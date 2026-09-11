@@ -69,7 +69,7 @@
     notes: "",
     defaultName: "",
     defaultDescription: "",
-    defaultQuantity: 1,
+    defaultQuantity: 0,
     defaultInsured: false,
     defaultManufacturer: "",
     defaultModelNumber: "",
@@ -176,7 +176,7 @@
               v-model.number="updateData.defaultQuantity"
               :label="$t('global.quantity')"
               type="number"
-              :min="1"
+              :min="0"
               step="any"
             />
             <FormTextField
