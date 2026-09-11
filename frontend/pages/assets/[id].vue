@@ -20,13 +20,13 @@
     const { data, error } = await api.assets.get(assetId.value);
     if (error) {
       toast.error(t("items.toast.failed_to_load_asset"));
-      navigateTo("/home");
+      navigateTo("/locations");
       return;
     }
     switch (data.total) {
       case 0:
         toast.error(t("items.toast.asset_not_found"));
-        navigateTo("/home");
+        navigateTo("/locations");
         break;
       case 1:
         navigateTo(`/item/${data.items[0]!.id}`, { replace: true, redirectCode: 302 });

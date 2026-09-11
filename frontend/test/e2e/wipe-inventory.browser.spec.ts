@@ -28,12 +28,12 @@ async function mockStatus(page: Page, demo: boolean) {
 }
 
 async function login(page: Page, email = "demo@example.com", password = "demodemo") {
-  await page.goto("/home");
+  await page.goto("/locations");
   await expect(page).toHaveURL("/");
   await page.fill("input[type='text']", email);
   await page.fill("input[type='password']", password);
   await page.click("button[type='submit']");
-  await expect(page).toHaveURL("/home");
+  await expect(page).toHaveURL("/locations");
 }
 
 async function openWipeInventory(page: Page) {

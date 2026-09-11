@@ -423,7 +423,7 @@
       </ul>
       <div class="flex flex-wrap gap-2">
         <NuxtLink href="/collection/tools">{{ $t("collection.tabs.tools") }}</NuxtLink>
-        <NuxtLink href="/home">{{ $t("menu.home") }}</NuxtLink>
+        <NuxtLink href="/locations">{{ $t("menu.locations") }}</NuxtLink>
       </div>
     </div>
     <Separator class="mx-auto max-w-4xl" />

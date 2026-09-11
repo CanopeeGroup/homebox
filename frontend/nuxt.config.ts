@@ -88,7 +88,7 @@ export default defineNuxtConfig({
       short_name: "Homebox",
       description: "Home Inventory App",
       theme_color: "#5b7f67",
-      start_url: "/home",
+      start_url: "/locations",
       icons: [
         {
           src: "pwa-192x192.png",

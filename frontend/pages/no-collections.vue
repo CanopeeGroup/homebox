@@ -33,7 +33,7 @@
               @click="
                 openDialog(DialogID.CreateCollection, {
                   params: {
-                    redirectTo: '/home',
+                    redirectTo: '/locations',
                   },
                 })
               "
@@ -46,7 +46,7 @@
               @click="
                 openDialog(DialogID.JoinCollection, {
                   params: {
-                    redirectTo: '/home',
+                    redirectTo: '/locations',
                   },
                 })
               "

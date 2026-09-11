@@ -49,7 +49,7 @@
     const { data, error } = await api.items.get(locationId.value);
     if (error) {
       toast.error(t("locations.toast.failed_load_location"));
-      navigateTo("/home");
+      navigateTo("/locations");
       return;
     }
 

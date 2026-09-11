@@ -74,7 +74,7 @@
     const { data, error } = await api.items.get(itemId.value);
     if (error) {
       toast.error(t("items.toast.failed_load_item"));
-      navigateTo("/home");
+      navigateTo("/locations");
       return;
     }
     return data;
@@ -562,7 +562,7 @@
       return;
     }
     toast.success(t("items.toast.item_deleted"));
-    navigateTo("/home");
+    navigateTo("/locations");
   }
 
   async function saveAsTemplate() {

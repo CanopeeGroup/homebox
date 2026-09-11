@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
 
 test("valid login", async ({ page }) => {
-  await page.goto("/home");
+  await page.goto("/locations");
   await expect(page).toHaveURL("/");
   await page.fill("input[type='text']", "demo@example.com");
   await page.fill("input[type='password']", "demodemo");
   await page.click("button[type='submit']");
-  await expect(page).toHaveURL("/home");
+  await expect(page).toHaveURL("/locations");
 });
 
 test("invalid login", async ({ page }) => {
-  await page.goto("/home");
+  await page.goto("/locations");
   await expect(page).toHaveURL("/");
   await page.fill("input[type='text']", "dummy@example.com");
   await page.fill("input[type='password']", "dummy");
@@ -23,7 +23,7 @@ test("invalid login", async ({ page }) => {
 test("registration", async ({ page }) => {
   test.slow();
   // Register a new user
-  await page.goto("/home");
+  await page.goto("/locations");
   await expect(page).toHaveURL("/");
   await page.getByTestId("register-button").click();
 
@@ -36,7 +36,7 @@ test("registration", async ({ page }) => {
   await expect(page).toHaveURL("/");
 
   // Try to register the same user again (it should fail)
-  await page.goto("/home");
+  await page.goto("/locations");
   await expect(page).toHaveURL("/");
   await page.getByTestId("register-button").click();
   await page.getByTestId("email-input").locator("input").fill("test@example.com");

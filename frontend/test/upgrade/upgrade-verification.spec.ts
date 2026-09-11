@@ -57,7 +57,7 @@ test.describe("HomeBox Upgrade Verification", () => {
       await page.click("button[type='submit']");
 
       // Wait for navigation to home page
-      await expect(page).toHaveURL("/home", { timeout: 10000 });
+      await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
       console.log(`✓ User ${user.email} logged in successfully`);
 
@@ -78,7 +78,7 @@ test.describe("HomeBox Upgrade Verification", () => {
     await page.fill("input[type='text']", firstUser.email);
     await page.fill("input[type='password']", firstUser.password);
     await page.click("button[type='submit']");
-    await expect(page).toHaveURL("/home", { timeout: 10000 });
+    await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
     // Look for version in footer or about section
     // The version might be in the footer or a settings page
@@ -106,7 +106,7 @@ test.describe("HomeBox Upgrade Verification", () => {
     await page.fill("input[type='text']", firstUser.email);
     await page.fill("input[type='password']", firstUser.password);
     await page.click("button[type='submit']");
-    await expect(page).toHaveURL("/home", { timeout: 10000 });
+    await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
     // Wait for page to load
     await page.waitForSelector("body", { state: "visible" });
@@ -140,7 +140,7 @@ test.describe("HomeBox Upgrade Verification", () => {
     await page.fill("input[type='text']", firstUser.email);
     await page.fill("input[type='password']", firstUser.password);
     await page.click("button[type='submit']");
-    await expect(page).toHaveURL("/home", { timeout: 10000 });
+    await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
     await page.waitForSelector("body", { state: "visible" });
 
@@ -171,7 +171,7 @@ test.describe("HomeBox Upgrade Verification", () => {
     await page.fill("input[type='text']", firstUser.email);
     await page.fill("input[type='password']", firstUser.password);
     await page.click("button[type='submit']");
-    await expect(page).toHaveURL("/home", { timeout: 10000 });
+    await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
     await page.waitForSelector("body", { state: "visible" });
 
@@ -201,7 +201,7 @@ test.describe("HomeBox Upgrade Verification", () => {
     await page.fill("input[type='text']", firstUser.email);
     await page.fill("input[type='password']", firstUser.password);
     await page.click("button[type='submit']");
-    await expect(page).toHaveURL("/home", { timeout: 10000 });
+    await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
     await page.waitForSelector("body", { state: "visible" });
 
@@ -243,7 +243,7 @@ test.describe("HomeBox Upgrade Verification", () => {
     await page.fill("input[type='text']", firstUser.email);
     await page.fill("input[type='password']", firstUser.password);
     await page.click("button[type='submit']");
-    await expect(page).toHaveURL("/home", { timeout: 10000 });
+    await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
     await page.waitForSelector("body", { state: "visible" });
 
@@ -309,7 +309,7 @@ test.describe("HomeBox Upgrade Verification", () => {
     await page.fill("input[type='text']", firstUser.email);
     await page.fill("input[type='password']", firstUser.password);
     await page.click("button[type='submit']");
-    await expect(page).toHaveURL("/home", { timeout: 10000 });
+    await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
     await page.waitForSelector("body", { state: "visible" });
 
@@ -371,7 +371,7 @@ test.describe("HomeBox Upgrade Verification", () => {
     await page.fill("input[type='text']", firstUser.email);
     await page.fill("input[type='password']", firstUser.password);
     await page.click("button[type='submit']");
-    await expect(page).toHaveURL("/home", { timeout: 10000 });
+    await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
     await page.waitForSelector("body", { state: "visible" });
 
@@ -401,7 +401,7 @@ test.describe("HomeBox Upgrade Verification", () => {
     await page.fill("input[type='text']", group2User.email);
     await page.fill("input[type='password']", group2User.password);
     await page.click("button[type='submit']");
-    await expect(page).toHaveURL("/home", { timeout: 10000 });
+    await expect(page).toHaveURL("/locations", { timeout: 10000 });
 
     await page.waitForSelector("body", { state: "visible" });
 

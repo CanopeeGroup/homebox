@@ -4,40 +4,12 @@
       <span>{{ selectedEntityType?.isLocation ? $t("menu.create_location") : $t("menu.create_object") }}</span>
     </template>
     <template #header-actions>
-      <div class="flex gap-2">
-        <TooltipProvider :delay-duration="0">
-          <!-- Template selector button -->
-          <TemplateSelector
-            v-if="!selectedEntityType?.isLocation"
-            v-model="selectedTemplate"
-            compact
-            @template-selected="handleTemplateSelected"
-          />
-
-          <ButtonGroup>
-            <Tooltip>
-              <TooltipTrigger>
-                <Button variant="outline" :disabled="loading" size="icon" data-pos="start" @click="openQrScannerPage()">
-                  <MdiBarcodeScan class="size-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{{ $t("components.entity.create_modal.product_tooltip_scan_barcode") }}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger>
-                <Button variant="outline" :disabled="loading" size="icon" data-pos="end" @click="openBarcodeDialog()">
-                  <MdiBarcode class="size-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{{ $t("components.entity.create_modal.product_tooltip_input_barcode") }}</p>
-              </TooltipContent>
-            </Tooltip>
-          </ButtonGroup>
-        </TooltipProvider>
-      </div>
+      <TemplateSelector
+        v-if="!selectedEntityType?.isLocation"
+        v-model="selectedTemplate"
+        compact
+        @template-selected="handleTemplateSelected"
+      />
     </template>
 
     <form class="flex min-w-0 flex-col gap-2" @submit.prevent="create()">
@@ -161,6 +133,7 @@
         :min="0"
       />
       <FormTextArea
+        v-if="selectedEntityType?.isLocation"
         v-model="form.description"
         :label="
           $t('components.entity.create_modal.entity_description', {
@@ -170,6 +143,7 @@
         :max-length="1000"
       />
       <PhotoUploader
+        v-if="selectedEntityType?.isLocation"
         :label="
           $t('components.entity.create_modal.entity_photo', {
             type: t(selectedEntityType ? selectedEntityType.name : 'global.entity'),
@@ -199,6 +173,7 @@
       </div>
 
       <PhotoUploaderPreview
+        v-if="selectedEntityType?.isLocation"
         :photos="form.photos"
         @delete="deletePhotoAt"
         @rotate="rotatePhotoAt"
@@ -222,8 +197,6 @@
     EntityTypeSummary,
   } from "~~/lib/api/types/data-contracts";
   import { useLocationStore } from "~~/stores/locations";
-  import MdiBarcode from "~icons/mdi/barcode";
-  import MdiBarcodeScan from "~icons/mdi/barcode-scan";
   import MdiPackageVariant from "~icons/mdi/package-variant";
   import MdiPackageVariantClosed from "~icons/mdi/package-variant-closed";
   import MdiFileDocumentOutline from "~icons/mdi/file-document-outline";
@@ -233,7 +206,6 @@
   import { useDialog, useDialogHotkey } from "~/components/ui/dialog-provider";
   import ItemSelector from "~/components/Item/Selector.vue";
   import TemplateSelector from "~/components/Template/Selector.vue";
-  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
   import LocationSelector from "~/components/Location/Selector.vue";
   import FormTextField from "~/components/Form/TextField.vue";
   import FormTextArea from "~/components/Form/TextArea.vue";
@@ -249,7 +221,7 @@
   import { useEntityTypeStore } from "~~/stores/entityTypes";
 
   const { t } = useI18n();
-  const { openDialog, closeDialog, registerOpenDialogCallback } = useDialog();
+  const { closeDialog, registerOpenDialogCallback } = useDialog();
 
   useDialogHotkey(DialogID.CreateEntity, { code: "Digit1", shift: true }, () => ({
     baseType: "item",
@@ -654,13 +626,5 @@
       // fires — re-apply it here so the selection isn't cleared (#1489).
       await restoreLastTemplate();
     }
-  }
-
-  function openQrScannerPage() {
-    openDialog(DialogID.Scanner);
-  }
-
-  function openBarcodeDialog() {
-    openDialog(DialogID.ProductImport);
   }
 </script>

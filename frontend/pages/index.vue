@@ -36,9 +36,9 @@
         if (ctx.isAuthorized()) {
           // Preserve invitation token when redirecting authenticated users
           if (route.query.token) {
-            return `/home?token=${encodeURIComponent(route.query.token as string)}`;
+            return `/locations?token=${encodeURIComponent(route.query.token as string)}`;
           }
-          return "/home";
+          return "/locations";
         } else {
           console.log("Logged out, clearing collectionId preference");
           const prefs = useViewPreferences();
@@ -208,7 +208,7 @@
 
     toast.success(t("index.toast.login_success"));
 
-    navigateTo(redirectTo.value || "/home");
+    navigateTo(redirectTo.value || "/locations");
     redirectTo.value = null;
     loading.value = false;
   }

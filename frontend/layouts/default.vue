@@ -22,7 +22,7 @@
           <SidebarGroupLabel class="text-base group-data-[collapsible=icon]:hidden">{{
             $t("global.welcome", { username: username })
           }}</SidebarGroupLabel>
-          <NuxtLink class="group-data-[collapsible=icon]:hidden" to="/home">
+          <NuxtLink class="group-data-[collapsible=icon]:hidden" to="/locations">
             <div class="flex size-24 items-center justify-center rounded-full bg-background-accent p-4">
               <AppLogo />
             </div>
@@ -183,7 +183,7 @@
           >
             <div class="flex h-1/2 items-center gap-2 sm:h-auto">
               <SidebarTrigger variant="default" />
-              <NuxtLink to="/home">
+              <NuxtLink to="/locations">
                 <AppHeaderText class="h-6" />
               </NuxtLink>
             </div>
@@ -239,7 +239,6 @@
   import DOMPurify from "dompurify";
   import { useLocationStore } from "~~/stores/locations";
 
-  import MdiHome from "~icons/mdi/home";
   import MdiFileTree from "~icons/mdi/file-tree";
   import MdiMagnify from "~icons/mdi/magnify";
   import MdiQrcodeScan from "~icons/mdi/qrcode-scan";
@@ -394,13 +393,6 @@
       to: string;
     }[];
   }[] = [
-    {
-      icon: MdiHome,
-      active: computed(() => route.path === "/home"),
-      id: 0,
-      name: computed(() => t("menu.home")),
-      to: "/home",
-    },
     {
       icon: MdiFileTree,
       id: 1,
