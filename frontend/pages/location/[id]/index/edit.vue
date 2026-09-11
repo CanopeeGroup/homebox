@@ -153,12 +153,6 @@
       maxLength: 1000,
     },
     {
-      type: "markdown",
-      label: "items.notes",
-      ref: "notes",
-      maxLength: 1000,
-    },
-    {
       type: "text",
       label: "items.asset_id",
       ref: "assetId",
