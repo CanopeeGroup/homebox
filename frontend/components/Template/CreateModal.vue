@@ -28,7 +28,7 @@
             v-model.number="form.defaultQuantity"
             :label="$t('global.quantity')"
             type="number"
-            :min="1"
+            :min="0"
             step="any"
           />
           <FormTextField
@@ -128,7 +128,7 @@
     notes: "",
     defaultName: "",
     defaultDescription: "",
-    defaultQuantity: 1,
+    defaultQuantity: 0,
     defaultInsured: false,
     defaultManufacturer: "",
     defaultModelNumber: "",
@@ -156,7 +156,7 @@
       notes: "",
       defaultName: "",
       defaultDescription: "",
-      defaultQuantity: 1,
+      defaultQuantity: 0,
       defaultInsured: false,
       defaultManufacturer: "",
       defaultModelNumber: "",
