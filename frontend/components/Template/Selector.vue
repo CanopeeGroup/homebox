@@ -14,55 +14,53 @@
       <MdiFileDocumentOutline class="size-5" />
     </Button>
 
-    <Teleport to="body">
-      <div v-if="open" class="fixed inset-0 z-[100] flex h-dvh flex-col bg-background p-3">
-        <div class="mb-2 flex shrink-0 items-center justify-between gap-2">
-          <strong class="text-base">{{ $t("components.template.selector.label") }}</strong>
-          <Button
-            size="icon"
-            variant="ghost"
-            :aria-label="$t('components.template.selector.close')"
-            @click="open = false"
-          >
-            <X class="size-5" />
-          </Button>
-        </div>
-        <Command class="min-h-0 flex-1 border" :ignore-filter="true">
-          <CommandInput
-            v-model="search"
-            class="shrink-0"
-            :placeholder="$t('components.template.selector.search')"
-            :display-value="_ => ''"
-          />
-          <CommandEmpty>{{ $t("components.template.selector.not_found") }}</CommandEmpty>
-          <CommandList class="!max-h-none min-h-0 flex-1 overscroll-contain">
-            <CommandGroup>
-              <CommandItem
-                v-for="template in filteredTemplates"
-                :key="template.id"
-                :value="template.id"
-                @select="selectTemplate(template)"
-              >
-                <Check :class="cn('mr-2 h-4 w-4', value?.id === template.id ? 'opacity-100' : 'opacity-0')" />
-                <div class="flex w-full min-w-0 flex-col">
-                  <div class="truncate">{{ template.name }}</div>
-                  <div v-if="template.description" class="mt-1 line-clamp-1 text-xs text-muted-foreground">
-                    {{ template.description }}
-                  </div>
-                </div>
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator v-if="value" />
-            <CommandGroup v-if="value">
-              <CommandItem value="clear-selection" @select="clearSelection">
-                <X class="mr-2 size-4" />
-                <span class="text-destructive">{{ $t("components.template.selector.clear") }}</span>
-              </CommandItem>
-            </CommandGroup>
-          </CommandList>
-        </Command>
+    <div v-if="open" class="fixed inset-0 z-[100] flex h-dvh flex-col bg-background p-3">
+      <div class="mb-2 flex shrink-0 items-center justify-between gap-2">
+        <strong class="text-base">{{ $t("components.template.selector.label") }}</strong>
+        <Button
+          size="icon"
+          variant="ghost"
+          :aria-label="$t('components.template.selector.close')"
+          @click="open = false"
+        >
+          <X class="size-5" />
+        </Button>
       </div>
-    </Teleport>
+      <Command class="min-h-0 flex-1 border" :ignore-filter="true">
+        <CommandInput
+          v-model="search"
+          class="shrink-0"
+          :placeholder="$t('components.template.selector.search')"
+          :display-value="_ => ''"
+        />
+        <CommandEmpty>{{ $t("components.template.selector.not_found") }}</CommandEmpty>
+        <CommandList class="!max-h-none min-h-0 flex-1 overscroll-contain">
+          <CommandGroup>
+            <CommandItem
+              v-for="template in filteredTemplates"
+              :key="template.id"
+              :value="template.id"
+              @select="selectTemplate(template)"
+            >
+              <Check :class="cn('mr-2 h-4 w-4', value?.id === template.id ? 'opacity-100' : 'opacity-0')" />
+              <div class="flex w-full min-w-0 flex-col">
+                <div class="truncate">{{ template.name }}</div>
+                <div v-if="template.description" class="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                  {{ template.description }}
+                </div>
+              </div>
+            </CommandItem>
+          </CommandGroup>
+          <CommandSeparator v-if="value" />
+          <CommandGroup v-if="value">
+            <CommandItem value="clear-selection" @select="clearSelection">
+              <X class="mr-2 size-4" />
+              <span class="text-destructive">{{ $t("components.template.selector.clear") }}</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
   </template>
 
   <!-- Compact mode: icon button only -->
