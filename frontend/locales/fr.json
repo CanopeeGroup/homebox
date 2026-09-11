@@ -328,7 +328,11 @@
         "template": {
             "apply_template": "Appliquer un modèle",
             "export": "Exporter",
+            "export_csv": "Exporter en CSV",
+            "export_json": "Exporter en JSON",
             "import": "Importer",
+            "import_csv": "Importer un CSV",
+            "import_json": "Importer un JSON",
             "card": {
                 "delete": "Supprimer le modèle",
                 "duplicate": "Dupliquer le modèle",
@@ -372,6 +376,8 @@
                 "select": "Sélectionner un modèle...…"
             },
             "show_defaults": "Afficher les valeurs par défaut",
+            "view_compact": "Vue liste compacte",
+            "view_grid": "Vue en grille",
             "toast": {
                 "applied": "Modèle \"{name}\" a été appliqué",
                 "create_failed": "Echec lors de la création du modèle",
