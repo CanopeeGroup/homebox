@@ -9,7 +9,6 @@
   import MdiEmailPlus from "~icons/mdi/email-plus";
   import MdiBell from "~icons/mdi/bell";
   import MdiCog from "~icons/mdi/cog";
-  import MdiShape from "~icons/mdi/shape";
   import MdiWrench from "~icons/mdi/wrench";
   import MdiLogout from "~icons/mdi/logout";
   import MdiDelete from "~icons/mdi/delete";
@@ -54,12 +53,6 @@
       label: "collection.tabs.settings",
       to: "/collection/settings",
       icon: MdiCog,
-    },
-    {
-      id: "entity-types",
-      label: "collection.tabs.entity_types",
-      to: "/collection/entity-types",
-      icon: MdiShape,
     },
     {
       id: "tools",
