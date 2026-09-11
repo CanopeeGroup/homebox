@@ -8,6 +8,7 @@ import type {
 
 export const TEMPLATE_EXPORT_FORMAT = "homebox-template-export";
 export const TEMPLATE_EXPORT_VERSION = 1;
+export const TEMPLATE_CSV_HEADERS = ["EntryName", "Article"] as const;
 
 type PortableTemplateField = Omit<TemplateField, "id">;
 
@@ -80,6 +81,7 @@ function hasValidTemplateShape(value: unknown): value is PortableTemplate {
     typeof value.notes === "string" &&
     typeof value.defaultQuantity === "number" &&
     Number.isFinite(value.defaultQuantity) &&
+    value.defaultQuantity >= 0 &&
     typeof value.defaultInsured === "boolean" &&
     typeof value.defaultName === "string" &&
     typeof value.defaultDescription === "string" &&
@@ -117,6 +119,96 @@ export function parseTemplateExport(value: unknown): TemplateExportDocument {
   }
 
   return value as unknown as TemplateExportDocument;
+}
+
+function escapeCsvValue(value: string): string {
+  return `"${value.replaceAll('"', '""')}"`;
+}
+
+export function createTemplateCsv(templates: EntityTemplateOut[]): string {
+  const rows = templates.map(template =>
+    [template.name, template.defaultModelNumber].map(value => escapeCsvValue(value ?? "")).join(";")
+  );
+  return `\uFEFF${TEMPLATE_CSV_HEADERS.join(";")}\r\n${rows.join("\r\n")}\r\n`;
+}
+
+function parseCsvRows(csv: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let value = "";
+  let quoted = false;
+
+  for (let index = 0; index < csv.length; index++) {
+    const character = csv[index]!;
+    if (quoted) {
+      if (character === '"' && csv[index + 1] === '"') {
+        value += '"';
+        index++;
+      } else if (character === '"') {
+        quoted = false;
+      } else {
+        value += character;
+      }
+    } else if (character === '"') {
+      quoted = true;
+    } else if (character === ";") {
+      row.push(value);
+      value = "";
+    } else if (character === "\n") {
+      row.push(value.replace(/\r$/, ""));
+      if (row.some(cell => cell.length > 0)) rows.push(row);
+      row = [];
+      value = "";
+    } else {
+      value += character;
+    }
+  }
+
+  if (quoted) throw new Error("Invalid CSV: unterminated quoted value");
+  if (value.length > 0 || row.length > 0) {
+    row.push(value.replace(/\r$/, ""));
+    if (row.some(cell => cell.length > 0)) rows.push(row);
+  }
+  return rows;
+}
+
+const normalizeHeader = (header: string) =>
+  header
+    .replace(/^\uFEFF/, "")
+    .replace(/[ _-]/g, "")
+    .toLocaleLowerCase();
+
+export function parseTemplateCsv(csv: string): PortableTemplate[] {
+  const rows = parseCsvRows(csv);
+  const headers = rows.shift()?.map(normalizeHeader) ?? [];
+  const nameIndex = headers.findIndex(
+    header => header === "entryname" || header === "name" || header === "defaultname"
+  );
+  const articleIndex = headers.findIndex(header => header === "article" || header === "defaultmodelnumber");
+  if (nameIndex < 0 || articleIndex < 0) throw new Error("Invalid CSV template headers");
+
+  return rows
+    .map(row => ({ name: row[nameIndex]?.trim() ?? "", modelNumber: row[articleIndex]?.trim() ?? "" }))
+    .filter(row => row.name.length > 0)
+    .map(row => ({
+      name: row.name,
+      description: "",
+      notes: "",
+      defaultQuantity: 0,
+      defaultInsured: false,
+      defaultName: row.name,
+      defaultDescription: "",
+      defaultManufacturer: "",
+      defaultModelNumber: row.modelNumber,
+      defaultLifetimeWarranty: false,
+      defaultWarrantyDetails: "",
+      defaultLocationName: null,
+      defaultTagNames: [],
+      includeWarrantyFields: false,
+      includePurchaseFields: false,
+      includeSoldFields: false,
+      fields: [],
+    }));
 }
 
 const normalizedName = (name: string) => name.trim().toLocaleLowerCase();
