@@ -343,9 +343,12 @@
                 "edit": "Edit template"
             },
             "confirm_delete": "Delete this template?",
+            "confirm_delete_selected": "Delete {count} selected template(s)? This action cannot be undone.",
             "create_modal": {
                 "title": "Create Template"
             },
+            "delete_selected": "Delete selected",
+            "deselect_all": "Deselect all",
             "detail": {
                 "default_values": "Default Values",
                 "updated": "Updated"
@@ -372,6 +375,9 @@
             },
             "hide_defaults": "Hide defaults",
             "save_as_template": "Save as Template",
+            "select_all": "Select all",
+            "select_template": "Select template {name}",
+            "selected_count": "{count} selected",
             "selector": {
                 "clear": "Clear Template Selection",
                 "label": "Template (Optional)",
@@ -388,6 +394,8 @@
                 "created": "Template created",
                 "delete_failed": "Failed to delete template",
                 "deleted": "Template deleted",
+                "deleted_selected": "Deleted {count} template(s)",
+                "delete_selected_failed": "Deleted {deleted} template(s); {failed} deletion(s) failed",
                 "duplicate_failed": "Failed to duplicate template",
                 "duplicated": "Template duplicated as \"{name}\"",
                 "export_empty": "There are no templates to export",
@@ -561,6 +569,7 @@
         }
     },
     "items": {
+        "template_results": "Templates ({count})",
         "add": "Add",
         "advanced": "Advanced",
         "archived": "Archived",
