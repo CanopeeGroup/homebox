@@ -7,6 +7,7 @@
     <template v-if="useTouchLayout">
       <Button
         :id="id"
+        type="button"
         variant="outline"
         role="combobox"
         :aria-expanded="open"
@@ -23,6 +24,7 @@
         <div class="mb-2 flex shrink-0 items-center justify-between gap-2">
           <strong class="text-base">{{ $t("components.location.selector.parent_location") }}</strong>
           <Button
+            type="button"
             size="icon"
             variant="ghost"
             :aria-label="$t('components.location.selector.close')"
@@ -69,7 +71,14 @@
 
     <Popover v-else v-model:open="open">
       <PopoverTrigger as-child>
-        <Button :id="id" variant="outline" role="combobox" :aria-expanded="open" class="w-full justify-between">
+        <Button
+          :id="id"
+          type="button"
+          variant="outline"
+          role="combobox"
+          :aria-expanded="open"
+          class="w-full justify-between"
+        >
           <span class="min-w-0 flex-auto truncate text-left">
             {{ value && value.name ? value.name : $t("components.location.selector.select_location") }}
           </span>
