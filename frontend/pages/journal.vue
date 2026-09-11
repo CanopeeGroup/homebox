@@ -32,6 +32,15 @@
     if (action === "create") return "default";
     return "secondary";
   };
+
+  const operationLabel = (entry: NonNullable<typeof entries.value>[number]) => {
+    const action = t(`journal.${entry.action}`);
+    const resource = t(`journal.resources.${entry.resource}`, entry.resource);
+    // Older journal rows contain the raw API path. Keep them readable without
+    // pretending that the UUID is an object name.
+    const name = entry.path && !entry.path.startsWith("/") ? ` ${entry.path}` : "";
+    return `${action} ${resource}${name}`;
+  };
 </script>
 
 <template>
@@ -66,7 +75,7 @@
           <span class="truncate" :title="entry.userName">{{ entry.userName }}</span>
           <Badge class="w-fit" :variant="actionVariant(entry.action)">{{ $t(`journal.${entry.action}`) }}</Badge>
           <span>{{ $t(`journal.resources.${entry.resource}`, entry.resource) }}</span>
-          <code class="truncate text-xs text-muted-foreground" :title="entry.path">{{ entry.path }}</code>
+          <span class="truncate" :title="operationLabel(entry)">{{ operationLabel(entry) }}</span>
         </div>
       </div>
       <p v-else class="p-8 text-center text-muted-foreground">{{ $t("journal.empty") }}</p>
