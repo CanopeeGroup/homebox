@@ -589,10 +589,14 @@
     form.modelNumber = "";
     form.photos = [];
     form.tags = [];
+    form.parentId = null;
+    form.location = locations.value?.[0] ?? ({} as EntityOut);
+    parent.value = {};
     selectedTemplate.value = null;
     templateData.value = null;
     templateUserSelected.value = false;
     showTemplateDetails.value = false;
+    localStorage.removeItem(LAST_TEMPLATE_KEY);
     focused.value = false;
     loading.value = false;
 
