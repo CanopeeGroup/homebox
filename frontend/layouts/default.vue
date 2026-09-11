@@ -237,13 +237,10 @@
 <script lang="ts" setup>
   import { useI18n } from "vue-i18n";
   import DOMPurify from "dompurify";
-  import { useTagStore } from "~/stores/tags";
   import { useLocationStore } from "~~/stores/locations";
-  import { useEntityTypeStore } from "~~/stores/entityTypes";
 
   import MdiHome from "~icons/mdi/home";
   import MdiFileTree from "~icons/mdi/file-tree";
-  import MdiTagMultiple from "~icons/mdi/tag-multiple";
   import MdiMagnify from "~icons/mdi/magnify";
   import MdiQrcodeScan from "~icons/mdi/qrcode-scan";
   import MdiAccount from "~icons/mdi/account";
@@ -413,13 +410,6 @@
       to: "/locations",
     },
     {
-      icon: MdiTagMultiple,
-      id: 2,
-      active: computed(() => route.path === "/tags"),
-      name: computed(() => t("global.tags")),
-      to: "/tags",
-    },
-    {
       icon: MdiMagnify,
       id: 3,
       active: computed(() => route.path === "/items"),
@@ -479,12 +469,6 @@
           to: "/collection/settings",
         },
         {
-          id: 65,
-          active: computed(() => route.path === "/collection/entity-types"),
-          name: computed(() => t("collection.tabs.entity_types")),
-          to: "/collection/entity-types",
-        },
-        {
           id: 66,
           active: computed(() => route.path === "/collection/tools"),
           name: computed(() => t("collection.tabs.tools")),
@@ -509,14 +493,8 @@
     })),
   ]);
 
-  const tagStore = useTagStore();
-  tagStore.ensureAllTagsFetched();
-
   const locationStore = useLocationStore();
   locationStore.ensureLocationsFetched();
-
-  const entityTypeStore = useEntityTypeStore();
-  entityTypeStore.ensureFetched();
 
   onMounted(() => {
     locationStore.refreshParents();
@@ -538,10 +516,6 @@
         params: { inviteCode: token },
       });
     }
-  });
-
-  onServerEvent(ServerEvent.TagMutation, () => {
-    tagStore.refresh();
   });
 
   onServerEvent(ServerEvent.EntityMutation, () => {
