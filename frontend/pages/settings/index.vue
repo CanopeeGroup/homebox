@@ -15,10 +15,34 @@
   useHead({ title: computed(() => `HomeBox | ${t("menu.settings")}`) });
 
   const sections = computed(() => [
-    { to: "/maintenance", label: t("menu.maintenance"), icon: MdiWrench },
-    { to: "/profile", label: t("menu.profile"), icon: MdiAccount },
-    { to: "/collection/members", label: t("menu.collection"), icon: MdiAccountGroup },
-    ...(auth.user?.isSuperuser ? [{ to: "/settings/users", label: t("menu.users"), icon: MdiAccountMultiple }] : []),
+    {
+      to: "/maintenance",
+      label: t("menu.maintenance"),
+      description: t("settings.sections.maintenance"),
+      icon: MdiWrench,
+    },
+    {
+      to: "/profile",
+      label: t("menu.profile"),
+      description: t("settings.sections.profile"),
+      icon: MdiAccount,
+    },
+    {
+      to: "/collection/members",
+      label: t("menu.collection"),
+      description: t("settings.sections.collection"),
+      icon: MdiAccountGroup,
+    },
+    ...(auth.user?.isSuperuser
+      ? [
+          {
+            to: "/settings/users",
+            label: t("menu.users"),
+            description: t("settings.sections.users"),
+            icon: MdiAccountMultiple,
+          },
+        ]
+      : []),
   ]);
 </script>
 
@@ -33,7 +57,7 @@
           <CardHeader>
             <component :is="section.icon" class="mb-2 size-7 text-primary" />
             <CardTitle>{{ section.label }}</CardTitle>
-            <CardDescription>{{ $t("settings.description") }}</CardDescription>
+            <CardDescription>{{ section.description }}</CardDescription>
           </CardHeader>
         </Card>
       </NuxtLink>

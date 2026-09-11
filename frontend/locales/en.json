@@ -810,6 +810,12 @@
     },
     "settings": {
         "description": "Manage maintenance, your profile, and collection settings.",
+        "sections": {
+            "collection": "Manage server collections",
+            "maintenance": "Entry count and server performance",
+            "profile": "Manage your profile and theme",
+            "users": "Manage server users"
+        },
         "title": "Settings"
     },
     "journal": {

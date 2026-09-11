@@ -757,6 +757,12 @@
     },
     "settings": {
         "description": "Gérez l’entretien, votre profil et les paramètres de la collection.",
+        "sections": {
+            "collection": "Gérer les collections du serveur",
+            "maintenance": "Nombre d’entrées et performance du serveur",
+            "profile": "Gérer votre profil et votre thème",
+            "users": "Gérer les utilisateurs du serveur"
+        },
         "title": "Réglages"
     },
     "journal": {
