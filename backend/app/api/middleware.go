@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -368,6 +371,49 @@ func (a *app) mwTenant(next errchain.Handler) errchain.Handler {
 // error response.
 func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 	return errchain.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+		// Keep a readable object name before the handler consumes the request or
+		// deletes the object. The body is restored unchanged for the handler.
+		objectName := ""
+		if r.Body != nil {
+			body, readErr := io.ReadAll(r.Body)
+			if readErr == nil {
+				r.Body = io.NopCloser(bytes.NewReader(body))
+				var payload struct {
+					Name        string `json:"name"`
+					DefaultName string `json:"defaultName"`
+				}
+				if json.Unmarshal(body, &payload) == nil {
+					objectName = strings.TrimSpace(payload.Name)
+					if objectName == "" {
+						objectName = strings.TrimSpace(payload.DefaultName)
+					}
+				}
+			}
+		}
+
+		resourcePath := strings.TrimPrefix(r.URL.Path, "/api/v1/")
+		pathParts := strings.Split(strings.Trim(resourcePath, "/"), "/")
+		resource := pathParts[0]
+		if objectName == "" {
+			for _, part := range pathParts[1:] {
+				id, parseErr := uuid.Parse(part)
+				if parseErr != nil {
+					continue
+				}
+				switch resource {
+				case "templates":
+					if template, getErr := a.repos.EntityTemplates.GetOne(r.Context(), services.NewContext(r.Context()).GID, id); getErr == nil {
+						objectName = template.Name
+					}
+				case "items", "entities":
+					if item, getErr := a.repos.Entities.GetOne(r.Context(), id); getErr == nil {
+						objectName = item.Name
+					}
+				}
+				break
+			}
+		}
+
 		err := next.ServeHTTP(w, r)
 		if err != nil {
 			return err
@@ -387,8 +433,6 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 		if auth.User == nil || auth.GID == uuid.Nil {
 			return nil
 		}
-		resourcePath := strings.TrimPrefix(r.URL.Path, "/api/v1/")
-		resource := strings.Split(strings.Trim(resourcePath, "/"), "/")[0]
 		entry := repo.AuditLogEntry{
 			ID:        uuid.New(),
 			GroupID:   auth.GID,
@@ -396,7 +440,7 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 			UserName:  auth.User.Name,
 			Action:    action,
 			Resource:  resource,
-			Path:      r.URL.Path,
+			Path:      objectName,
 			CreatedAt: time.Now().UTC(),
 		}
 		if auditErr := a.repos.AuditLogs.Create(r.Context(), entry); auditErr != nil {
