@@ -6,16 +6,20 @@
   import MdiContentCopy from "~icons/mdi/content-copy";
   import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
   import { Button } from "@/components/ui/button";
+  import { Checkbox } from "@/components/ui/checkbox";
   import type { EntityTemplateSummary, EntityTemplateCreate } from "~/lib/api/types/data-contracts";
 
   const props = defineProps<{
     template: EntityTemplateSummary;
     compact?: boolean;
+    selectable?: boolean;
+    selected?: boolean;
   }>();
 
   const emit = defineEmits<{
     deleted: [];
     duplicated: [id: string];
+    "update:selected": [selected: boolean];
   }>();
 
   const api = useUserApi();
@@ -85,6 +89,13 @@
 
 <template>
   <Card :class="compact && 'flex min-w-0 items-center gap-2 px-3 py-2'">
+    <Checkbox
+      v-if="selectable"
+      class="ml-3"
+      :model-value="selected"
+      :aria-label="$t('components.template.select_template', { name: template.name })"
+      @update:model-value="$emit('update:selected', $event === true)"
+    />
     <CardHeader :class="compact && 'min-w-0 flex-1 p-0'">
       <CardTitle class="truncate">{{ template.name }}</CardTitle>
       <CardDescription v-if="template.description" :class="compact ? 'truncate' : 'line-clamp-2'">
