@@ -40,7 +40,7 @@ func (EntityTemplate) Fields() []ent.Field {
 		// ------------------------------------
 		// Default values for item fields
 		field.Float("default_quantity").
-			Default(1),
+			Default(0),
 		field.Bool("default_insured").
 			Default(false),
 
