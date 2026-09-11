@@ -3,7 +3,7 @@
     <template #title>
       <span>{{ selectedEntityType?.isLocation ? $t("menu.create_location") : $t("menu.create_object") }}</span>
     </template>
-    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="create()">
+    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="submitCreate">
       <TemplateSelector
         v-if="!selectedEntityType?.isLocation"
         v-model="selectedTemplate"
@@ -150,7 +150,7 @@
         @selected="appendPhotos"
       />
       <div class="mt-4 flex flex-row-reverse">
-        <Button :disabled="loading" type="submit" class="group">
+        <Button :disabled="loading" type="submit" class="group" data-entity-create-submit="true">
           <div class="relative mx-2">
             <div
               class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:rotate-[360deg]"
@@ -318,8 +318,6 @@
 
     // Save template ID to localStorage for persistence
     localStorage.setItem(LAST_TEMPLATE_KEY, template.id);
-
-    toast.success(t("components.template.toast.applied", { name: data.name }));
   }
 
   async function restoreLastTemplate() {
@@ -377,6 +375,14 @@
   );
 
   const { shift } = useMagicKeys();
+
+  function submitCreate(event: SubmitEvent) {
+    const submitter = event.submitter as HTMLElement | null;
+    if (submitter?.dataset.entityCreateSubmit === "true") {
+      void create();
+    }
+  }
+
   function appendPhotos(photos: PhotoPreview[]) {
     form.photos.push(...photos);
   }
@@ -558,15 +564,7 @@
       return;
     }
 
-    toast.success(
-      t("components.entity.create_modal.toast.create_success", {
-        type: t(selectedEntityType.value ? selectedEntityType.value.name : "global.entity"),
-      })
-    );
-
     if (form.photos.length > 0) {
-      toast.info(t("components.entity.create_modal.toast.uploading_photos", { count: form.photos.length }));
-      let uploadError = false;
       for (const photo of form.photos) {
         const { error: attachError } = await api.items.attachments.add(
           data.id,
@@ -577,15 +575,9 @@
         );
 
         if (attachError) {
-          uploadError = true;
           toast.error(t("components.entity.create_modal.toast.upload_failed", { photoName: photo.photoName }));
           console.error(attachError);
         }
-      }
-      if (uploadError) {
-        toast.warning(t("components.entity.create_modal.toast.some_photos_failed", { count: form.photos.length }));
-      } else {
-        toast.success(t("components.entity.create_modal.toast.upload_success", { count: form.photos.length }));
       }
     }
 
