@@ -192,7 +192,7 @@ func (r *EntityTypeRepository) GetDefault(ctx context.Context, gid uuid.UUID, is
 	if err != nil {
 		if ent.IsNotFound(err) {
 			// Create a default entity type
-			name := "Item"
+			name := "Object"
 			if isLocation {
 				name = "Location"
 			}
