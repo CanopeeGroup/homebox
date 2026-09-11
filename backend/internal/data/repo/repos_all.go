@@ -22,10 +22,15 @@ type AllRepos struct {
 	MaintEntry          *MaintenanceEntryRepository
 	Notifiers           *NotifierRepository
 	Exports             *ExportRepository
+	AuditLogs           *AuditLogRepository
 }
 
-func New(db *ent.Client, bus *eventbus.EventBus, storage config.Storage, pubSubConn string, thumbnail config.Thumbnail) *AllRepos {
+func New(db *ent.Client, bus *eventbus.EventBus, storage config.Storage, pubSubConn string, thumbnail config.Thumbnail, databaseDriver ...string) *AllRepos {
 	attachments := &AttachmentRepo{db, storage, pubSubConn, thumbnail}
+	driver := "sqlite3"
+	if len(databaseDriver) > 0 {
+		driver = databaseDriver[0]
+	}
 	return &AllRepos{
 		Users:               &UserRepository{db},
 		AuthTokens:          &TokenRepository{db},
@@ -40,5 +45,6 @@ func New(db *ent.Client, bus *eventbus.EventBus, storage config.Storage, pubSubC
 		MaintEntry:          &MaintenanceEntryRepository{db},
 		Notifiers:           NewNotifierRepository(db),
 		Exports:             &ExportRepository{db},
+		AuditLogs:           NewAuditLogRepository(db, driver),
 	}
 }
