@@ -46,7 +46,6 @@
           v-model="form.defaultLocationObject"
           :label="$t('components.template.form.default_location')"
         />
-        <TagSelector v-model="form.defaultTagIds" :tags="tags ?? []" />
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
             <Switch id="defaultInsured" v-model:checked="form.defaultInsured" />
@@ -111,15 +110,10 @@
   import { Switch } from "@/components/ui/switch";
   import { Label } from "@/components/ui/label";
   import LocationSelector from "~/components/Location/Selector.vue";
-  import TagSelector from "~/components/Tag/Selector.vue";
-  import { useTagStore } from "~/stores/tags";
   import type { EntitySummary } from "~~/lib/api/types/data-contracts";
 
   const emit = defineEmits<{ created: [] }>();
   const { closeDialog } = useDialog();
-
-  const tagStore = useTagStore();
-  const tags = computed(() => tagStore.tags);
 
   const loading = ref(false);
   const form = reactive({
@@ -195,7 +189,7 @@
       defaultLifetimeWarranty: form.defaultLifetimeWarranty,
       defaultWarrantyDetails: form.defaultWarrantyDetails || null,
       defaultLocationId: form.defaultLocationObject?.id ?? null,
-      defaultTagIds: form.defaultTagIds,
+      defaultTagIds: [],
       includeWarrantyFields: form.includeWarrantyFields,
       includePurchaseFields: form.includePurchaseFields,
       includeSoldFields: form.includeSoldFields,
