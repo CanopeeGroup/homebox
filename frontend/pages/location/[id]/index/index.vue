@@ -1,8 +1,6 @@
 <script setup lang="ts">
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
-  import type { AnyDetail, Details } from "~~/components/global/DetailsSection/types";
-  import { filterZeroValues } from "~~/components/global/DetailsSection/types";
   import type { ItemAttachment } from "~~/lib/api/types/data-contracts";
   import MdiPackageVariant from "~icons/mdi/package-variant";
   import MdiPlus from "~icons/mdi/plus";
@@ -26,7 +24,6 @@
   import DateTime from "~/components/global/DateTime.vue";
   import LabelMaker from "~/components/global/LabelMaker.vue";
   import Markdown from "~/components/global/Markdown.vue";
-  import DetailsSection from "~/components/global/DetailsSection/DetailsSection.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
   import ItemAttachmentsList from "~/components/Item/AttachmentsList.vue";
@@ -43,7 +40,6 @@
 
   const route = useRoute();
   const api = useUserApi();
-  const preferences = useViewPreferences();
 
   const locationId = computed<string>(() => route.params.id as string);
 
@@ -164,33 +160,6 @@
     return a.attachments.length > 0 || a.warranty.length > 0 || a.manuals.length > 0 || a.receipts.length > 0;
   });
 
-  // Details
-  const locationDetails = computed<Details>(() => {
-    if (!location.value) {
-      return [];
-    }
-
-    const ret: Details = [
-      {
-        name: "items.notes",
-        type: "markdown",
-        text: location.value.notes,
-      },
-      ...(location.value.fields || []).map(field => {
-        return {
-          name: field.name,
-          text: field.textValue,
-        } as AnyDetail;
-      }),
-    ];
-
-    if (!preferences.value.showEmpty) {
-      return filterZeroValues(ret);
-    }
-
-    return ret;
-  });
-
   const { data: items, refresh: refreshItemList } = useAsyncData(
     () => locationId.value + "_item_list",
     async () => {
@@ -303,12 +272,6 @@
         <Separator v-if="location && location.description" />
         <Markdown v-if="location && location.description" class="mt-3 text-base" :source="location.description" />
       </Card>
-
-      <!-- Details (notes, custom fields) -->
-      <BaseCard v-if="locationDetails.length > 0" class="mt-4">
-        <template #title> {{ $t("global.details") }} </template>
-        <DetailsSection :details="locationDetails" />
-      </BaseCard>
 
       <!-- Attachments (non-photo) -->
       <BaseCard v-if="hasNonPhotoAttachments" class="mt-4">
