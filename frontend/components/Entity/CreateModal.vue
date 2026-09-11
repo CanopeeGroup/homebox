@@ -371,7 +371,7 @@
     location: locations.value && locations.value.length > 0 ? locations.value[0] : ({} as EntityOut),
     parentId: null,
     name: "",
-    quantity: 1,
+    quantity: 0,
     description: "",
     color: "",
     // Populated by the barcode product-import flow; passed through on create (#1578).
@@ -386,7 +386,7 @@
       // Template was deselected, clear template data and remove from storage
       templateData.value = null;
       templateUserSelected.value = false;
-      form.quantity = 1;
+      form.quantity = 0;
       localStorage.removeItem(LAST_TEMPLATE_KEY);
       return;
     }
@@ -471,7 +471,7 @@
     templateData.value = null;
     templateUserSelected.value = false;
     showTemplateDetails.value = false;
-    form.quantity = 1;
+    form.quantity = 0;
     localStorage.removeItem(LAST_TEMPLATE_KEY);
   }
 
@@ -704,7 +704,7 @@
     }
 
     form.name = "";
-    form.quantity = 1;
+    form.quantity = 0;
     form.description = "";
     form.color = "";
     form.manufacturer = "";
