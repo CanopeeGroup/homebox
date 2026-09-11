@@ -1,23 +1,34 @@
 <template>
   <!-- Touch devices: a viewport-fixed picker is not displaced by the virtual keyboard. -->
-  <template v-if="compact && useTouchLayout">
-    <Button
-      :id="id"
-      variant="outline"
-      size="icon"
-      role="combobox"
-      :aria-expanded="open"
-      :aria-label="$t('components.template.apply_template')"
-      :class="value ? 'border-primary text-primary' : ''"
-      @click="open = true"
-    >
-      <MdiFileDocumentOutline class="size-5" />
-    </Button>
+  <template v-if="useTouchLayout">
+    <div :class="compact ? '' : 'flex flex-col gap-1'">
+      <Label v-if="!compact" :for="id" class="px-1">{{ $t("components.template.selector.label") }}</Label>
+      <Button
+        :id="id"
+        type="button"
+        variant="outline"
+        :size="compact ? 'icon' : 'default'"
+        role="combobox"
+        :aria-expanded="open"
+        :aria-label="$t('components.template.apply_template')"
+        :class="[value ? 'border-primary text-primary' : '', !compact && 'w-full justify-between']"
+        @click="open = true"
+      >
+        <MdiFileDocumentOutline v-if="compact" class="size-5" />
+        <template v-else>
+          <span class="min-w-0 flex-auto truncate text-left">
+            {{ value?.name || $t("components.template.selector.select") }}
+          </span>
+          <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
+        </template>
+      </Button>
+    </div>
 
     <div v-if="open" class="fixed inset-0 z-[100] flex h-dvh flex-col bg-background p-3">
       <div class="mb-2 flex shrink-0 items-center justify-between gap-2">
         <strong class="text-base">{{ $t("components.template.selector.label") }}</strong>
         <Button
+          type="button"
           size="icon"
           variant="ghost"
           :aria-label="$t('components.template.selector.close')"
@@ -68,6 +79,7 @@
     <PopoverTrigger as-child>
       <Button
         :id="id"
+        type="button"
         variant="outline"
         size="icon"
         role="combobox"
@@ -123,7 +135,14 @@
 
     <Popover v-model:open="open">
       <PopoverTrigger as-child>
-        <Button :id="id" variant="outline" role="combobox" :aria-expanded="open" class="w-full justify-between">
+        <Button
+          :id="id"
+          type="button"
+          variant="outline"
+          role="combobox"
+          :aria-expanded="open"
+          class="w-full justify-between"
+        >
           {{ value && value.name ? value.name : $t("components.template.selector.select") }}
           <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
