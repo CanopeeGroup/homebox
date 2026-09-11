@@ -9,7 +9,6 @@
     <OutdatedModal v-if="status" :status="status" />
     <EntityCreateModal />
     <WipeInventoryDialog />
-    <TagCreateModal />
     <ItemBarcodeModal />
     <AppQuickMenuModal :actions="quickMenuActions" />
     <AppScannerModal />
@@ -284,7 +283,6 @@
   import OutdatedModal from "~/components/App/OutdatedModal.vue";
   import EntityCreateModal from "~/components/Entity/CreateModal.vue";
   import WipeInventoryDialog from "~/components/WipeInventoryDialog.vue";
-  import TagCreateModal from "~/components/Tag/CreateModal.vue";
   import ItemBarcodeModal from "~/components/Item/BarcodeModal.vue";
   import AppQuickMenuModal from "~/components/App/QuickMenuModal.vue";
   import AppScannerModal from "~/components/App/ScannerModal.vue";
@@ -368,12 +366,6 @@
       name: computed(() => t("menu.create_location")),
       shortcut: "Shift+2",
       dialogId: DialogID.CreateEntity,
-    },
-    {
-      id: 2,
-      name: computed(() => t("menu.create_tag")),
-      shortcut: "Shift+3",
-      dialogId: DialogID.CreateTag,
     },
   ];
 
