@@ -32,7 +32,6 @@
   import ItemAttachmentsList from "~/components/Item/AttachmentsList.vue";
   import ItemImageDialog from "~/components/Item/ImageDialog.vue";
   import LocationCard from "~/components/Location/Card.vue";
-  import TagChip from "~/components/Tag/Chip.vue";
 
   definePageMeta({
     middleware: ["auth"],
@@ -276,9 +275,6 @@
                   {{ $t("global.created") }}
                   <DateTime :date="location?.createdAt" />
                 </div>
-              </div>
-              <div v-if="location.tags && location.tags.length > 0" class="mt-2 flex flex-wrap gap-1">
-                <TagChip v-for="tag in location.tags" :key="tag.id" :tag="tag" size="sm" />
               </div>
             </div>
             <div class="ml-auto mt-2 flex flex-wrap items-center justify-between gap-2">
