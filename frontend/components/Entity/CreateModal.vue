@@ -3,16 +3,12 @@
     <template #title>
       <span>{{ selectedEntityType?.isLocation ? $t("menu.create_location") : $t("menu.create_object") }}</span>
     </template>
-    <template #header-actions>
+    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="create()">
       <TemplateSelector
         v-if="!selectedEntityType?.isLocation"
         v-model="selectedTemplate"
-        compact
         @template-selected="handleTemplateSelected"
       />
-    </template>
-
-    <form class="flex min-w-0 flex-col gap-2" @submit.prevent="create()">
       <LocationSelector v-model="form.location" />
 
       <!-- Template Info Display - Collapsible banner with distinct styling -->
@@ -154,22 +150,17 @@
         @selected="appendPhotos"
       />
       <div class="mt-4 flex flex-row-reverse">
-        <ButtonGroup>
-          <Button :disabled="loading" type="submit" class="group">
-            <div class="relative mx-2">
-              <div
-                class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:rotate-[360deg]"
-              >
-                <MdiPackageVariant class="size-5 group-hover:hidden" />
-                <MdiPackageVariantClosed class="hidden size-5 group-hover:block" />
-              </div>
+        <Button :disabled="loading" type="submit" class="group">
+          <div class="relative mx-2">
+            <div
+              class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:rotate-[360deg]"
+            >
+              <MdiPackageVariant class="size-5 group-hover:hidden" />
+              <MdiPackageVariantClosed class="hidden size-5 group-hover:block" />
             </div>
-            {{ $t("global.create") }}
-          </Button>
-          <Button variant="outline" :disabled="loading" type="button" @click="create(false)">
-            {{ $t("global.create_and_add") }}
-          </Button>
-        </ButtonGroup>
+          </div>
+          {{ $t("global.create") }}
+        </Button>
       </div>
 
       <PhotoUploaderPreview
@@ -187,7 +178,7 @@
   import { useI18n } from "vue-i18n";
   import { DialogID } from "@/components/ui/dialog-provider/utils";
   import { toast } from "@/components/ui/sonner";
-  import { Button, ButtonGroup } from "~/components/ui/button";
+  import { Button } from "~/components/ui/button";
   import BaseModal from "@/components/App/CreateModal.vue";
   import type {
     EntityCreate,
