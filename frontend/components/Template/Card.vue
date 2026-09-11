@@ -97,8 +97,10 @@
       @update:model-value="$emit('update:selected', $event === true)"
     />
     <CardHeader :class="compact && 'min-w-0 flex-1 p-0'">
-      <CardTitle class="truncate">{{ template.name }}</CardTitle>
-      <CardDescription v-if="template.description" :class="compact ? 'truncate' : 'line-clamp-2'">
+      <CardTitle :class="compact ? 'truncate text-base font-semibold leading-5' : 'truncate'">
+        {{ template.name }}
+      </CardTitle>
+      <CardDescription v-if="template.description" :class="compact ? 'truncate text-xs leading-4' : 'line-clamp-2'">
         {{ template.description }}
       </CardDescription>
     </CardHeader>
