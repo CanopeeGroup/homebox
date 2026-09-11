@@ -376,6 +376,7 @@
             "selected_count": "{count} sélectionné(s)",
             "selector": {
                 "clear": "Effacer les modèles sélectionnés",
+                "close": "Fermer la recherche de modèles",
                 "label": "Modèle (Optionnel)",
                 "not_found": "Aucun modèle trouvé",
                 "search": "Chercher un modèle...…",
