@@ -737,6 +737,7 @@
     "languages.en@pirate": "English (Pirate)",
     "languages.sr-RS": "Serbian (Serbia)",
     "locations": {
+        "no_sub_locations": "No sublocations",
         "child_locations": "Child Locations",
         "collapse_tree": "Collapse Tree",
         "expand_tree": "Expand Tree",
@@ -789,6 +790,7 @@
         "total_entries": "Total Entries"
     },
     "menu": {
+        "journal": "Journal",
         "collection": "Collection",
         "create_item": "Object",
         "create_object": "Create Object",
@@ -801,6 +803,29 @@
         "scanner": "Scanner",
         "search": "Search",
         "templates": "Templates"
+    },
+    "journal": {
+        "action": "Action",
+        "create": "Added",
+        "date": "Date",
+        "delete": "Deleted",
+        "empty": "No changes have been logged yet.",
+        "load_failed": "Could not load the journal",
+        "path": "Operation",
+        "refresh": "Refresh",
+        "resource": "Resource",
+        "resources": {
+            "actions": "Bulk action",
+            "entities": "Object",
+            "group": "Import / export",
+            "groups": "Collection",
+            "maintenance": "Maintenance",
+            "notifiers": "Notification",
+            "templates": "Template",
+            "users": "User"
+        },
+        "update": "Modified",
+        "user": "User"
     },
     "pages": {
         "templates": {
