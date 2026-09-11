@@ -734,7 +734,12 @@
         "profile": "Profil",
         "scanner": "Numériser",
         "search": "Recherche",
+        "settings": "Réglages",
         "templates": "Modèles"
+    },
+    "settings": {
+        "description": "Gérez l’entretien, votre profil et les paramètres de la collection.",
+        "title": "Réglages"
     },
     "journal": {
         "action": "Action",
