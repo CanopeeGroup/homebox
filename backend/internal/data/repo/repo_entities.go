@@ -380,7 +380,7 @@ func (r *EntityRepository) resolveDefaultEntityType(ctx context.Context, gid uui
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			name := "Item"
+			name := "Object"
 			if isLocation {
 				name = "Location"
 			}
