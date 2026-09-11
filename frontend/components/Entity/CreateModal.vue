@@ -1,15 +1,7 @@
 <template>
   <BaseModal :dialog-id="DialogID.CreateEntity">
     <template #title>
-      <div class="flex items-center gap-2 text-nowrap">
-        <span>Create</span>
-        <EntitySelector
-          :selected-entity-type="selectedEntityType?.id"
-          :entity-types="subItemCreate ? entityTypes.filter(t => !t.isLocation) : entityTypes"
-          size="sm"
-          @entity-type-changed="onEntityTypeChanged"
-        />
-      </div>
+      <span>{{ selectedEntityType?.isLocation ? $t("menu.create_location") : $t("menu.create_object") }}</span>
     </template>
     <template #header-actions>
       <div class="flex gap-2">
@@ -117,10 +109,6 @@
                 {{ templateData.defaultLocation.name }}
               </div>
             </div>
-            <div v-if="templateData.defaultTags && templateData.defaultTags.length > 0" class="mt-1">
-              <span class="font-medium">{{ $t("global.tags") }}:</span>
-              {{ templateData.defaultTags.map((t: any) => t.name).join(", ") }}
-            </div>
             <div v-if="templateData.defaultDescription" class="mt-1">
               <p class="font-medium">{{ $t("components.template.form.item_description") }}:</p>
               <p class="ml-2">{{ templateData.defaultDescription }}</p>
@@ -183,7 +171,6 @@
         "
         :max-length="1000"
       />
-      <TagSelector v-model="form.tags" :tags="tags ?? []" />
       <PhotoUploader
         :label="
           $t('components.entity.create_modal.entity_photo', {
@@ -236,7 +223,6 @@
     EntityOut,
     EntityTypeSummary,
   } from "~~/lib/api/types/data-contracts";
-  import { useTagStore } from "~/stores/tags";
   import { useLocationStore } from "~~/stores/locations";
   import MdiBarcode from "~icons/mdi/barcode";
   import MdiBarcodeScan from "~icons/mdi/barcode-scan";
@@ -247,7 +233,6 @@
   import MdiClose from "~icons/mdi/close";
   import { AttachmentTypes } from "~~/lib/api/types/non-generated";
   import { useDialog, useDialogHotkey } from "~/components/ui/dialog-provider";
-  import TagSelector from "~/components/Tag/Selector.vue";
   import ItemSelector from "~/components/Item/Selector.vue";
   import TemplateSelector from "~/components/Template/Selector.vue";
   import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
@@ -264,7 +249,6 @@
     type PhotoPreview,
   } from "~/components/Form/photo-uploader";
   import { useEntityTypeStore } from "~~/stores/entityTypes";
-  import EntitySelector from "~/components/Entity/Selector.vue";
 
   const { t } = useI18n();
   const { openDialog, closeDialog, registerOpenDialogCallback } = useDialog();
@@ -283,21 +267,11 @@
   const locationsStore = useLocationStore();
   const locations = computed(() => locationsStore.allLocations);
 
-  const tagStore = useTagStore();
-  const tags = computed(() => tagStore.tags);
-
   const route = useRoute();
 
   const parent = ref();
   const { query, results, isLoading, triggerSearch } = useItemSearch(api, { immediate: false });
   const subItemCreate = ref();
-
-  const tagId = computed(() => {
-    if (route.fullPath.includes("/tag/")) {
-      return route.params.id;
-    }
-    return null;
-  });
 
   const locationId = computed(() => {
     if (route.fullPath.includes("/location/")) {
@@ -318,44 +292,6 @@
   // Entity type selection
   const entityTypes = computed(() => entityTypeStore.allTypes);
   const selectedEntityType = ref<EntityTypeSummary | null>(null);
-
-  async function onEntityTypeChanged(typeId: string) {
-    const et = entityTypes.value.find(t => t.id === typeId);
-    selectedEntityType.value = et || null;
-
-    // A template the user picked explicitly takes precedence over the entity
-    // type's default template, so don't overwrite it when the type changes.
-    // (Locations don't use templates, so they still clear it below.)
-    if (templateUserSelected.value && !et?.isLocation) {
-      return;
-    }
-
-    // If the selected type has a default template and is not a location, auto-apply it
-    if (et?.isLocation || !et?.defaultTemplateId || !et.defaultTemplate) {
-      clearTemplate();
-    } else {
-      const { data, error } = await api.templates.get(et.defaultTemplateId);
-      if (!error && data) {
-        selectedTemplate.value = {
-          id: data.id,
-          name: data.name,
-          description: data.description,
-        } as EntityTemplateSummary;
-        templateData.value = data;
-        form.quantity = data.defaultQuantity;
-        if (data.defaultName) form.name = data.defaultName;
-        if (data.defaultDescription) form.description = data.defaultDescription;
-        if (data.defaultLocation) {
-          const found = locations.value.find(l => l.id === data.defaultLocation!.id);
-          if (found) form.location = found;
-        }
-        if (data.defaultTags && data.defaultTags.length > 0) {
-          form.tags = data.defaultTags.map(l => l.id);
-        }
-        toast.success(t("components.template.toast.applied", { name: data.name }));
-      }
-    }
-  }
 
   const LAST_TEMPLATE_KEY = "homebox:lastUsedTemplate";
 
@@ -418,10 +354,6 @@
         form.location = found;
       }
     }
-    // Pre-fill tags from template
-    if (data.defaultTags && data.defaultTags.length > 0) {
-      form.tags = data.defaultTags.map(l => l.id);
-    }
 
     // Save template ID to localStorage for persistence
     localStorage.setItem(LAST_TEMPLATE_KEY, template.id);
@@ -459,10 +391,6 @@
       if (found) {
         form.location = found;
       }
-    }
-    // Pre-fill tags from template
-    if (data.defaultTags && data.defaultTags.length > 0) {
-      form.tags = data.defaultTags.map(l => l.id);
     }
   }
 
@@ -514,6 +442,7 @@
 
   onMounted(() => {
     const cleanup = registerOpenDialogCallback(DialogID.CreateEntity, async params => {
+      await entityTypeStore.ensureFetched();
       subItemCreate.value = false;
       let parentItemLocationId = null;
       parent.value = {};
@@ -579,10 +508,6 @@
           form.location = found;
         }
       }
-
-      if (tagId.value) {
-        form.tags = tags.value.filter(l => l.id === tagId.value).map(l => l.id);
-      }
     });
 
     onUnmounted(cleanup);
@@ -626,7 +551,7 @@
         parentId: form.location?.id || null,
         entityTypeId: selectedEntityType.value?.id || "",
         quantity: 1,
-        tagIds: form.tags,
+        tagIds: [],
       });
       error = result.error;
       data = result.data;
@@ -636,7 +561,7 @@
         name: form.name,
         description: form.description,
         parentId: form.location.id as string,
-        tagIds: form.tags,
+        tagIds: [],
         quantity: form.quantity,
         entityTypeId: selectedEntityType.value?.id || "",
       };
@@ -653,7 +578,7 @@
         description: form.description,
         manufacturer: form.manufacturer,
         modelNumber: form.modelNumber,
-        tagIds: form.tags,
+        tagIds: [],
         entityTypeId: selectedEntityType.value?.id || "",
       };
 
