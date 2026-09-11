@@ -109,9 +109,9 @@
         :trigger-focus="focused"
         :autofocus="true"
         :label="
-          $t('components.entity.create_modal.entity_name', {
-            type: selectedEntityType ? t(selectedEntityType.name) : '',
-          })
+          selectedEntityType?.isLocation
+            ? $t('components.location.create_modal.location_name')
+            : $t('components.item.create_modal.item_name')
         "
         :max-length="255"
         :min-length="1"
@@ -119,35 +119,10 @@
       <FormTextField
         v-if="!selectedEntityType?.isLocation"
         v-model.number="form.quantity"
-        :label="
-          $t('components.entity.create_modal.entity_quantity', {
-            type: t(selectedEntityType ? selectedEntityType.name : 'global.entity'),
-          })
-        "
+        :label="$t('components.item.create_modal.item_quantity')"
         type="number"
         step="any"
         :min="0"
-      />
-      <FormTextArea
-        v-if="selectedEntityType?.isLocation"
-        v-model="form.description"
-        :label="
-          $t('components.entity.create_modal.entity_description', {
-            type: t(selectedEntityType ? selectedEntityType.name : 'global.entity'),
-          })
-        "
-        :max-length="1000"
-      />
-      <PhotoUploader
-        v-if="selectedEntityType?.isLocation"
-        :label="
-          $t('components.entity.create_modal.entity_photo', {
-            type: t(selectedEntityType ? selectedEntityType.name : 'global.entity'),
-          })
-        "
-        :button-label="$t('components.entity.create_modal.upload_photos')"
-        :existing-count="form.photos.length"
-        @selected="appendPhotos"
       />
       <div class="mt-4 flex flex-row-reverse">
         <Button :disabled="loading" type="submit" class="group" data-entity-create-submit="true">
@@ -162,14 +137,6 @@
           {{ $t("global.create") }}
         </Button>
       </div>
-
-      <PhotoUploaderPreview
-        v-if="selectedEntityType?.isLocation"
-        :photos="form.photos"
-        @delete="deletePhotoAt"
-        @rotate="rotatePhotoAt"
-        @set-primary="setPrimaryPhotoAt"
-      />
     </form>
   </BaseModal>
 </template>
@@ -199,16 +166,7 @@
   import TemplateSelector from "~/components/Template/Selector.vue";
   import LocationSelector from "~/components/Location/Selector.vue";
   import FormTextField from "~/components/Form/TextField.vue";
-  import FormTextArea from "~/components/Form/TextArea.vue";
-  import PhotoUploader from "~/components/Form/PhotoUploader.vue";
-  import PhotoUploaderPreview from "~/components/Form/PhotoUploaderPreview.vue";
-  import {
-    deletePhoto,
-    dataURLtoFile,
-    rotatePhotoPreview,
-    setPrimaryPhoto,
-    type PhotoPreview,
-  } from "~/components/Form/photo-uploader";
+  import { dataURLtoFile, type PhotoPreview } from "~/components/Form/photo-uploader";
   import { useEntityTypeStore } from "~~/stores/entityTypes";
 
   const { t } = useI18n();
@@ -253,6 +211,9 @@
   // Entity type selection
   const entityTypes = computed(() => entityTypeStore.allTypes);
   const selectedEntityType = ref<EntityTypeSummary | null>(null);
+  const entityTypeName = computed(() =>
+    selectedEntityType.value?.isLocation ? t("menu.create_location") : t("menu.create_item")
+  );
 
   const LAST_TEMPLATE_KEY = "homebox:lastUsedTemplate";
 
@@ -265,7 +226,7 @@
   const templateUserSelected = ref(false);
   const showTemplateDetails = ref(false);
   const form = reactive({
-    location: locations.value && locations.value.length > 0 ? locations.value[0] : ({} as EntityOut),
+    location: {} as EntityOut,
     parentId: null,
     name: "",
     quantity: 0,
@@ -387,26 +348,6 @@
     form.photos.push(...photos);
   }
 
-  function deletePhotoAt(index: number) {
-    form.photos = deletePhoto(form.photos, index);
-  }
-
-  function setPrimaryPhotoAt(index: number) {
-    form.photos = setPrimaryPhoto(form.photos, index);
-  }
-
-  async function rotatePhotoAt(index: number) {
-    const photo = form.photos[index];
-    if (!photo) return;
-
-    try {
-      form.photos[index] = await rotatePhotoPreview(photo);
-    } catch (error) {
-      toast.error(t("components.entity.create_modal.toast.rotate_process_failed"));
-      console.error(error);
-    }
-  }
-
   onMounted(() => {
     const cleanup = registerOpenDialogCallback(DialogID.CreateEntity, async params => {
       await entityTypeStore.ensureFetched();
@@ -498,7 +439,7 @@
     if (loading.value) {
       toast.error(
         t("components.entity.create_modal.toast.already_creating", {
-          type: t(selectedEntityType.value ? selectedEntityType.value.name : "global.entity"),
+          type: entityTypeName.value,
         })
       );
       return;
@@ -558,7 +499,7 @@
       loading.value = false;
       toast.error(
         t("components.entity.create_modal.toast.create_failed", {
-          type: t(selectedEntityType.value ? selectedEntityType.value.name : "global.entity"),
+          type: entityTypeName.value,
         })
       );
       return;
@@ -567,7 +508,7 @@
     if (!selectedEntityType.value?.isLocation) {
       toast.success(
         t("components.entity.create_modal.toast.create_success", {
-          type: t(selectedEntityType.value ? selectedEntityType.value.name : "global.entity"),
+          type: entityTypeName.value,
         })
       );
     }
@@ -598,7 +539,7 @@
     form.photos = [];
     form.tags = [];
     form.parentId = null;
-    form.location = locations.value?.[0] ?? ({} as EntityOut);
+    form.location = {} as EntityOut;
     parent.value = {};
     selectedTemplate.value = null;
     templateData.value = null;
