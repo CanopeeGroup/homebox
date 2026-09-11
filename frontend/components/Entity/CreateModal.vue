@@ -564,6 +564,14 @@
       return;
     }
 
+    if (!selectedEntityType.value?.isLocation) {
+      toast.success(
+        t("components.entity.create_modal.toast.create_success", {
+          type: t(selectedEntityType.value ? selectedEntityType.value.name : "global.entity"),
+        })
+      );
+    }
+
     if (form.photos.length > 0) {
       for (const photo of form.photos) {
         const { error: attachError } = await api.items.attachments.add(
