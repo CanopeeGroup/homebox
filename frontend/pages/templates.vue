@@ -4,10 +4,7 @@
   import MdiPlus from "~icons/mdi/plus";
   import MdiDownload from "~icons/mdi/download";
   import MdiUpload from "~icons/mdi/upload";
-  import MdiViewGrid from "~icons/mdi/view-grid";
-  import MdiViewList from "~icons/mdi/view-list";
   import MdiDelete from "~icons/mdi/delete";
-  import { useLocalStorage } from "@vueuse/core";
   import { Button } from "@/components/ui/button";
   import { Checkbox } from "@/components/ui/checkbox";
   import { useDialog } from "@/components/ui/dialog-provider";
@@ -57,7 +54,6 @@
   const csvImportInput = ref<HTMLInputElement>();
   const importing = ref(false);
   const exporting = ref(false);
-  const viewMode = useLocalStorage<"grid" | "compact">("homebox:template-view", "grid");
   const selectedTemplateIds = ref<string[]>([]);
   const allTemplatesSelected = computed(
     () =>
@@ -182,24 +178,6 @@
     <div class="mb-4 flex flex-wrap justify-between gap-2">
       <BaseSectionHeader>{{ $t("pages.templates.title") }}</BaseSectionHeader>
       <div class="flex flex-wrap justify-end gap-2">
-        <Button
-          size="icon"
-          :variant="viewMode === 'grid' ? 'default' : 'outline'"
-          :title="$t('components.template.view_grid')"
-          :aria-pressed="viewMode === 'grid'"
-          @click="viewMode = 'grid'"
-        >
-          <MdiViewGrid />
-        </Button>
-        <Button
-          size="icon"
-          :variant="viewMode === 'compact' ? 'default' : 'outline'"
-          :title="$t('components.template.view_compact')"
-          :aria-pressed="viewMode === 'compact'"
-          @click="viewMode = 'compact'"
-        >
-          <MdiViewList />
-        </Button>
         <input
           ref="jsonImportInput"
           class="hidden"
@@ -258,15 +236,12 @@
       </Button>
     </div>
 
-    <div
-      v-if="templates && templates.length > 0"
-      :class="viewMode === 'compact' ? 'flex flex-col gap-1' : 'grid gap-4 md:grid-cols-2 lg:grid-cols-3'"
-    >
+    <div v-if="templates && templates.length > 0" class="flex flex-col gap-1">
       <TemplateCard
         v-for="tpl in templates"
         :key="tpl.id"
         :template="tpl"
-        :compact="viewMode === 'compact'"
+        compact
         selectable
         :selected="selectedTemplateIds.includes(tpl.id)"
         @update:selected="setTemplateSelected(tpl.id, $event)"
