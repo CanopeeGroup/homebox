@@ -378,7 +378,7 @@
             "selector": {
                 "clear": "Effacer les modèles sélectionnés",
                 "close": "Fermer la recherche de modèles",
-                "label": "Modèle (Optionnel)",
+                "label": "Sélection Produit",
                 "not_found": "Aucun modèle trouvé",
                 "search": "Chercher un modèle...…",
                 "select": "Sélectionner un modèle...…"
