@@ -43,7 +43,7 @@ func (Entity) Fields() []ent.Field {
 			MaxLen(1000).
 			Optional(),
 		field.Float("quantity").
-			Default(1),
+			Default(0),
 		field.Bool("insured").
 			Default(false),
 		field.Bool("archived").
