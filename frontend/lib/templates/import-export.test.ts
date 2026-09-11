@@ -1,13 +1,20 @@
 import { describe, expect, test } from "vitest";
 import type { EntityTemplateOut } from "../api/types/data-contracts";
-import { createTemplateExport, parseTemplateExport, TEMPLATE_EXPORT_FORMAT, toTemplateCreate } from "./import-export";
+import {
+  createTemplateCsv,
+  createTemplateExport,
+  parseTemplateCsv,
+  parseTemplateExport,
+  TEMPLATE_EXPORT_FORMAT,
+  toTemplateCreate,
+} from "./import-export";
 
 const template = {
   id: "template-id",
   name: "Laptop",
   description: "Portable computer",
   notes: "Inventory template",
-  defaultQuantity: 1,
+  defaultQuantity: 0,
   defaultInsured: true,
   defaultName: "Laptop {n}",
   defaultDescription: "",
@@ -66,5 +73,21 @@ describe("template import/export", () => {
     expect(result.defaultLocationId).toBe("target-location");
     expect(result.defaultTagIds).toEqual(["target-tag"]);
     expect(result.fields[0]?.id).toBe("00000000-0000-0000-0000-000000000000");
+  });
+
+  test("exports a semicolon-delimited CSV compatible with EntryName and Article", () => {
+    const csv = createTemplateCsv([{ ...template, name: 'Laptop; 13"', defaultModelNumber: 'FR"13' }]);
+
+    expect(csv).toContain("EntryName;Article\r\n");
+    expect(csv).toContain('"Laptop; 13""";"FR""13"');
+  });
+
+  test("imports EntryName into both names and Article into the model number", () => {
+    const [result] = parseTemplateCsv('\uFEFFEntryName;Article\r\n"Laptop; Pro";ABC-123\r\n');
+
+    expect(result?.name).toBe("Laptop; Pro");
+    expect(result?.defaultName).toBe("Laptop; Pro");
+    expect(result?.defaultModelNumber).toBe("ABC-123");
+    expect(result?.defaultQuantity).toBe(0);
   });
 });
