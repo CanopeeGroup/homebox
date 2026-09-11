@@ -722,7 +722,8 @@
     },
     "menu": {
         "collection": "Collection",
-        "create_item": "Article / Ressource",
+        "create_item": "Objet",
+        "create_object": "Créer un objet",
         "create_location": "Emplacement",
         "create_tag": "Étiquette",
         "home": "Accueil",
