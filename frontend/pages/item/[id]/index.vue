@@ -36,7 +36,6 @@
   import ItemImageDialog from "~/components/Item/ImageDialog.vue";
   import ItemDuplicateSettings from "~/components/Item/DuplicateSettings.vue";
   import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-  import TagChip from "~/components/Tag/Chip.vue";
   import DateTime from "~/components/global/DateTime.vue";
   import LabelMaker from "~/components/global/LabelMaker.vue";
   import Markdown from "~/components/global/Markdown.vue";
@@ -132,10 +131,6 @@
     attachmentId: string;
     originalType?: string;
   };
-
-  const itemTags = computed(() => {
-    return useTagStore().withAncestors(item.value?.tags || []);
-  });
 
   const photos = computed<Photo[]>(() => {
     if (!item.value) {
@@ -684,9 +679,6 @@
               <h1 class="text-wrap pb-1 text-2xl">
                 {{ item ? item.name : "" }}
               </h1>
-              <div class="flex flex-wrap gap-2 pb-1">
-                <TagChip v-for="tag in itemTags" :key="tag.id" :tag="tag" size="sm" :ancestors="tag.ancestors" />
-              </div>
               <div class="flex flex-wrap gap-1 text-wrap text-xs">
                 <div>
                   {{ $t("items.created_at") }}
