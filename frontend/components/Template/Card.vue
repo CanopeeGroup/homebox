@@ -10,6 +10,7 @@
 
   const props = defineProps<{
     template: EntityTemplateSummary;
+    compact?: boolean;
   }>();
 
   const emit = defineEmits<{
@@ -83,14 +84,14 @@
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
+  <Card :class="compact && 'flex min-w-0 items-center gap-2 px-3 py-2'">
+    <CardHeader :class="compact && 'min-w-0 flex-1 p-0'">
       <CardTitle class="truncate">{{ template.name }}</CardTitle>
-      <CardDescription v-if="template.description" class="line-clamp-2">
+      <CardDescription v-if="template.description" :class="compact ? 'truncate' : 'line-clamp-2'">
         {{ template.description }}
       </CardDescription>
     </CardHeader>
-    <CardFooter class="flex justify-end gap-1">
+    <CardFooter :class="compact ? 'shrink-0 gap-1 p-0' : 'flex justify-end gap-1'">
       <Button size="icon" variant="outline" class="size-8" as-child :title="$t('components.template.card.edit')">
         <NuxtLink :to="`/template/${template.id}`">
           <MdiPencil class="size-4" />
