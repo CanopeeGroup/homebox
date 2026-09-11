@@ -249,6 +249,7 @@
   import MdiPlus from "~icons/mdi/plus";
   import MdiLogout from "~icons/mdi/logout";
   import MdiFileDocumentMultiple from "~icons/mdi/file-document-multiple";
+  import MdiHistory from "~icons/mdi/history";
   import MdiChevronRight from "~icons/mdi/chevron-right";
 
   import {
@@ -422,6 +423,13 @@
       active: computed(() => route.path === "/templates"),
       name: computed(() => t("menu.templates")),
       to: "/templates",
+    },
+    {
+      icon: MdiHistory,
+      id: 8,
+      active: computed(() => route.path === "/journal"),
+      name: computed(() => t("menu.journal")),
+      to: "/journal",
     },
     {
       icon: MdiWrench,

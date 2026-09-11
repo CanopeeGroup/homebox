@@ -118,6 +118,7 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 			a.mwAuthToken,
 			a.mwTenant,
 			a.mwRoles(RoleModeOr, authroles.RoleUser.String()),
+			a.mwAudit,
 		}
 
 		// ownerMW additionally requires role=owner on the tenant collection.
@@ -129,9 +130,11 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 			a.mwTenant,
 			a.mwRoles(RoleModeOr, authroles.RoleUser.String()),
 			a.mwGroupOwner,
+			a.mwAudit,
 		}
 
 		r.Get("/ws/events", chain.ToHandlerFunc(v1Ctrl.HandleCacheWS(), userMW...))
+		r.Get("/audit-logs", chain.ToHandlerFunc(v1Ctrl.HandleAuditLogsGetAll(), userMW...))
 
 		// User management endpoints
 		r.Get("/users/self", chain.ToHandlerFunc(v1Ctrl.HandleUserSelf(), userMW...))
@@ -251,6 +254,7 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 			a.mwAuthToken,
 			a.mwTenant,
 			a.mwRoles(RoleModeOr, authroles.RoleUser.String(), authroles.RoleAttachments.String()),
+			a.mwAudit,
 		}
 
 		r.Get("/products/search-from-barcode", chain.ToHandlerFunc(v1Ctrl.HandleProductSearchFromBarcode(a.conf.Barcode), userMW...))

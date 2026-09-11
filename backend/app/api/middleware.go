@@ -15,6 +15,7 @@ import (
 	v1 "github.com/sysadminsmedia/homebox/backend/app/api/handlers/v1"
 	"github.com/sysadminsmedia/homebox/backend/internal/core/services"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/repo"
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/config"
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/validate"
 	"github.com/sysadminsmedia/homebox/backend/pkgs/hasher"
@@ -358,6 +359,50 @@ func (a *app) mwTenant(next errchain.Handler) errchain.Handler {
 		span.SetAttributes(attribute.String("tenant.outcome", "ok"))
 		r = r.WithContext(services.SetTenantCtx(spanCtx, tenantID))
 		return next.ServeHTTP(w, r)
+	})
+}
+
+// mwAudit records every successful authenticated mutation in the current
+// collection. Logging is best-effort: an audit storage failure is reported to
+// the server log but never turns an already successful user action into an
+// error response.
+func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
+	return errchain.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+		err := next.ServeHTTP(w, r)
+		if err != nil {
+			return err
+		}
+
+		action := map[string]string{
+			http.MethodPost:   "create",
+			http.MethodPut:    "update",
+			http.MethodPatch:  "update",
+			http.MethodDelete: "delete",
+		}[r.Method]
+		if action == "" {
+			return nil
+		}
+
+		auth := services.NewContext(r.Context())
+		if auth.User == nil || auth.GID == uuid.Nil {
+			return nil
+		}
+		resourcePath := strings.TrimPrefix(r.URL.Path, "/api/v1/")
+		resource := strings.Split(strings.Trim(resourcePath, "/"), "/")[0]
+		entry := repo.AuditLogEntry{
+			ID:        uuid.New(),
+			GroupID:   auth.GID,
+			UserID:    auth.UID,
+			UserName:  auth.User.Name,
+			Action:    action,
+			Resource:  resource,
+			Path:      r.URL.Path,
+			CreatedAt: time.Now().UTC(),
+		}
+		if auditErr := a.repos.AuditLogs.Create(r.Context(), entry); auditErr != nil {
+			log.Warn().Err(auditErr).Str("audit.path", r.URL.Path).Msg("failed to persist audit log")
+		}
+		return nil
 	})
 }
 
