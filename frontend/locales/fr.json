@@ -327,6 +327,8 @@
         },
         "template": {
             "apply_template": "Appliquer un modèle",
+            "export": "Exporter",
+            "import": "Importer",
             "card": {
                 "delete": "Supprimer le modèle",
                 "duplicate": "Dupliquer le modèle",
