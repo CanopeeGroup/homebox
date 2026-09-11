@@ -289,6 +289,7 @@
         "location": {
             "selector": {
                 "clear": "Clear Location Selection",
+                "close": "Close location search",
                 "no_location_found": "No location found",
                 "parent_location": "Parent Location",
                 "search_location": "Search Locations",
