@@ -109,6 +109,21 @@
                 "your_collections": "Vos collections"
             }
         },
+        "entity": {
+            "create_modal": {
+                "clear_template": "Effacer le produit sélectionné",
+                "toast": {
+                    "already_creating": "Création de {type} déjà en cours",
+                    "create_failed": "Impossible de créer : {type}",
+                    "create_success": "{type} créé",
+                    "failed_load_parent": "Impossible de charger l’objet parent ; veuillez le sélectionner manuellement",
+                    "please_select_entity_type": "Veuillez sélectionner un type d’objet.",
+                    "please_select_location": "Veuillez sélectionner un emplacement.",
+                    "rotate_process_failed": "Impossible de traiter la rotation de l’image",
+                    "upload_failed": "Échec du téléversement de la photo : {photoName}"
+                }
+            }
+        },
         "color_selector": {
             "clear": "Effacer Couleur",
             "color": "Couleur",
