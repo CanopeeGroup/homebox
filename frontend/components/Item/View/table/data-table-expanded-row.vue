@@ -1,16 +1,10 @@
 <script setup lang="ts">
-  import { computed } from "vue";
   import type { EntitySummary } from "~/lib/api/types/data-contracts";
-  import TagChip from "@/components/Tag/Chip.vue";
   import Badge from "~/components/ui/badge/Badge.vue";
 
   const props = defineProps<{
     item: EntitySummary;
   }>();
-
-  const itemTags = computed(() => {
-    return useTagStore().withAncestors(props.item.tags);
-  });
 
   const api = useUserApi();
 
@@ -38,9 +32,6 @@
           {{ item.location.name }}
         </NuxtLink>
       </Badge>
-      <div class="flex flex-wrap gap-2">
-        <TagChip v-for="tag in itemTags" :key="tag.id" :tag="tag" size="sm" :ancestors="tag.ancestors" />
-      </div>
       <p class="whitespace-pre-line break-words text-sm text-muted-foreground">
         {{ item.description || $t("components.item.no_description") }}
       </p>
