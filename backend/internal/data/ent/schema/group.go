@@ -28,7 +28,7 @@ func (Group) Fields() []ent.Field {
 			MaxLen(255).
 			NotEmpty(),
 		field.String("currency").
-			Default("usd"),
+			Default("eur"),
 	}
 }
 

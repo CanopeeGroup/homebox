@@ -6,8 +6,6 @@
   import { toast } from "@/components/ui/sonner";
 
   import MdiAccountMultiple from "~icons/mdi/account-multiple";
-  import MdiEmailPlus from "~icons/mdi/email-plus";
-  import MdiBell from "~icons/mdi/bell";
   import MdiCog from "~icons/mdi/cog";
   import MdiWrench from "~icons/mdi/wrench";
   import MdiLogout from "~icons/mdi/logout";
@@ -28,6 +26,7 @@
   const confirm = useConfirm();
 
   const currentPath = computed(() => route.path);
+  const isOwner = ref(false);
 
   const tabs = computed(() => [
     {
@@ -36,30 +35,22 @@
       to: "/collection/members",
       icon: MdiAccountMultiple,
     },
-    {
-      id: "invites",
-      label: "collection.tabs.invites",
-      to: "/collection/invites",
-      icon: MdiEmailPlus,
-    },
-    {
-      id: "notifiers",
-      label: "collection.tabs.notifiers",
-      to: "/collection/notifiers",
-      icon: MdiBell,
-    },
-    {
-      id: "settings",
-      label: "collection.tabs.settings",
-      to: "/collection/settings",
-      icon: MdiCog,
-    },
-    {
-      id: "tools",
-      label: "collection.tabs.tools",
-      to: "/collection/tools",
-      icon: MdiWrench,
-    },
+    ...(isOwner.value
+      ? [
+          {
+            id: "settings",
+            label: "collection.tabs.settings",
+            to: "/collection/settings",
+            icon: MdiCog,
+          },
+          {
+            id: "tools",
+            label: "collection.tabs.tools",
+            to: "/collection/tools",
+            icon: MdiWrench,
+          },
+        ]
+      : []),
   ]);
 
   const { selectedCollection, load: reloadCollections } = useCollections();
@@ -104,10 +95,20 @@
     }
   };
 
+  const loadAccess = async () => {
+    if (!selectedCollection.value) {
+      isOwner.value = false;
+      return;
+    }
+    const res = await api.group.getAccess();
+    isOwner.value = !res.error && Boolean(res.data?.isOwner);
+  };
+
   watch(
     () => selectedCollection.value?.id,
     () => {
       void loadMembers();
+      void loadAccess();
     },
     { immediate: true }
   );

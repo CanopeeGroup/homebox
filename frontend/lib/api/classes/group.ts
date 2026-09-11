@@ -10,6 +10,10 @@ import type {
 } from "../types/data-contracts";
 
 export class GroupApi extends BaseAPI {
+  getAccess() {
+    return this.http.get<{ isOwner: boolean }>({ url: route("/groups/access") });
+  }
+
   /**
    * Create a new invitation for the current group.
    */

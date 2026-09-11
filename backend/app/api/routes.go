@@ -166,6 +166,7 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.Get("/groups/all", chain.ToHandlerFunc(v1Ctrl.HandleGroupsGetAll(), userMW...))
 		r.Post("/groups", chain.ToHandlerFunc(v1Ctrl.HandleGroupCreate(), userMW...))
 		r.Get("/groups", chain.ToHandlerFunc(v1Ctrl.HandleGroupGet(), userMW...))
+		r.Get("/groups/access", chain.ToHandlerFunc(v1Ctrl.HandleGroupAccess(), userMW...))
 		r.Put("/groups", chain.ToHandlerFunc(v1Ctrl.HandleGroupUpdate(), ownerMW...))
 		r.Delete("/groups", chain.ToHandlerFunc(v1Ctrl.HandleGroupDelete(), ownerMW...))
 

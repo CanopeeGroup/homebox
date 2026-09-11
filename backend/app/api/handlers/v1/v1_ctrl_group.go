@@ -36,7 +36,23 @@ type (
 	CreateRequest struct {
 		Name string `json:"name" validate:"required"`
 	}
+
+	GroupAccess struct {
+		IsOwner bool `json:"isOwner"`
+	}
 )
+
+// HandleGroupAccess reports whether the current user owns the selected
+// collection. This lets the UI hide administration actions without relying on
+// a global role; write routes remain protected by mwGroupOwner.
+func (ctrl *V1Controller) HandleGroupAccess() errchain.HandlerFunc {
+	fn := func(r *http.Request) (GroupAccess, error) {
+		auth := services.NewContext(r.Context())
+		isOwner, err := ctrl.repo.Groups.IsOwnerOf(auth, auth.UID, auth.GID)
+		return GroupAccess{IsOwner: isOwner}, err
+	}
+	return adapters.Command(fn, http.StatusOK)
+}
 
 // HandleGroupGet godoc
 //

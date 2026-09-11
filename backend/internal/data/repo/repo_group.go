@@ -281,7 +281,7 @@ func (r *GroupRepository) StatsGroup(ctx context.Context, gid uuid.UUID) (GroupS
 
 func (r *GroupRepository) GroupCreate(ctx context.Context, name string, userID uuid.UUID) (Group, error) {
 	if userID == uuid.Nil {
-		return r.groupMapper.MapErr(r.db.Group.Create().SetName(name).Save(ctx))
+		return r.groupMapper.MapErr(r.db.Group.Create().SetName(name).SetCurrency("eur").Save(ctx))
 	}
 
 	tx, err := r.db.Tx(ctx)
@@ -289,7 +289,7 @@ func (r *GroupRepository) GroupCreate(ctx context.Context, name string, userID u
 		return Group{}, err
 	}
 
-	g, err := tx.Group.Create().SetName(name).Save(ctx)
+	g, err := tx.Group.Create().SetName(name).SetCurrency("eur").Save(ctx)
 	if err != nil {
 		_ = tx.Rollback()
 		return Group{}, err
