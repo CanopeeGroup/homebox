@@ -669,6 +669,7 @@
     "languages.sk-SK": "Slovaque",
     "languages.sq-AL": "Albanais",
     "locations": {
+        "no_sub_locations": "Aucun sous-emplacement",
         "child_locations": "Sous-emplacements",
         "collapse_tree": "Minimiser la liste",
         "expand_tree": "Ouvrir l’arborescence",
@@ -721,6 +722,7 @@
         "total_entries": "Nombre d'entrées"
     },
     "menu": {
+        "journal": "Journal",
         "collection": "Collection",
         "create_item": "Objet",
         "create_object": "Créer un objet",
@@ -733,6 +735,29 @@
         "scanner": "Numériser",
         "search": "Recherche",
         "templates": "Modèles"
+    },
+    "journal": {
+        "action": "Action",
+        "create": "Ajout",
+        "date": "Date",
+        "delete": "Suppression",
+        "empty": "Aucun changement n’a encore été journalisé.",
+        "load_failed": "Impossible de charger le journal",
+        "path": "Opération",
+        "refresh": "Actualiser",
+        "resource": "Ressource",
+        "resources": {
+            "actions": "Action groupée",
+            "entities": "Objet",
+            "group": "Import / export",
+            "groups": "Collection",
+            "maintenance": "Maintenance",
+            "notifiers": "Notification",
+            "templates": "Modèle",
+            "users": "Utilisateur"
+        },
+        "update": "Modification",
+        "user": "Utilisateur"
     },
     "pages": {
         "templates": {
