@@ -3,6 +3,8 @@
   import MdiHistory from "~icons/mdi/history";
   import MdiRefresh from "~icons/mdi/refresh";
   import MdiDownload from "~icons/mdi/download";
+  import MdiChevronLeft from "~icons/mdi/chevron-left";
+  import MdiChevronRight from "~icons/mdi/chevron-right";
   import BaseContainer from "@/components/Base/Container.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
   import DateTime from "~/components/global/DateTime.vue";
@@ -15,18 +17,26 @@
   useHead({ title: computed(() => `HomeBox | ${t("menu.journal")}`) });
 
   const api = useUserApi();
+  const page = ref(1);
+  const pageSize = 1000;
+  const exporting = ref(false);
   const {
-    data: entries,
+    data: journal,
     refresh,
     pending,
-  } = useAsyncData("audit-logs", async () => {
-    const { data, error } = await api.auditLogs.getAll();
-    if (error) {
-      toast.error(t("journal.load_failed"));
-      return [];
-    }
-    return data;
-  });
+  } = useAsyncData(
+    "audit-logs",
+    async () => {
+      const { data, error } = await api.auditLogs.getPage(page.value, pageSize);
+      if (error) {
+        toast.error(t("journal.load_failed"));
+        return { items: [], page: 1, pageSize, total: 0, totalPages: 0 };
+      }
+      return data;
+    },
+    { watch: [page] }
+  );
+  const entries = computed(() => journal.value?.items ?? []);
 
   const actionVariant = (action: string): "default" | "destructive" | "secondary" => {
     if (action === "delete") return "destructive";
@@ -44,9 +54,24 @@
   };
 
   const csvCell = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
-  const exportCsv = () => {
-    if (!entries.value?.length) return;
-    const rows = entries.value.map(entry => [
+  const exportCsv = async () => {
+    if (!journal.value?.total || exporting.value) return;
+    exporting.value = true;
+    const allEntries = [] as typeof entries.value;
+    try {
+      const totalPages = journal.value.totalPages;
+      for (let currentPage = 1; currentPage <= totalPages; currentPage++) {
+        const result = await api.auditLogs.getPage(currentPage, pageSize);
+        if (result.error) {
+          toast.error(t("journal.export_failed"));
+          return;
+        }
+        allEntries.push(...result.data.items);
+      }
+    } finally {
+      exporting.value = false;
+    }
+    const rows = allEntries.map(entry => [
       new Date(entry.createdAt).toISOString(),
       entry.userName,
       t(`journal.${entry.action}`),
@@ -79,8 +104,8 @@
         <span class="flex items-center gap-2"><MdiHistory /> {{ $t("menu.journal") }}</span>
       </BaseSectionHeader>
       <div class="flex gap-2">
-        <Button size="sm" variant="outline" :disabled="!entries?.length" @click="exportCsv">
-          <MdiDownload class="mr-2" /> {{ $t("journal.export_csv") }}
+        <Button size="sm" variant="outline" :disabled="!journal?.total || exporting" @click="exportCsv">
+          <MdiDownload class="mr-2" :class="exporting && 'animate-pulse'" /> {{ $t("journal.export_csv") }}
         </Button>
         <Button size="sm" variant="outline" :disabled="pending" @click="refresh()">
           <MdiRefresh class="mr-2" :class="pending && 'animate-spin'" />
@@ -115,6 +140,18 @@
         </div>
       </div>
       <p v-else class="p-8 text-center text-muted-foreground">{{ $t("journal.empty") }}</p>
+    </div>
+    <div v-if="journal?.total" class="mt-3 flex items-center justify-between gap-3 text-sm">
+      <span>{{ $t("journal.total", { total: journal.total }) }}</span>
+      <div class="flex items-center gap-2">
+        <Button size="icon" variant="outline" :disabled="page <= 1 || pending" @click="page--">
+          <MdiChevronLeft />
+        </Button>
+        <span>{{ $t("journal.page", { page, total: journal.totalPages }) }}</span>
+        <Button size="icon" variant="outline" :disabled="page >= journal.totalPages || pending" @click="page++">
+          <MdiChevronRight />
+        </Button>
+      </div>
     </div>
   </BaseContainer>
 </template>

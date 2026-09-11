@@ -42,14 +42,24 @@ func (r *AuditLogRepository) Create(ctx context.Context, entry AuditLogEntry) er
 	return err
 }
 
-func (r *AuditLogRepository) GetAll(ctx context.Context, groupID uuid.UUID) ([]AuditLogEntry, error) {
+func (r *AuditLogRepository) Count(ctx context.Context, groupID uuid.UUID) (int, error) {
+	query := `SELECT COUNT(*) FROM audit_logs WHERE group_id = ?`
+	if r.postgres {
+		query = `SELECT COUNT(*) FROM audit_logs WHERE group_id = $1`
+	}
+	var count int
+	err := r.db.Sql().QueryRowContext(ctx, query, groupID).Scan(&count)
+	return count, err
+}
+
+func (r *AuditLogRepository) GetPage(ctx context.Context, groupID uuid.UUID, limit, offset int) ([]AuditLogEntry, error) {
 	query := `SELECT id, group_id, user_id, user_name, action, resource, path, item_count, created_at
-		FROM audit_logs WHERE group_id = ? ORDER BY created_at DESC LIMIT 1000`
+		FROM audit_logs WHERE group_id = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`
 	if r.postgres {
 		query = `SELECT id, group_id, user_id, user_name, action, resource, path, item_count, created_at
-			FROM audit_logs WHERE group_id = $1 ORDER BY created_at DESC LIMIT 1000`
+			FROM audit_logs WHERE group_id = $1 ORDER BY created_at DESC, id DESC LIMIT $2 OFFSET $3`
 	}
-	rows, err := r.db.Sql().QueryContext(ctx, query, groupID)
+	rows, err := r.db.Sql().QueryContext(ctx, query, groupID, limit, offset)
 	if err != nil {
 		return nil, err
 	}

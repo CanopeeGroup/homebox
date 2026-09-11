@@ -12,8 +12,16 @@ export interface AuditLogEntry {
   createdAt: Date | string;
 }
 
+export interface AuditLogPage {
+  items: AuditLogEntry[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
 export class AuditLogsAPI extends BaseAPI {
-  getAll() {
-    return this.http.get<AuditLogEntry[]>({ url: route("/audit-logs") });
+  getPage(page = 1, pageSize = 1000) {
+    return this.http.get<AuditLogPage>({ url: route(`/audit-logs?page=${page}&pageSize=${pageSize}`) });
   }
 }

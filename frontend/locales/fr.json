@@ -773,8 +773,10 @@
         "delete": "Suppression",
         "empty": "Aucun changement n’a encore été journalisé.",
         "export_csv": "Exporter en CSV",
+		"export_failed": "Impossible d’exporter l’intégralité du journal",
         "load_failed": "Impossible de charger le journal",
         "path": "Opération",
+		"page": "Page {page} sur {total}",
         "refresh": "Actualiser",
         "resource": "Ressource",
         "resources": {
@@ -788,7 +790,8 @@
             "users": "Utilisateur"
         },
         "update": "Modification",
-        "user": "Utilisateur"
+		"total": "{total} opérations conservées",
+		"user": "Utilisateur"
     },
     "users": {
         "add": "Ajouter",

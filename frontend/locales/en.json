@@ -826,8 +826,10 @@
         "delete": "Deleted",
         "empty": "No changes have been logged yet.",
         "export_csv": "Export CSV",
+		"export_failed": "Could not export the complete journal",
         "load_failed": "Could not load the journal",
         "path": "Operation",
+		"page": "Page {page} of {total}",
         "refresh": "Refresh",
         "resource": "Resource",
         "resources": {
@@ -841,7 +843,8 @@
             "users": "User"
         },
         "update": "Modified",
-        "user": "User"
+		"total": "{total} operations retained",
+		"user": "User"
     },
     "users": {
         "add": "Add",
