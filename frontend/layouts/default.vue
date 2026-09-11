@@ -243,9 +243,7 @@
   import MdiFileTree from "~icons/mdi/file-tree";
   import MdiMagnify from "~icons/mdi/magnify";
   import MdiQrcodeScan from "~icons/mdi/qrcode-scan";
-  import MdiAccount from "~icons/mdi/account";
   import MdiCog from "~icons/mdi/cog";
-  import MdiWrench from "~icons/mdi/wrench";
   import MdiPlus from "~icons/mdi/plus";
   import MdiLogout from "~icons/mdi/logout";
   import MdiFileDocumentMultiple from "~icons/mdi/file-document-multiple";
@@ -432,55 +430,35 @@
       to: "/journal",
     },
     {
-      icon: MdiWrench,
-      id: 5,
-      active: computed(() => route.path === "/maintenance"),
-      name: computed(() => t("menu.maintenance")),
-      to: "/maintenance",
-    },
-    {
-      icon: MdiAccount,
-      id: 6,
-      active: computed(() => route.path === "/profile"),
-      name: computed(() => t("menu.profile")),
-      to: "/profile",
-    },
-    {
       icon: MdiCog,
       id: 7,
-      active: computed(() => route.path.includes("/collection")),
-      name: computed(() => t("menu.collection")),
-      to: "/collection/members",
+      active: computed(
+        () =>
+          route.path === "/settings" ||
+          route.path === "/maintenance" ||
+          route.path === "/profile" ||
+          route.path.includes("/collection")
+      ),
+      name: computed(() => t("menu.settings")),
+      to: "/settings",
       collapsible: [
         {
-          id: 61,
-          active: computed(() => route.path === "/collection/members"),
-          name: computed(() => t("collection.tabs.members")),
+          id: 71,
+          active: computed(() => route.path === "/maintenance"),
+          name: computed(() => t("menu.maintenance")),
+          to: "/maintenance",
+        },
+        {
+          id: 72,
+          active: computed(() => route.path === "/profile"),
+          name: computed(() => t("menu.profile")),
+          to: "/profile",
+        },
+        {
+          id: 73,
+          active: computed(() => route.path.includes("/collection")),
+          name: computed(() => t("menu.collection")),
           to: "/collection/members",
-        },
-        {
-          id: 62,
-          active: computed(() => route.path === "/collection/invites"),
-          name: computed(() => t("collection.tabs.invites")),
-          to: "/collection/invites",
-        },
-        {
-          id: 63,
-          active: computed(() => route.path === "/collection/notifiers"),
-          name: computed(() => t("collection.tabs.notifiers")),
-          to: "/collection/notifiers",
-        },
-        {
-          id: 64,
-          active: computed(() => route.path === "/collection/settings"),
-          name: computed(() => t("collection.tabs.settings")),
-          to: "/collection/settings",
-        },
-        {
-          id: 66,
-          active: computed(() => route.path === "/collection/tools"),
-          name: computed(() => t("collection.tabs.tools")),
-          to: "/collection/tools",
         },
       ],
     },
