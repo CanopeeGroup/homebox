@@ -7,14 +7,12 @@
       <div class="flex gap-2">
         <TooltipProvider :delay-duration="0">
           <!-- Template selector button -->
-          <Tooltip v-if="!selectedEntityType?.isLocation">
-            <TooltipTrigger>
-              <TemplateSelector v-model="selectedTemplate" compact @template-selected="handleTemplateSelected" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{{ $t("components.template.apply_template") }}</p>
-            </TooltipContent>
-          </Tooltip>
+          <TemplateSelector
+            v-if="!selectedEntityType?.isLocation"
+            v-model="selectedTemplate"
+            compact
+            @template-selected="handleTemplateSelected"
+          />
 
           <ButtonGroup>
             <Tooltip>
