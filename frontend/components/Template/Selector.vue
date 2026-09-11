@@ -8,12 +8,14 @@
         size="icon"
         role="combobox"
         :aria-expanded="open"
+        :aria-label="$t('components.template.apply_template')"
+        :title="$t('components.template.apply_template')"
         :class="value ? 'border-primary text-primary' : ''"
       >
         <MdiFileDocumentOutline class="size-5" />
       </Button>
     </PopoverTrigger>
-    <PopoverContent class="w-72 p-0" align="end">
+    <PopoverContent class="z-[70] w-[calc(100vw-1rem)] max-w-80 p-0 sm:w-80" align="end" :collision-padding="8">
       <Command :ignore-filter="true">
         <CommandInput
           v-model="search"
@@ -21,7 +23,7 @@
           :display-value="_ => ''"
         />
         <CommandEmpty>{{ $t("components.template.selector.not_found") }}</CommandEmpty>
-        <CommandList>
+        <CommandList class="max-h-[45dvh] sm:max-h-[300px]">
           <CommandGroup>
             <CommandItem
               v-for="template in filteredTemplates"
@@ -62,7 +64,11 @@
           <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent class="w-[--reka-popper-anchor-width] p-0">
+      <PopoverContent
+        class="z-[70] w-[calc(100vw-1rem)] max-w-md p-0 sm:w-[--reka-popper-anchor-width]"
+        align="start"
+        :collision-padding="8"
+      >
         <Command :ignore-filter="true">
           <CommandInput
             v-model="search"
@@ -70,7 +76,7 @@
             :display-value="_ => ''"
           />
           <CommandEmpty>{{ $t("components.template.selector.not_found") }}</CommandEmpty>
-          <CommandList>
+          <CommandList class="max-h-[45dvh] sm:max-h-[300px]">
             <CommandGroup>
               <CommandItem
                 v-for="template in filteredTemplates"
