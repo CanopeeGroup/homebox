@@ -6,8 +6,10 @@
   import MdiUpload from "~icons/mdi/upload";
   import MdiViewGrid from "~icons/mdi/view-grid";
   import MdiViewList from "~icons/mdi/view-list";
+  import MdiDelete from "~icons/mdi/delete";
   import { useLocalStorage } from "@vueuse/core";
   import { Button } from "@/components/ui/button";
+  import { Checkbox } from "@/components/ui/checkbox";
   import { useDialog } from "@/components/ui/dialog-provider";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
   import BaseContainer from "@/components/Base/Container.vue";
@@ -35,6 +37,7 @@
 
   const api = useUserApi();
   const { openDialog } = useDialog();
+  const confirm = useConfirm();
 
   const { data: templates, refresh } = useAsyncData("templates", async () => {
     const { data, error } = await api.templates.getAll();
@@ -55,6 +58,41 @@
   const importing = ref(false);
   const exporting = ref(false);
   const viewMode = useLocalStorage<"grid" | "compact">("homebox:template-view", "grid");
+  const selectedTemplateIds = ref<string[]>([]);
+  const allTemplatesSelected = computed(
+    () =>
+      !!templates.value?.length && templates.value.every(template => selectedTemplateIds.value.includes(template.id))
+  );
+
+  const setTemplateSelected = (id: string, selected: boolean) => {
+    selectedTemplateIds.value = selected
+      ? [...new Set([...selectedTemplateIds.value, id])]
+      : selectedTemplateIds.value.filter(selectedId => selectedId !== id);
+  };
+
+  const toggleAllTemplates = () => {
+    selectedTemplateIds.value = allTemplatesSelected.value ? [] : (templates.value ?? []).map(template => template.id);
+  };
+
+  const deleteSelectedTemplates = async () => {
+    if (!selectedTemplateIds.value.length) return;
+    const { isCanceled } = await confirm.open(
+      t("components.template.confirm_delete_selected", { count: selectedTemplateIds.value.length })
+    );
+    if (isCanceled) return;
+
+    let deleted = 0;
+    let failed = 0;
+    for (const id of selectedTemplateIds.value) {
+      const { error } = await api.templates.delete(id);
+      if (error) failed++;
+      else deleted++;
+    }
+    selectedTemplateIds.value = [];
+    await refresh();
+    if (failed) toast.error(t("components.template.toast.delete_selected_failed", { deleted, failed }));
+    else toast.success(t("components.template.toast.deleted_selected", { count: deleted }));
+  };
 
   const getFullTemplates = async () => {
     if (!templates.value?.length) {
@@ -201,6 +239,25 @@
 
     <TemplateCreateModal @created="handleRefresh" />
 
+    <div v-if="templates?.length" class="mb-3 flex flex-wrap items-center gap-3 rounded-md border px-3 py-2">
+      <Checkbox
+        :model-value="allTemplatesSelected ? true : selectedTemplateIds.length ? 'indeterminate' : false"
+        :aria-label="$t('components.template.select_all')"
+        @update:model-value="toggleAllTemplates"
+      />
+      <Button size="sm" variant="ghost" @click="toggleAllTemplates">
+        {{ allTemplatesSelected ? $t("components.template.deselect_all") : $t("components.template.select_all") }}
+      </Button>
+      <span class="text-sm text-muted-foreground">
+        {{ $t("components.template.selected_count", { count: selectedTemplateIds.length }) }}
+      </span>
+      <div class="grow" />
+      <Button size="sm" variant="destructive" :disabled="!selectedTemplateIds.length" @click="deleteSelectedTemplates">
+        <MdiDelete class="mr-2" />
+        {{ $t("components.template.delete_selected") }}
+      </Button>
+    </div>
+
     <div
       v-if="templates && templates.length > 0"
       :class="viewMode === 'compact' ? 'flex flex-col gap-1' : 'grid gap-4 md:grid-cols-2 lg:grid-cols-3'"
@@ -210,6 +267,9 @@
         :key="tpl.id"
         :template="tpl"
         :compact="viewMode === 'compact'"
+        selectable
+        :selected="selectedTemplateIds.includes(tpl.id)"
+        @update:selected="setTemplateSelected(tpl.id, $event)"
         @deleted="handleRefresh"
         @duplicated="handleDuplicated"
       />
