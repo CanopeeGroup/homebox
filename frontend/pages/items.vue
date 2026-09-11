@@ -2,12 +2,13 @@
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import { Input } from "~/components/ui/input";
-  import type { EntitySummary, TagSummary } from "~~/lib/api/types/data-contracts";
+  import type { EntitySummary, EntityTemplateSummary, TagSummary } from "~~/lib/api/types/data-contracts";
   import { useTagStore } from "~/stores/tags";
   import { useLocationStore } from "~~/stores/locations";
   import MdiLoading from "~icons/mdi/loading";
   import MdiMagnify from "~icons/mdi/magnify";
   import MdiDelete from "~icons/mdi/delete";
+  import MdiFileDocumentMultiple from "~icons/mdi/file-document-multiple";
   import { Button } from "@/components/ui/button";
   import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
   import { Label } from "@/components/ui/label";
@@ -36,6 +37,7 @@
   const api = useUserApi();
   const loading = useMinLoader(500);
   const items = ref<EntitySummary[]>([]);
+  const templateResults = ref<EntityTemplateSummary[]>([]);
   const total = ref(0);
 
   // Using useRouteQuery directly has two downsides
@@ -307,19 +309,31 @@
 
     await router.push({ query: push_query as LocationQueryRaw });
 
-    const { data, error } = await api.items.getAll({
-      q: query.value || "",
-      parentIds: locIDs.value,
-      tags: tagIDs.value,
-      negateTags: negateTags.value,
-      onlyWithoutPhoto: onlyWithoutPhoto.value,
-      onlyWithPhoto: onlyWithPhoto.value,
-      includeArchived: includeArchived.value,
-      page: page.value,
-      pageSize: pageSize.value,
-      orderBy: orderBy.value,
-      fields,
-    });
+    const [itemsResult, templatesResult] = await Promise.all([
+      api.items.getAll({
+        q: query.value || "",
+        parentIds: locIDs.value,
+        tags: tagIDs.value,
+        negateTags: negateTags.value,
+        onlyWithoutPhoto: onlyWithoutPhoto.value,
+        onlyWithPhoto: onlyWithPhoto.value,
+        includeArchived: includeArchived.value,
+        page: page.value,
+        pageSize: pageSize.value,
+        orderBy: orderBy.value,
+        fields,
+      }),
+      query.value.trim() ? api.templates.getAll() : Promise.resolve({ data: [], error: null }),
+    ]);
+    const { data, error } = itemsResult;
+    const normalizedQuery = query.value.trim().toLocaleLowerCase();
+    templateResults.value = templatesResult.error
+      ? []
+      : templatesResult.data.filter(
+          template =>
+            template.name.toLocaleLowerCase().includes(normalizedQuery) ||
+            template.description.toLocaleLowerCase().includes(normalizedQuery)
+        );
 
     function resetItems() {
       page.value = Math.max(1, page.value - 1);
@@ -515,6 +529,25 @@
     </div>
 
     <section>
+      <div v-if="query.trim() && templateResults.length" class="mb-6">
+        <h2 class="mb-2 flex items-center gap-2 text-lg font-semibold">
+          <MdiFileDocumentMultiple />
+          {{ $t("items.template_results", { count: templateResults.length }) }}
+        </h2>
+        <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+          <NuxtLink
+            v-for="template in templateResults"
+            :key="template.id"
+            :to="`/template/${template.id}`"
+            class="rounded-md border bg-card px-3 py-2 transition-colors hover:bg-accent"
+          >
+            <p class="truncate font-medium">{{ template.name }}</p>
+            <p v-if="template.description" class="truncate text-sm text-muted-foreground">
+              {{ template.description }}
+            </p>
+          </NuxtLink>
+        </div>
+      </div>
       <ItemViewSelectable
         :items="items"
         :location-flat-tree="locationFlatTree"
