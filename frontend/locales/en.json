@@ -790,7 +790,8 @@
     },
     "menu": {
         "collection": "Collection",
-        "create_item": "Item / Asset",
+        "create_item": "Object",
+        "create_object": "Create Object",
         "create_location": "Location",
         "create_tag": "Tag",
         "home": "Home",
