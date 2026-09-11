@@ -2,7 +2,6 @@
   import { useI18n } from "vue-i18n";
   import { statCardData } from "./statistics";
   import { itemsTable } from "./table";
-  import { useTagStore } from "~/stores/tags";
   import { useLocationStore } from "~~/stores/locations";
   import BaseContainer from "@/components/Base/Container.vue";
   import BaseCard from "@/components/Base/Card.vue";
@@ -10,7 +9,6 @@
   import StatCard from "~/components/global/StatCard/StatCard.vue";
   import ItemCard from "~/components/Item/Card.vue";
   import LocationCard from "~/components/Location/Card.vue";
-  import TagChip from "~/components/Tag/Chip.vue";
   import Table from "~/components/Item/View/Table.vue";
 
   const { t } = useI18n();
@@ -27,9 +25,6 @@
 
   const locationStore = useLocationStore();
   const locations = computed(() => locationStore.parentLocations);
-
-  const tagsStore = useTagStore();
-  const tags = computed(() => tagsStore.tags);
 
   const itemTable = itemsTable(api);
   const stats = statCardData(api);
@@ -62,14 +57,6 @@
         <p v-if="locations.length === 0" class="ml-2 text-sm">{{ $t("locations.no_results") }}</p>
         <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           <LocationCard v-for="location in locations" :key="location.id" :location="location" />
-        </div>
-      </section>
-
-      <section>
-        <Subtitle> {{ $t("home.tags") }} </Subtitle>
-        <p v-if="tags.length === 0" class="ml-2 text-sm">{{ $t("tags.no_results") }}</p>
-        <div v-else class="flex flex-wrap gap-4">
-          <TagChip v-for="tag in tags" :key="tag.id" size="lg" :tag="tag" class="shadow-md" />
         </div>
       </section>
     </BaseContainer>
