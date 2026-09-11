@@ -802,7 +802,12 @@
         "profile": "Profile",
         "scanner": "Scanner",
         "search": "Search",
+        "settings": "Settings",
         "templates": "Templates"
+    },
+    "settings": {
+        "description": "Manage maintenance, your profile, and collection settings.",
+        "title": "Settings"
     },
     "journal": {
         "action": "Action",
