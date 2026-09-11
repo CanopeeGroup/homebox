@@ -68,9 +68,6 @@
           </div>
         </TooltipProvider>
         <Markdown class="mb-2 line-clamp-3 text-ellipsis" :source="item.description" />
-        <div class="-mr-1 mt-auto flex flex-wrap justify-end gap-2">
-          <TagChip v-for="tag in itemTags" :key="tag.id" :tag="tag" size="sm" :ancestors="tag.ancestors" />
-        </div>
       </div>
     </NuxtLink>
   </Card>
@@ -85,7 +82,6 @@
   import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
   import { Separator } from "@/components/ui/separator";
   import Markdown from "@/components/global/Markdown.vue";
-  import TagChip from "@/components/Tag/Chip.vue";
   import type { Row } from "@tanstack/vue-table";
   import { Checkbox } from "@/components/ui/checkbox";
 
@@ -101,10 +97,6 @@
     } else {
       return api.authURL(`/entities/${props.item.id}/attachments/${props.item.imageId}`);
     }
-  });
-
-  const itemTags = computed(() => {
-    return useTagStore().withAncestors(props.item.tags);
   });
 
   const props = defineProps({
