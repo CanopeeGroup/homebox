@@ -382,7 +382,7 @@
             "selector": {
                 "clear": "Clear Template Selection",
                 "close": "Close template search",
-                "label": "Template (Optional)",
+                "label": "Product Selection",
                 "not_found": "No template found",
                 "search": "Search templates…",
                 "select": "Select template…"
