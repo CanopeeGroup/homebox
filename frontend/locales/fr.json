@@ -339,9 +339,12 @@
                 "edit": "Modifier le modèle"
             },
             "confirm_delete": "Supprimer ce modèle ?",
+            "confirm_delete_selected": "Supprimer les {count} modèle(s) sélectionné(s) ? Cette action est irréversible.",
             "create_modal": {
                 "title": "Créer un modèle"
             },
+            "delete_selected": "Supprimer la sélection",
+            "deselect_all": "Tout désélectionner",
             "detail": {
                 "default_values": "Valeurs par défaut",
                 "updated": "Mis à jour"
@@ -368,6 +371,9 @@
             },
             "hide_defaults": "Cacher les modèles par défaut",
             "save_as_template": "Enregistrer comme modèle",
+            "select_all": "Tout sélectionner",
+            "select_template": "Sélectionner le modèle {name}",
+            "selected_count": "{count} sélectionné(s)",
             "selector": {
                 "clear": "Effacer les modèles sélectionnés",
                 "label": "Modèle (Optionnel)",
@@ -384,6 +390,8 @@
                 "created": "Modèle créé",
                 "delete_failed": "Échec lors de la suppression du modèle",
                 "deleted": "Modèle supprimé",
+                "deleted_selected": "{count} modèle(s) supprimé(s)",
+                "delete_selected_failed": "{deleted} modèle(s) supprimé(s), {failed} suppression(s) en échec",
                 "duplicate_failed": "Échec lors de la duplication du modèle",
                 "duplicated": "Modèle dupliqué sous le nom \"{name}\"",
                 "export_empty": "Aucun modèle à exporter",
@@ -497,6 +505,7 @@
         }
     },
     "items": {
+        "template_results": "Modèles ({count})",
         "add": "Ajouter",
         "advanced": "Avancé",
         "archived": "Archivé",
