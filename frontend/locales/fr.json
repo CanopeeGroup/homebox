@@ -290,6 +290,7 @@
             },
             "selector": {
                 "clear": "Effacer les emplacements sélectionnés",
+                "close": "Fermer la recherche d’emplacements",
                 "no_location_found": "Aucun emplacement trouvé",
                 "parent_location": "Emplacement parent",
                 "search_location": "Rechercher des emplacements",
