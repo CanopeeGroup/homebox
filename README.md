@@ -3,6 +3,11 @@
 </div>
 
 <h1 align="center" style="margin-top: -10px;"> HomeBox </h1>
+
+> [!IMPORTANT]
+> Ceci est le fork personnalisé de HomeBox maintenu par **leroyconstant**.
+> Les différences avec le projet officiel, les instructions Docker et la stratégie de mise à jour sont détaillées dans [FORK_CHANGES.md](FORK_CHANGES.md).
+
 <p align="center" style="width: 100%;">
    <a href="https://homebox.software/en/">Docs</a>
    |
