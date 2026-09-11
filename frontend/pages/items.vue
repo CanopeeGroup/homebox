@@ -2,8 +2,7 @@
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import { Input } from "~/components/ui/input";
-  import type { EntitySummary, EntityTemplateSummary, TagSummary } from "~~/lib/api/types/data-contracts";
-  import { useTagStore } from "~/stores/tags";
+  import type { EntitySummary, EntityTemplateSummary } from "~~/lib/api/types/data-contracts";
   import { useLocationStore } from "~~/stores/locations";
   import MdiLoading from "~icons/mdi/loading";
   import MdiMagnify from "~icons/mdi/magnify";
@@ -86,12 +85,10 @@
   const query = useOptionalRouteQuery("q", "");
   const includeArchived = useOptionalRouteQuery("archived", false);
   const fieldSelector = useOptionalRouteQuery("fieldSelector", false);
-  const negateTags = useOptionalRouteQuery("negateTags", false);
   const onlyWithoutPhoto = useOptionalRouteQuery("onlyWithoutPhoto", false);
   const onlyWithPhoto = useOptionalRouteQuery("onlyWithPhoto", false);
   const orderBy = useOptionalRouteQuery("orderBy", "name");
   const qLoc = useOptionalRouteQuery("loc", []);
-  const qTag = useOptionalRouteQuery("tag", []);
 
   const preferences = useViewPreferences();
   const pageSize = computed(() => preferences.value.itemsPerTablePage);
@@ -102,13 +99,9 @@
   onMounted(async () => {
     loading.value = true;
     searchLocked.value = true;
-    await Promise.all([locationsStore.ensureLocationsFetched(), tagStore.ensureAllTagsFetched()]);
+    await locationsStore.ensureLocationsFetched();
     if (qLoc) {
       selectedLocations.value = locations.value.filter(l => qLoc.value.includes(l.id));
-    }
-
-    if (qTag) {
-      selectedTags.value = tags.value.filter(l => qTag.value.includes(l.id));
     }
 
     queryParamsInitialized.value = true;
@@ -126,7 +119,7 @@
     }
 
     // trigger search if no changes
-    if (!qTag && !qLoc) {
+    if (!qLoc) {
       search();
     }
 
@@ -144,14 +137,9 @@
 
   const locations = computed(() => locationsStore.allLocations);
 
-  const tagStore = useTagStore();
-  const tags = computed(() => tagStore.tags);
-
   const selectedLocations = ref<EntitySummary[]>([]);
-  const selectedTags = ref<TagSummary[]>([]);
 
   const locIDs = computed(() => selectedLocations.value.map(l => l.id));
-  const tagIDs = computed(() => selectedTags.value.map(l => l.id));
 
   function parseAssetIDString(d: string) {
     d = d.replace(/"/g, "").replace(/-/g, "");
@@ -276,14 +264,12 @@
     const push_query: Record<string, string | string[] | number | boolean | undefined> = {
       archived: includeArchived.value,
       fieldSelector: fieldSelector.value,
-      negateTags: negateTags.value,
       onlyWithoutPhoto: onlyWithoutPhoto.value,
       onlyWithPhoto: onlyWithPhoto.value,
       orderBy: orderBy.value,
       page: page.value,
       q: query.value,
       loc: locIDs.value,
-      tag: tagIDs.value,
       fields: fields,
     };
 
@@ -313,8 +299,8 @@
       api.items.getAll({
         q: query.value || "",
         parentIds: locIDs.value,
-        tags: tagIDs.value,
-        negateTags: negateTags.value,
+        tags: [],
+        negateTags: false,
         onlyWithoutPhoto: onlyWithoutPhoto.value,
         onlyWithPhoto: onlyWithPhoto.value,
         includeArchived: includeArchived.value,
@@ -360,7 +346,7 @@
     initialSearch.value = false;
   }
 
-  watchDebounced([page, pageSize, query, selectedTags, selectedLocations], search, { debounce: 250, maxWait: 1000 });
+  watchDebounced([page, pageSize, query, selectedLocations], search, { debounce: 250, maxWait: 1000 });
 
   async function submit() {
     // Set URL Params
@@ -402,7 +388,7 @@
 
 <template>
   <BaseContainer>
-    <div v-if="locations && tags">
+    <div v-if="locations">
       <div class="flex flex-wrap items-end gap-4 md:flex-nowrap">
         <div class="w-full">
           <Input v-model:model-value="query" :placeholder="$t('global.search')" class="h-12" />
@@ -419,7 +405,6 @@
 
       <div class="flex w-full flex-wrap gap-2 py-2 md:flex-nowrap">
         <SearchFilter v-model="selectedLocations" :label="$t('global.locations')" :options="locationFlatTree" />
-        <SearchFilter v-model="selectedTags" :label="$t('global.tags')" :options="tags" />
         <Popover>
           <PopoverTrigger as-child>
             <Button size="sm" variant="outline"> {{ $t("items.options") }}</Button>
@@ -434,11 +419,6 @@
               <Switch v-model="fieldSelector" class="ml-auto" />
               <div class="grow" />
               <span class="text-right"> {{ $t("items.field_selector") }} </span>
-            </Label>
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="negateTags" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.negate_tags") }} </span>
             </Label>
             <Label class="flex cursor-pointer items-center">
               <Switch v-model="onlyWithoutPhoto" class="ml-auto" />
