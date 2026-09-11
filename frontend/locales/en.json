@@ -331,6 +331,8 @@
         },
         "template": {
             "apply_template": "Apply a template",
+            "export": "Export",
+            "import": "Import",
             "card": {
                 "delete": "Delete template",
                 "duplicate": "Duplicate template",
