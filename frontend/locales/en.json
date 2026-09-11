@@ -332,7 +332,11 @@
         "template": {
             "apply_template": "Apply a template",
             "export": "Export",
+            "export_csv": "Export CSV",
+            "export_json": "Export JSON",
             "import": "Import",
+            "import_csv": "Import CSV",
+            "import_json": "Import JSON",
             "card": {
                 "delete": "Delete template",
                 "duplicate": "Duplicate template",
@@ -376,6 +380,8 @@
                 "select": "Select template…"
             },
             "show_defaults": "Show defaults",
+            "view_compact": "Compact list view",
+            "view_grid": "Grid view",
             "toast": {
                 "applied": "Template \"{name}\" applied",
                 "create_failed": "Failed to create template",
