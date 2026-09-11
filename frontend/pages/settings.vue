@@ -1,12 +1,15 @@
 <script setup lang="ts">
+  import { useI18n } from "vue-i18n";
   import MdiAccount from "~icons/mdi/account";
   import MdiAccountGroup from "~icons/mdi/account-group";
   import MdiWrench from "~icons/mdi/wrench";
+  import MdiAccountMultiple from "~icons/mdi/account-multiple";
   import BaseContainer from "@/components/Base/Container.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
   import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
   const { t } = useI18n();
+  const auth = useAuthContext();
 
   definePageMeta({ middleware: ["auth"] });
   useHead({ title: computed(() => `HomeBox | ${t("menu.settings")}`) });
@@ -15,6 +18,7 @@
     { to: "/maintenance", label: t("menu.maintenance"), icon: MdiWrench },
     { to: "/profile", label: t("menu.profile"), icon: MdiAccount },
     { to: "/collection/members", label: t("menu.collection"), icon: MdiAccountGroup },
+    ...(auth.user?.isSuperuser ? [{ to: "/settings/users", label: t("menu.users"), icon: MdiAccountMultiple }] : []),
   ]);
 </script>
 

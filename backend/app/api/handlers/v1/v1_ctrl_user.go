@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/hay-kot/httpkit/errchain"
 	"github.com/hay-kot/httpkit/server"
@@ -15,6 +16,63 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/validate"
 	"go.opentelemetry.io/otel/attribute"
 )
+
+func (ctrl *V1Controller) HandleAdminUsersGetAll() errchain.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		users, err := ctrl.svc.User.AdminListUsers(r.Context())
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusInternalServerError)
+		}
+		return server.JSON(w, http.StatusOK, users)
+	}
+}
+
+func (ctrl *V1Controller) HandleAdminUsersCreate() errchain.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		var data services.AdminUserCreate
+		if err := server.Decode(r, &data); err != nil {
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
+		ctx := services.NewContext(r.Context())
+		created, err := ctrl.svc.User.AdminCreateUser(r.Context(), ctx.GID, data)
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
+		return server.JSON(w, http.StatusCreated, created)
+	}
+}
+
+func (ctrl *V1Controller) HandleAdminUsersUpdate() errchain.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
+		var data repo.AdminUserUpdate
+		if err := server.Decode(r, &data); err != nil {
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
+		updated, err := ctrl.svc.User.AdminUpdateUser(r.Context(), id, data)
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
+		return server.JSON(w, http.StatusOK, updated)
+	}
+}
+
+func (ctrl *V1Controller) HandleAdminUsersDelete() errchain.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
+		ctx := services.NewContext(r.Context())
+		if err := ctrl.svc.User.AdminDeleteUser(r.Context(), ctx.UID, id); err != nil {
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
+		return server.JSON(w, http.StatusNoContent, nil)
+	}
+}
 
 // HandleUserRegistration godoc
 //

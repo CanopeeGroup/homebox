@@ -127,6 +127,18 @@ func (a *app) mwRoles(rm RoleMode, required ...string) errchain.Middleware {
 	}
 }
 
+// mwSuperuser protects solution-wide administration endpoints. It must run
+// after mwAuthToken, which loads the full user into the request context.
+func (a *app) mwSuperuser(next errchain.Handler) errchain.Handler {
+	return errchain.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+		usr := services.UseUserCtx(r.Context())
+		if usr == nil || !usr.IsSuperuser {
+			return validate.NewRequestError(errors.New("administrator access required"), http.StatusForbidden)
+		}
+		return next.ServeHTTP(w, r)
+	})
+}
+
 type KeyFunc func(r *http.Request) (string, error)
 
 func getBearer(r *http.Request) (string, error) {
@@ -374,6 +386,7 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 		// Keep a readable object name before the handler consumes the request or
 		// deletes the object. The body is restored unchanged for the handler.
 		objectName := ""
+		itemCount := 1
 		if r.Body != nil {
 			body, readErr := io.ReadAll(r.Body)
 			if readErr == nil {
@@ -388,12 +401,24 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 						objectName = strings.TrimSpace(payload.DefaultName)
 					}
 				}
+				var raw map[string]any
+				if json.Unmarshal(body, &raw) == nil {
+					for _, key := range []string{"ids", "itemIds", "entityIds", "templateIds", "items", "entities", "templates"} {
+						if values, ok := raw[key].([]any); ok && len(values) > 0 {
+							itemCount = len(values)
+							break
+						}
+					}
+				}
 			}
 		}
 
 		resourcePath := strings.TrimPrefix(r.URL.Path, "/api/v1/")
 		pathParts := strings.Split(strings.Trim(resourcePath, "/"), "/")
 		resource := pathParts[0]
+		if resource == "admin" && len(pathParts) > 1 && pathParts[1] == "users" {
+			resource = "users"
+		}
 		if objectName == "" {
 			for _, part := range pathParts[1:] {
 				id, parseErr := uuid.Parse(part)
@@ -408,6 +433,10 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 				case "items", "entities":
 					if item, getErr := a.repos.Entities.GetOne(r.Context(), id); getErr == nil {
 						objectName = item.Name
+					}
+				case "users":
+					if user, getErr := a.repos.Users.GetOneID(r.Context(), id); getErr == nil {
+						objectName = user.Name
 					}
 				}
 				break
@@ -441,6 +470,7 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 			Action:    action,
 			Resource:  resource,
 			Path:      objectName,
+			Count:     itemCount,
 			CreatedAt: time.Now().UTC(),
 		}
 		if auditErr := a.repos.AuditLogs.Create(r.Context(), entry); auditErr != nil {

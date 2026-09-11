@@ -60,6 +60,12 @@ type (
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
+	AdminUserCreate struct {
+		Name        string `json:"name"`
+		Email       string `json:"email"`
+		Password    string `json:"password"`
+		IsSuperuser bool   `json:"isSuperuser"`
+	}
 )
 
 // RegisterOption customizes RegisterUser behavior.
@@ -181,11 +187,15 @@ func (svc *UserService) RegisterUser(ctx context.Context, data UserRegistration,
 		log.Err(err).Msg("Failed to hash password")
 		return repo.UserOut{}, err
 	}
+	userCount, err := svc.repos.Users.Count(ctx)
+	if err != nil {
+		return repo.UserOut{}, err
+	}
 	usrCreate := repo.UserCreate{
 		Name:           data.Name,
 		Email:          data.Email,
 		Password:       &hashed,
-		IsSuperuser:    false,
+		IsSuperuser:    userCount == 0,
 		DefaultGroupID: group.ID,
 		IsOwner:        creatingGroup,
 	}
@@ -300,6 +310,87 @@ func (svc *UserService) UpdateSelf(ctx context.Context, id uuid.UUID, data repo.
 		recordServiceSpanError(span, err)
 	}
 	return out, err
+}
+
+// AdminListUsers returns every account. Authorization is enforced by the API
+// middleware before these service methods are called.
+func (svc *UserService) AdminListUsers(ctx context.Context) ([]repo.UserOut, error) {
+	return svc.repos.Users.GetAll(ctx)
+}
+
+func (svc *UserService) AdminCreateUser(ctx context.Context, groupID uuid.UUID, data AdminUserCreate) (repo.UserOut, error) {
+	data.Name = strings.TrimSpace(data.Name)
+	data.Email = strings.TrimSpace(data.Email)
+	if data.Name == "" || data.Email == "" {
+		return repo.UserOut{}, errors.New("name and email are required")
+	}
+	if len(data.Password) < PasswordMinLength {
+		return repo.UserOut{}, ErrorPasswordTooShort
+	}
+	hashed, err := hasher.HashPasswordCtx(ctx, data.Password)
+	if err != nil {
+		return repo.UserOut{}, err
+	}
+	return svc.repos.Users.Create(ctx, repo.UserCreate{
+		Name: data.Name, Email: data.Email, Password: &hashed,
+		IsSuperuser: data.IsSuperuser, DefaultGroupID: groupID, IsOwner: false,
+	})
+}
+
+func (svc *UserService) AdminUpdateUser(ctx context.Context, id uuid.UUID, data repo.AdminUserUpdate) (repo.UserOut, error) {
+	data.Name = strings.TrimSpace(data.Name)
+	data.Email = strings.TrimSpace(data.Email)
+	if data.Name == "" || data.Email == "" {
+		return repo.UserOut{}, errors.New("name and email are required")
+	}
+	current, err := svc.repos.Users.GetOneID(ctx, id)
+	if err != nil {
+		return repo.UserOut{}, err
+	}
+	if current.IsSuperuser && !data.IsSuperuser {
+		count, countErr := svc.repos.Users.CountSuperusers(ctx)
+		if countErr != nil {
+			return repo.UserOut{}, countErr
+		}
+		if count <= 1 {
+			return repo.UserOut{}, errors.New("the last administrator cannot be demoted")
+		}
+	}
+	var passwordHash *string
+	if data.Password != "" {
+		if len(data.Password) < PasswordMinLength {
+			return repo.UserOut{}, ErrorPasswordTooShort
+		}
+		hashed, hashErr := hasher.HashPasswordCtx(ctx, data.Password)
+		if hashErr != nil {
+			return repo.UserOut{}, hashErr
+		}
+		passwordHash = &hashed
+	}
+	if err := svc.repos.Users.UpdateAdmin(ctx, id, data, passwordHash); err != nil {
+		return repo.UserOut{}, err
+	}
+	return svc.repos.Users.GetOneID(ctx, id)
+}
+
+func (svc *UserService) AdminDeleteUser(ctx context.Context, actorID, id uuid.UUID) error {
+	if actorID == id {
+		return errors.New("an administrator cannot delete their own account here")
+	}
+	current, err := svc.repos.Users.GetOneID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if current.IsSuperuser {
+		count, countErr := svc.repos.Users.CountSuperusers(ctx)
+		if countErr != nil {
+			return countErr
+		}
+		if count <= 1 {
+			return errors.New("the last administrator cannot be deleted")
+		}
+	}
+	return svc.repos.Users.Delete(ctx, id)
 }
 
 // ============================================================================
@@ -553,11 +644,15 @@ func (svc *UserService) registerOIDCUser(ctx context.Context, issuer, subject, e
 	}
 	span.SetAttributes(attribute.String("group.id", group.ID.String()))
 
+	userCount, err := svc.repos.Users.Count(ctx)
+	if err != nil {
+		return repo.UserOut{}, err
+	}
 	usrCreate := repo.UserCreate{
 		Name:           name,
 		Email:          email,
 		Password:       nil,
-		IsSuperuser:    false,
+		IsSuperuser:    userCount == 0,
 		DefaultGroupID: group.ID,
 		IsOwner:        true,
 	}

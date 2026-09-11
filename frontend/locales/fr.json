@@ -752,7 +752,8 @@
         "scanner": "Numériser",
         "search": "Recherche",
         "settings": "Réglages",
-        "templates": "Modèles"
+        "templates": "Modèles",
+        "users": "Utilisateurs"
     },
     "settings": {
         "description": "Gérez l’entretien, votre profil et les paramètres de la collection.",
@@ -760,10 +761,12 @@
     },
     "journal": {
         "action": "Action",
+        "count": "Nombre",
         "create": "Ajout",
         "date": "Date",
         "delete": "Suppression",
         "empty": "Aucun changement n’a encore été journalisé.",
+        "export_csv": "Exporter en CSV",
         "load_failed": "Impossible de charger le journal",
         "path": "Opération",
         "refresh": "Actualiser",
@@ -780,6 +783,25 @@
         },
         "update": "Modification",
         "user": "Utilisateur"
+    },
+    "users": {
+        "add": "Ajouter",
+        "administrator": "Administrateur",
+        "confirm_delete": "Supprimer l’utilisateur {name} ?",
+        "created": "Utilisateur créé",
+        "delete": "Supprimer",
+        "delete_failed": "Impossible de supprimer l’utilisateur",
+        "deleted": "Utilisateur supprimé",
+        "description": "Ajoutez, modifiez ou supprimez les comptes de la solution.",
+        "email": "Adresse e-mail",
+        "load_failed": "Impossible de charger les utilisateurs",
+        "name": "Nom",
+        "password": "Mot de passe",
+        "password_unchanged": "Nouveau mot de passe (facultatif)",
+        "save": "Enregistrer",
+        "save_failed": "Impossible d’enregistrer l’utilisateur",
+        "saved": "Utilisateur modifié",
+        "title": "Utilisateurs"
     },
     "pages": {
         "templates": {

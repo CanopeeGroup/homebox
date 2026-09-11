@@ -805,7 +805,8 @@
         "scanner": "Scanner",
         "search": "Search",
         "settings": "Settings",
-        "templates": "Templates"
+        "templates": "Templates",
+        "users": "Users"
     },
     "settings": {
         "description": "Manage maintenance, your profile, and collection settings.",
@@ -813,10 +814,12 @@
     },
     "journal": {
         "action": "Action",
+        "count": "Count",
         "create": "Added",
         "date": "Date",
         "delete": "Deleted",
         "empty": "No changes have been logged yet.",
+        "export_csv": "Export CSV",
         "load_failed": "Could not load the journal",
         "path": "Operation",
         "refresh": "Refresh",
@@ -833,6 +836,25 @@
         },
         "update": "Modified",
         "user": "User"
+    },
+    "users": {
+        "add": "Add",
+        "administrator": "Administrator",
+        "confirm_delete": "Delete user {name}?",
+        "created": "User created",
+        "delete": "Delete",
+        "delete_failed": "Could not delete user",
+        "deleted": "User deleted",
+        "description": "Add, edit, or delete solution accounts.",
+        "email": "Email address",
+        "load_failed": "Could not load users",
+        "name": "Name",
+        "password": "Password",
+        "password_unchanged": "New password (optional)",
+        "save": "Save",
+        "save_failed": "Could not save user",
+        "saved": "User updated",
+        "title": "Users"
     },
     "pages": {
         "templates": {

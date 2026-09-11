@@ -22,6 +22,7 @@ type AuditLogEntry struct {
 	Action    string    `json:"action"`
 	Resource  string    `json:"resource"`
 	Path      string    `json:"path"`
+	Count     int       `json:"count"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
@@ -30,22 +31,22 @@ func NewAuditLogRepository(db *ent.Client, driver string) *AuditLogRepository {
 }
 
 func (r *AuditLogRepository) Create(ctx context.Context, entry AuditLogEntry) error {
-	query := `INSERT INTO audit_logs (id, group_id, user_id, user_name, action, resource, path, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO audit_logs (id, group_id, user_id, user_name, action, resource, path, item_count, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	if r.postgres {
-		query = `INSERT INTO audit_logs (id, group_id, user_id, user_name, action, resource, path, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+		query = `INSERT INTO audit_logs (id, group_id, user_id, user_name, action, resource, path, item_count, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 	}
 	_, err := r.db.Sql().ExecContext(ctx, query, entry.ID, entry.GroupID, entry.UserID, entry.UserName,
-		entry.Action, entry.Resource, entry.Path, entry.CreatedAt)
+		entry.Action, entry.Resource, entry.Path, entry.Count, entry.CreatedAt)
 	return err
 }
 
 func (r *AuditLogRepository) GetAll(ctx context.Context, groupID uuid.UUID) ([]AuditLogEntry, error) {
-	query := `SELECT id, group_id, user_id, user_name, action, resource, path, created_at
+	query := `SELECT id, group_id, user_id, user_name, action, resource, path, item_count, created_at
 		FROM audit_logs WHERE group_id = ? ORDER BY created_at DESC LIMIT 1000`
 	if r.postgres {
-		query = `SELECT id, group_id, user_id, user_name, action, resource, path, created_at
+		query = `SELECT id, group_id, user_id, user_name, action, resource, path, item_count, created_at
 			FROM audit_logs WHERE group_id = $1 ORDER BY created_at DESC LIMIT 1000`
 	}
 	rows, err := r.db.Sql().QueryContext(ctx, query, groupID)
@@ -58,7 +59,7 @@ func (r *AuditLogRepository) GetAll(ctx context.Context, groupID uuid.UUID) ([]A
 	for rows.Next() {
 		var entry AuditLogEntry
 		if err := rows.Scan(&entry.ID, &entry.GroupID, &entry.UserID, &entry.UserName, &entry.Action,
-			&entry.Resource, &entry.Path, &entry.CreatedAt); err != nil {
+			&entry.Resource, &entry.Path, &entry.Count, &entry.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan audit log: %w", err)
 		}
 		entries = append(entries, entry)

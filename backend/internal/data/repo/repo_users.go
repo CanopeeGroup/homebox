@@ -49,6 +49,13 @@ type (
 		Email string `json:"email"`
 	}
 
+	AdminUserUpdate struct {
+		Name        string `json:"name"`
+		Email       string `json:"email"`
+		IsSuperuser bool   `json:"isSuperuser"`
+		Password    string `json:"password"`
+	}
+
 	UserOut struct {
 		ID             uuid.UUID   `json:"id"`
 		Name           string      `json:"name"`
@@ -191,6 +198,14 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]UserOut, error) {
 	return out, nil
 }
 
+func (r *UserRepository) Count(ctx context.Context) (int, error) {
+	return r.db.User.Query().Count(ctx)
+}
+
+func (r *UserRepository) CountSuperusers(ctx context.Context) (int, error) {
+	return r.db.User.Query().Where(user.IsSuperuser(true)).Count(ctx)
+}
+
 // membershipRole returns the per-membership role to assign for a UserCreate.
 func membershipRole(isOwner bool) usergroup.Role {
 	if isOwner {
@@ -312,6 +327,17 @@ func (r *UserRepository) Update(ctx context.Context, id uuid.UUID, data UserUpda
 	_, err := q.Save(ctx)
 	recordSpanError(span, err)
 	return err
+}
+
+func (r *UserRepository) UpdateAdmin(ctx context.Context, id uuid.UUID, data AdminUserUpdate, passwordHash *string) error {
+	q := r.db.User.UpdateOneID(id).
+		SetName(data.Name).
+		SetEmail(normalizeEmail(data.Email)).
+		SetIsSuperuser(data.IsSuperuser)
+	if passwordHash != nil {
+		q = q.SetPassword(*passwordHash)
+	}
+	return q.Exec(ctx)
 }
 
 func (r *UserRepository) UpdateDefaultGroup(ctx context.Context, id uuid.UUID, groupID uuid.UUID) error {

@@ -8,6 +8,7 @@ export interface AuditLogEntry {
   action: "create" | "update" | "delete";
   resource: string;
   path: string;
+  count: number;
   createdAt: Date | string;
 }
 

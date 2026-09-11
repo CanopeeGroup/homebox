@@ -132,6 +132,12 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 			a.mwGroupOwner,
 			a.mwAudit,
 		}
+		adminMW := []errchain.Middleware{
+			a.mwAuthToken,
+			a.mwTenant,
+			a.mwSuperuser,
+			a.mwAudit,
+		}
 
 		r.Get("/ws/events", chain.ToHandlerFunc(v1Ctrl.HandleCacheWS(), userMW...))
 		r.Get("/audit-logs", chain.ToHandlerFunc(v1Ctrl.HandleAuditLogsGetAll(), userMW...))
@@ -146,6 +152,10 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.Post("/users/logout/all", chain.ToHandlerFunc(v1Ctrl.HandleAuthLogoutAll(), userMW...))
 		r.Get("/users/refresh", chain.ToHandlerFunc(v1Ctrl.HandleAuthRefresh(), userMW...))
 		r.Put("/users/self/change-password", chain.ToHandlerFunc(v1Ctrl.HandleUserSelfChangePassword(), userMW...))
+		r.Get("/admin/users", chain.ToHandlerFunc(v1Ctrl.HandleAdminUsersGetAll(), adminMW...))
+		r.Post("/admin/users", chain.ToHandlerFunc(v1Ctrl.HandleAdminUsersCreate(), adminMW...))
+		r.Put("/admin/users/{id}", chain.ToHandlerFunc(v1Ctrl.HandleAdminUsersUpdate(), adminMW...))
+		r.Delete("/admin/users/{id}", chain.ToHandlerFunc(v1Ctrl.HandleAdminUsersDelete(), adminMW...))
 
 		// User API keys (static tokens that authenticate as the owning user)
 		r.Get("/users/self/api-keys", chain.ToHandlerFunc(v1Ctrl.HandleUserAPIKeysList(), userMW...))

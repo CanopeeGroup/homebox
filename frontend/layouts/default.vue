@@ -295,6 +295,7 @@
   import CollectionInviteCreateModal from "~/components/Collection/InviteCreateModal.vue";
 
   const { t, locale } = useI18n();
+  const authCtx = useAuthContext();
   const username = computed(() => authCtx.user?.name || "User");
 
   const { openDialog } = useDialog();
@@ -421,6 +422,7 @@
           route.path === "/settings" ||
           route.path === "/maintenance" ||
           route.path === "/profile" ||
+          route.path === "/settings/users" ||
           route.path.includes("/collection")
       ),
       name: computed(() => t("menu.settings")),
@@ -444,6 +446,16 @@
           name: computed(() => t("menu.collection")),
           to: "/collection/members",
         },
+        ...(authCtx.user?.isSuperuser
+          ? [
+              {
+                id: 74,
+                active: computed(() => route.path === "/settings/users"),
+                name: computed(() => t("menu.users")),
+                to: "/settings/users",
+              },
+            ]
+          : []),
       ],
     },
   ];
@@ -494,7 +506,6 @@
     locationStore.refreshTree();
   });
 
-  const authCtx = useAuthContext();
   const api = useUserApi();
 
   async function logout() {
