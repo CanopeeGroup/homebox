@@ -4,7 +4,6 @@ import type { EntityTypeSummary } from "~~/lib/api/types/data-contracts";
 export const useEntityTypeStore = defineStore("entityTypes", {
   state: () => ({
     types: null as EntityTypeSummary[] | null,
-    client: useUserApi(),
     refreshPromise: null as Promise<void> | null,
   }),
   getters: {
@@ -33,7 +32,7 @@ export const useEntityTypeStore = defineStore("entityTypes", {
       if (this.refreshPromise !== null) return this.refreshPromise;
 
       this.refreshPromise = (async () => {
-        const result = await this.client.entityTypes.getAll();
+        const result = await useUserApi().entityTypes.getAll();
         if (result.error) throw result.error;
         this.types = result.data ?? [];
       })();

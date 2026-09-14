@@ -1,11 +1,11 @@
 <template>
   <BaseModal :dialog-id="DialogID.CreateEntity">
     <template #title>
-      <span>{{ selectedEntityType?.isLocation ? $t("menu.create_location") : $t("menu.create_object") }}</span>
+      <span>{{ isLocationCreation ? $t("menu.create_location") : $t("menu.create_object") }}</span>
     </template>
     <form class="flex min-w-0 flex-col gap-2" @submit.prevent="submitCreate">
       <TemplateSelector
-        v-if="!selectedEntityType?.isLocation"
+        v-if="!isLocationCreation"
         v-model="selectedTemplate"
         @template-selected="handleTemplateSelected"
       />
@@ -109,7 +109,7 @@
         :trigger-focus="focused"
         :autofocus="true"
         :label="
-          selectedEntityType?.isLocation
+          isLocationCreation
             ? $t('components.location.create_modal.location_name')
             : $t('components.item.create_modal.item_name')
         "
@@ -117,7 +117,7 @@
         :min-length="1"
       />
       <FormTextField
-        v-if="!selectedEntityType?.isLocation"
+        v-if="!isLocationCreation"
         v-model.number="form.quantity"
         :label="$t('components.item.create_modal.item_quantity')"
         type="number"
@@ -125,7 +125,7 @@
         :min="0"
       />
       <div class="mt-4 flex flex-row-reverse">
-        <Button :disabled="loading" type="submit" class="group" data-entity-create-submit="true">
+        <Button :disabled="loading || initializing" type="submit" class="group" data-entity-create-submit="true">
           <div class="relative mx-2">
             <div
               class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:rotate-[360deg]"
@@ -211,9 +211,10 @@
   // Entity type selection
   const entityTypes = computed(() => entityTypeStore.allTypes);
   const selectedEntityType = ref<EntityTypeSummary | null>(null);
-  const entityTypeName = computed(() =>
-    selectedEntityType.value?.isLocation ? t("menu.create_location") : t("menu.create_item")
-  );
+  const requestedBaseType = ref<"item" | "location">("item");
+  const isLocationCreation = computed(() => requestedBaseType.value === "location");
+  const initializing = ref(false);
+  const entityTypeName = computed(() => (isLocationCreation.value ? t("menu.create_location") : t("menu.create_item")));
 
   const LAST_TEMPLATE_KEY = "homebox:lastUsedTemplate";
 
@@ -350,7 +351,22 @@
 
   onMounted(() => {
     const cleanup = registerOpenDialogCallback(DialogID.CreateEntity, async params => {
-      await entityTypeStore.ensureFetched();
+      params = params ?? { baseType: "item" };
+      // Set the requested mode synchronously, before fetching entity types.
+      requestedBaseType.value = params.baseType;
+      selectedEntityType.value = null;
+      clearTemplate();
+      form.name = "";
+      form.location = {} as EntityOut;
+      initializing.value = true;
+      try {
+        await entityTypeStore.refresh();
+      } catch {
+        toast.error(t("components.entity.create_modal.toast.create_failed", { type: entityTypeName.value }));
+        return;
+      } finally {
+        initializing.value = false;
+      }
       subItemCreate.value = false;
       let parentItemLocationId = null;
       parent.value = {};
@@ -422,6 +438,7 @@
   });
 
   async function create(close = true) {
+    if (initializing.value) return;
     // An empty entityTypeId serializes to "" and fails UUID unmarshalling on the
     // backend, so block creation up front rather than firing a doomed request.
     if (!selectedEntityType.value?.id) {

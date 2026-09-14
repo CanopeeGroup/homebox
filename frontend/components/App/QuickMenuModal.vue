@@ -69,7 +69,13 @@
           @select="
             e => {
               e.preventDefault();
-              openDialog(create.dialogId as NoParamDialogIDs);
+              if (create.dialogId === DialogID.CreateEntity) {
+                openDialog(DialogID.CreateEntity, {
+                  params: { baseType: create.id === 1 ? 'location' : 'item' },
+                });
+              } else {
+                openDialog(create.dialogId as NoParamDialogIDs);
+              }
             }
           "
         >
