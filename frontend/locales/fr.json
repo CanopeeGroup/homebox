@@ -293,6 +293,7 @@
             }
         },
         "location": {
+            "create_item": "Nouvel Objet",
             "create_modal": {
                 "location_description": "Description de l'emplacement",
                 "location_name": "Nom de l'emplacement",
