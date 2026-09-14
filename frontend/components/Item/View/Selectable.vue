@@ -67,7 +67,7 @@
         <div
           id="selectable-subtitle"
           class="flex grow items-center px-2"
-          :class="{ hidden: !preferences.quickActions.enabled }"
+          :class="{ hidden: !compactList && !preferences.quickActions.enabled }"
         />
       </template>
       <template #description>
@@ -105,7 +105,7 @@
     <DataTable
       :view="itemView"
       :compact-list="compactList"
-      :columns="preferences.quickActions.enabled ? columns : columns.filter(c => c.enableHiding !== false)"
+      :columns="compactList || preferences.quickActions.enabled ? columns : columns.filter(c => c.enableHiding !== false)"
       :data="items"
       :location-flat-tree="locationFlatTree"
       :external-pagination="pagination"

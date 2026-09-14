@@ -36,6 +36,7 @@
 
     <div :class="['relative inline-flex items-center', selectedCount === 0 ? 'pointer-events-none opacity-50' : '']">
       <DropdownAction
+        :delete-only="compactList"
         :multi="{ items: table.getSelectedRowModel().rows, columns: table.getAllColumns() }"
         view="card"
         :table="table"
@@ -60,9 +61,10 @@
       v-for="row in table.getRowModel().rows"
       :key="row.original.id"
       class="flex min-h-24 items-start gap-3 rounded-lg border bg-background p-4 shadow-sm transition-colors hover:border-primary/50"
+      :class="{ 'border-primary ring-2 ring-primary/30': row.getIsSelected() }"
     >
       <Checkbox
-        v-if="preferences.quickActions.enabled"
+        v-if="compactList || preferences.quickActions.enabled"
         class="mt-1 shrink-0"
         :model-value="row.getIsSelected()"
         :aria-label="$t('components.item.view.selectable.select_row')"

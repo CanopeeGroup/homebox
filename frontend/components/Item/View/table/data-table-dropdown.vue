@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { MoreHorizontal } from "lucide-vue-next";
+  import { MoreHorizontal, Trash2 } from "lucide-vue-next";
   import { Button } from "@/components/ui/button";
   import {
     DropdownMenu,
@@ -24,6 +24,7 @@
   const { openDialog } = useDialog();
 
   const props = defineProps<{
+    deleteOnly?: boolean;
     item?: EntitySummary;
     multi?: {
       items: Row<EntitySummary>[];
@@ -112,24 +113,33 @@
     URL.revokeObjectURL(url);
   };
 
+  const deleting = ref(false);
+
   const deleteItems = async (ids: string[]) => {
-    const { isCanceled } = await confirm.open(t("components.item.view.table.dropdown.delete_confirmation"));
+    if (deleting.value || ids.length === 0) return;
+    deleting.value = true;
+    try {
+      const { isCanceled } = await confirm.open(t("components.item.view.table.dropdown.delete_confirmation"));
 
-    if (isCanceled) {
-      return;
-    }
-
-    // Process deletions sequentially to avoid database locking issues with concurrent write transactions
-    for (const id of ids) {
-      try {
-        await api.items.delete(id);
-      } catch (err) {
-        toast.error(t("components.item.view.table.dropdown.error_deleting"));
-        console.error(err);
+      if (isCanceled) {
+        return;
       }
-    }
 
-    resetSelection();
+      // Process deletions sequentially to avoid database locking issues with concurrent write transactions
+      for (const id of ids) {
+        try {
+          const { error } = await api.items.delete(id);
+          if (error) throw error;
+        } catch (err) {
+          toast.error(t("components.item.view.table.dropdown.error_deleting"));
+          console.error(err);
+        }
+      }
+
+      resetSelection();
+    } finally {
+      deleting.value = false;
+    }
   };
 
   const duplicateItems = async (ids: string[]) => {
@@ -155,7 +165,19 @@
 </script>
 
 <template>
-  <DropdownMenu>
+  <Button
+    v-if="deleteOnly"
+    variant="destructive"
+    class="size-9 p-0"
+    type="button"
+    :disabled="deleting || !multi?.items.length"
+    :aria-label="t('components.item.view.table.dropdown.delete_selected')"
+    :title="t('components.item.view.table.dropdown.delete_selected')"
+    @click="deleteItems(multi ? multi.items.map(row => row.original.id) : [])"
+  >
+    <Trash2 class="size-5" />
+  </Button>
+  <DropdownMenu v-else>
     <DropdownMenuTrigger as-child>
       <Button
         :variant="view === 'table' ? 'ghost' : 'outline'"
