@@ -1,19 +1,14 @@
 <script setup lang="ts">
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
-  import MdiGithub from "~icons/mdi/github";
-  import MdiDiscord from "~icons/mdi/discord";
-  import MdiFolder from "~icons/mdi/folder";
   import MdiAccount from "~icons/mdi/account";
   import MdiAccountPlus from "~icons/mdi/account-plus";
   import MdiLogin from "~icons/mdi/login";
   import MdiArrowRight from "~icons/mdi/arrow-right";
   import MdiLock from "~icons/mdi/lock";
-  import MdiMastodon from "~icons/mdi/mastodon";
   import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
   import { Button } from "@/components/ui/button";
   import LanguageSelector from "~/components/App/LanguageSelector.vue";
-  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
   import AppLogo from "~/components/App/Logo.vue";
   import FormTextField from "~/components/Form/TextField.vue";
   import FormPassword from "~/components/Form/Password.vue";
@@ -270,47 +265,9 @@
             {{ $t("index.tagline") }}
           </p>
         </div>
-        <TooltipProvider :delay-duration="0">
-          <div class="z-10 ml-auto mt-6 flex items-center gap-4 sm:mt-0">
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <a href="https://github.com/sysadminsmedia/homebox" target="_blank" rel="noopener noreferrer">
-                  <MdiGithub class="size-8" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>{{ $t("global.github") }}</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <a href="https://noc.social/@sysadminszone" target="_blank" rel="noopener noreferrer">
-                  <MdiMastodon class="size-8" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>{{ $t("global.follow_dev") }}</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <a href="https://discord.gg/aY4DCkpNA9" target="_blank" rel="noopener noreferrer">
-                  <MdiDiscord class="size-8" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>{{ $t("global.join_discord") }}</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <a href="https://homebox.software/en/" target="_blank" rel="noopener noreferrer">
-                  <MdiFolder class="size-8" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>{{ $t("global.read_docs") }}</TooltipContent>
-            </Tooltip>
-
-            <LanguageSelector class="z-10 text-primary" :expanded="false" />
-          </div>
-        </TooltipProvider>
+        <div class="z-10 ml-auto mt-6 flex items-center sm:mt-0">
+          <LanguageSelector class="z-10 text-primary" :expanded="false" />
+        </div>
       </header>
       <div class="grid min-h-[50vh] p-6 sm:place-items-center">
         <div>
@@ -486,12 +443,6 @@
         </div>
       </div>
     </div>
-    <footer v-if="status" class="bottom-0 mt-auto w-full pb-4 text-center">
-      <p class="text-center text-sm">
-        {{ $t("global.version", { version: status.build.version }) }} ~
-        {{ $t("global.build", { build: status.build.commit }) }}
-      </p>
-    </footer>
   </div>
 </template>
 

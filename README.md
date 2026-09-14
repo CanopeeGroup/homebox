@@ -57,6 +57,8 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Emplacements et navigation
 
+- Écran de connexion sans liens GitHub, Noc.social, Discord et documentation ;
+  sélecteur de langue conservé. Pied de page de version retiré de l’écran de connexion et des pages de l’application.
 - Dans une fiche d’emplacement, les sous-emplacements sont affichés avant les articles.
 - Fiches d’emplacement : retrait des actions Étiquettes, téléchargement, impression et QR Code.
 - Objets d’un emplacement en petites tuiles sans photo, avec nom et quantité, sans choix Carte/Tableau ;
