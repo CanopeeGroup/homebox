@@ -226,16 +226,6 @@
       maxLength: 1000,
     },
     {
-      type: "checkbox",
-      label: "items.insured",
-      ref: "insured",
-    },
-    {
-      type: "checkbox",
-      label: "items.archived",
-      ref: "archived",
-    },
-    {
       type: "text",
       label: "items.asset_id",
       ref: "assetId",

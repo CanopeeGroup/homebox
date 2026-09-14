@@ -28,8 +28,6 @@
   } from "@/components/ui/breadcrumb";
   import { Button, ButtonGroup } from "@/components/ui/button";
   import { useDialog } from "@/components/ui/dialog-provider";
-  import { Label } from "@/components/ui/label";
-  import { Switch } from "@/components/ui/switch";
   import { Card } from "@/components/ui/card";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
   import BaseContainer from "@/components/Base/Container.vue";
@@ -37,7 +35,6 @@
   import ItemDuplicateSettings from "~/components/Item/DuplicateSettings.vue";
   import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
   import DateTime from "~/components/global/DateTime.vue";
-  import LabelMaker from "~/components/global/LabelMaker.vue";
   import Markdown from "~/components/global/Markdown.vue";
   import BaseCard from "@/components/Base/Card.vue";
   import CopyText from "@/components/global/CopyText.vue";
@@ -233,14 +230,6 @@
         name: "items.manufacturer",
         text: item.value?.manufacturer,
         copyable: true,
-      },
-      {
-        name: "items.insured",
-        text: item.value?.insured ? "Yes" : "No",
-      },
-      {
-        name: "items.archived",
-        text: item.value?.archived ? "Yes" : "No",
       },
       {
         name: "items.notes",
@@ -459,11 +448,6 @@
         id: "details",
         name: "global.details",
         to: `/item/${itemId.value}`,
-      },
-      {
-        id: "log",
-        name: "global.maintenance",
-        to: `/item/${itemId.value}/maintenance`,
       },
       {
         id: "edit",
@@ -692,12 +676,6 @@
               </div>
             </div>
             <div class="ml-auto mt-2 flex flex-wrap items-center justify-between gap-2">
-              <LabelMaker
-                v-if="typeof item.assetId === 'string' && item.assetId != ''"
-                :id="item.assetId"
-                type="asset"
-              />
-              <LabelMaker v-else :id="item.id" type="item" />
               <Button class="w-9 md:w-auto" :aria-label="$t('global.create_subitem')" @click="createSubitem">
                 <MdiPlus />
                 <span class="hidden md:inline">{{ $t("global.create_subitem") }}</span>
@@ -762,10 +740,6 @@
           <template #title> {{ $t("items.details") }} </template>
           <template #title-actions>
             <div class="mt-2 flex flex-wrap items-center justify-between gap-4">
-              <Label class="flex cursor-pointer items-center gap-2">
-                <Switch v-model="preferences.showEmpty" />
-                {{ $t("items.show_empty") }}
-              </Label>
               <div class="space-x-1">
                 <CopyText :text="currentUrl" :icon-size="16" />
               </div>
