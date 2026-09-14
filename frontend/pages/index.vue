@@ -12,7 +12,6 @@
   import AppLogo from "~/components/App/Logo.vue";
   import FormTextField from "~/components/Form/TextField.vue";
   import FormPassword from "~/components/Form/Password.vue";
-  import FormCheckbox from "~/components/Form/Checkbox.vue";
   import PasswordScore from "~/components/global/PasswordScore.vue";
   import { PASSWORD_MIN_LENGTH, PASSWORD_RULES } from "~/lib/passwords";
 
@@ -95,7 +94,6 @@
   const email = ref("");
   const password = ref("");
   const canRegister = ref(false);
-  const remember = ref(false);
 
   const groupToken = computed<string>({
     get() {
@@ -192,7 +190,7 @@
 
   async function login() {
     loading.value = true;
-    const { error } = await ctx.login(api, email.value, loginPassword.value, remember.value);
+    const { error } = await ctx.login(api, email.value, loginPassword.value, true);
 
     if (error) {
       toast.error(t("index.toast.invalid_email_password"), {
@@ -374,14 +372,6 @@
                     autocomplete="current-password"
                     :required="true"
                   />
-                  <div class="flex items-center justify-between">
-                    <div class="max-w-[140px]">
-                      <FormCheckbox v-model="remember" :label="$t('index.remember_me')" />
-                    </div>
-                    <NuxtLink to="/forgot-password" class="text-sm hover:underline">
-                      {{ $t("index.forgot_password") }}
-                    </NuxtLink>
-                  </div>
                 </CardContent>
                 <CardFooter class="flex flex-col gap-2">
                   <Button

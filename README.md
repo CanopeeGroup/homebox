@@ -76,6 +76,8 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Utilisateurs et collections
 
+- Connexion avec session prolongée activée par défaut (28 jours) ; retrait de Se souvenir de moi
+  et du lien Mot de passe oublié de l’écran de connexion. La déconnexion et l’expiration restent actives.
 - Sur une base vide, formulaire automatique de création du premier administrateur.
   Après initialisation, l’inscription publique est fermée côté serveur et le bouton S’enregistrer est masqué.
   Les comptes supplémentaires sont créés dans Réglages → Utilisateurs par un administrateur.
