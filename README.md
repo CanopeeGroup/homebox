@@ -37,6 +37,9 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Emplacements et navigation
 
+- Fiches d’emplacement : retrait des actions Étiquettes, téléchargement, impression et QR Code.
+- Objets d’un emplacement en liste compacte sans vignette, sans choix Carte/Tableau ;
+  pagination et sélection groupée conservées.
 - Emplacements de premier niveau en petites tuiles ; sous-emplacements en liste hiérarchique.
 - Bouton escalier pour afficher ou masquer les sous-emplacements, repliés par défaut.
 - Retrait des blocs Détails/Notes des pages d’emplacement et simplification des formulaires Description/Photo.

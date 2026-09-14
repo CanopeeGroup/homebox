@@ -19,6 +19,7 @@
     locationFlatTree?: FlatTreeItem[];
     pagination?: Pagination;
     disableSort?: boolean;
+    compactList?: boolean;
   }>();
 
   const emit = defineEmits<{
@@ -36,11 +37,11 @@
   );
 
   const viewSet = computed(() => {
-    return !!props.view;
+    return !!props.view || props.compactList;
   });
 
   const itemView = computed(() => {
-    return props.view ?? preferences.value.itemDisplayView;
+    return props.compactList ? "card" : (props.view ?? preferences.value.itemDisplayView);
   });
 
   function setViewPreference(view: ViewType) {
@@ -103,6 +104,7 @@
 
     <DataTable
       :view="itemView"
+      :compact-list="compactList"
       :columns="preferences.quickActions.enabled ? columns : columns.filter(c => c.enableHiding !== false)"
       :data="items"
       :location-flat-tree="locationFlatTree"

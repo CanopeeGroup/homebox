@@ -22,7 +22,6 @@
   import BaseCard from "@/components/Base/Card.vue";
   import Currency from "~/components/global/Currency.vue";
   import DateTime from "~/components/global/DateTime.vue";
-  import LabelMaker from "~/components/global/LabelMaker.vue";
   import Markdown from "~/components/global/Markdown.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
@@ -247,7 +246,6 @@
               </div>
             </div>
             <div class="ml-auto mt-2 flex flex-wrap items-center justify-between gap-2">
-              <LabelMaker :id="location.id" type="location" />
               <Button class="w-9 md:w-auto" @click="openCreateItem">
                 <MdiPlus name="mdi-plus" />
                 <span class="hidden md:inline">
@@ -302,7 +300,7 @@
 
       <!-- Items in this location -->
       <section v-if="location && items">
-        <ItemViewSelectable :items="items" @refresh="refreshItemList" />
+        <ItemViewSelectable :items="items" compact-list @refresh="refreshItemList" />
       </section>
 
       <!-- Child locations -->

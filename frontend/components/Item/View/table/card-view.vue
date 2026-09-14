@@ -11,6 +11,7 @@
   const props = defineProps<{
     table: TableType<EntitySummary>;
     locationFlatTree?: FlatTreeItem[];
+    compactList?: boolean;
   }>();
 
   defineEmits<{
@@ -54,6 +55,22 @@
     <MdiSelectSearch class="size-10" />
     <p>{{ $t("items.no_results") }}</p>
   </div>
+  <ul v-else-if="compactList" class="divide-y rounded-lg border bg-background">
+    <li v-for="row in table.getRowModel().rows" :key="row.original.id" class="flex items-center gap-3 px-3 py-2">
+      <Checkbox
+        v-if="preferences.quickActions.enabled"
+        :model-value="row.getIsSelected()"
+        :aria-label="$t('components.item.view.selectable.select_row')"
+        @update:model-value="row.toggleSelected(!!$event)"
+      />
+      <NuxtLink :to="`/item/${row.original.id}`" class="min-w-0 flex-1 break-words text-sm hover:underline">
+        {{ row.original.name }}
+      </NuxtLink>
+      <span class="shrink-0 text-sm text-muted-foreground">
+        {{ $t("items.quantity") }} : {{ row.original.quantity }}
+      </span>
+    </li>
+  </ul>
   <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
     <ItemCard
       v-for="item in table.getRowModel().rows"

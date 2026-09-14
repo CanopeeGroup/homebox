@@ -32,6 +32,7 @@
     data: EntitySummary[];
     disableControls?: boolean;
     view: "table" | "card";
+    compactList?: boolean;
     locationFlatTree?: FlatTreeItem[];
     externalPagination?: Pagination;
   }>();
@@ -261,7 +262,12 @@
           :external-pagination="externalPagination"
         />
       </div>
-      <CardView :table="table" :location-flat-tree="locationFlatTree" @refresh="$emit('refresh')" />
+      <CardView
+        :table="table"
+        :compact-list="compactList"
+        :location-flat-tree="locationFlatTree"
+        @refresh="$emit('refresh')"
+      />
       <div v-if="!props.disableControls" class="pt-2">
         <DataTableControls
           :table="table"
