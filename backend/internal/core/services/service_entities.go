@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -169,7 +170,11 @@ func (svc *EntityService) EnsureImportRef(ctx context.Context, gid uuid.UUID) (i
 }
 
 func serializeLocation[T ~[]string](location T) string {
-	return fmt.Sprintf("%q", []string(location))
+	names := make([]string, len(location))
+	for i, name := range location {
+		names[i] = strings.ToLower(strings.TrimSpace(name))
+	}
+	return fmt.Sprintf("%q", names)
 }
 
 // CsvImport imports entities from a CSV file using the standard defined format.
@@ -179,7 +184,12 @@ func serializeLocation[T ~[]string](location T) string {
 //  1. If the entity does not exist, it is created.
 //  2. If the entity has an ImportRef and it exists it is skipped
 //  3. Locations and Tags are created if they do not exist.
+var csvImportMu sync.Mutex
+
 func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.Reader) (int, error) {
+	// Serialize CSV imports so two uploads cannot create the same missing paths.
+	csvImportMu.Lock()
+	defer csvImportMu.Unlock()
 	ctx, span := entityServiceTracer().Start(ctx, "service.EntityService.CsvImport",
 		trace.WithAttributes(attribute.String("group.id", gid.String())))
 	defer span.End()

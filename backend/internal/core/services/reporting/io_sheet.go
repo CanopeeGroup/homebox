@@ -449,9 +449,37 @@ func (s *IOSheet) CSV() ([][]string, error) {
 // no object fields, so importing them cannot accidentally create objects.
 func (s *IOSheet) CompactCSV() ([][]string, error) {
 	rows := [][]string{{"Subfolder-level1", "Subfolder-level2", "HB.name", "HB.model_number", "HB.quantity"}}
+	key := func(path LocationString) string {
+		names := make([]string, len(path))
+		for i, name := range path {
+			names[i] = strings.ToLower(strings.TrimSpace(name))
+		}
+		return fmt.Sprintf("%q", names)
+	}
+
+	// A row for an object or a child location already represents every parent
+	// in its path. Emit a standalone location only when no other row covers it.
+	covered := make(map[string]bool)
 	for _, row := range s.Rows {
 		if len(row.FolderPath) > 2 {
 			return nil, fmt.Errorf("five-column CSV supports only two location levels; use a full ZIP backup for deeper hierarchies")
+		}
+		depth := len(row.FolderPath)
+		if row.IsLocation {
+			depth--
+		}
+		for level := 1; level <= depth; level++ {
+			covered[key(row.FolderPath[:level])] = true
+		}
+	}
+	emittedLocations := make(map[string]bool)
+	for _, row := range s.Rows {
+		if row.IsLocation {
+			pathKey := key(row.FolderPath)
+			if covered[pathKey] || emittedLocations[pathKey] {
+				continue
+			}
+			emittedLocations[pathKey] = true
 		}
 		values := make([]string, 5)
 		copy(values, row.FolderPath)

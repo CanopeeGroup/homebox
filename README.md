@@ -67,7 +67,11 @@ A;A0110;Objet exemple;REF-001;2
 
 Une ligne sans nom d’objet importe uniquement les emplacements ; une ligne avec HB.name
 crée l’objet dans le chemin indiqué, avec son numéro de modèle et sa quantité.
-Les chemins d’emplacement existants ou répétés sont réutilisés. Les anciens CSV Homebox restent acceptés.
+Les chemins d’emplacement existants ou répétés sont réutilisés, sans distinction de casse ni des espaces en bordure.
+Les imports CSV sont sérialisés pour éviter les créations simultanées du même chemin.
+À l’export, un emplacement occupé est représenté par ses lignes d’objets : aucune ligne vide supplémentaire.
+Seuls les emplacements vides non représentés par un chemin descendant ont une ligne dédiée, une fois par chemin.
+Les objets distincts restent tous exportés, même s’ils ont des noms identiques. Les anciens CSV Homebox restent acceptés.
 Sans HB.import_ref dans ce format réduit, réimporter des lignes d’objets crée de nouveaux objets.
 
 Le format à cinq colonnes est prévu pour deux niveaux d’emplacements. Si une hiérarchie est plus profonde,
