@@ -1,5 +1,5 @@
 <template>
-  <BaseModal :dialog-id="DialogID.CreateEntity">
+  <BaseModal :dialog-id="DialogID.CreateEntity" hide-footer>
     <template #title>
       <span>{{ isLocationCreation ? $t("menu.create_location") : $t("menu.create_object") }}</span>
     </template>
@@ -143,7 +143,6 @@
         step="any"
         :min="0"
       />
-
     </form>
   </BaseModal>
 </template>
