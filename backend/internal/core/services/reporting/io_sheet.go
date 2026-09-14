@@ -444,3 +444,23 @@ func (s *IOSheet) CSV() ([][]string, error) {
 
 	return memcsv, nil
 }
+
+// CompactCSV is the five-column collection exchange format. Location rows have
+// no object fields, so importing them cannot accidentally create objects.
+func (s *IOSheet) CompactCSV() ([][]string, error) {
+	rows := [][]string{{"Subfolder-level1", "Subfolder-level2", "HB.name", "HB.model_number", "HB.quantity"}}
+	for _, row := range s.Rows {
+		if len(row.FolderPath) > 2 {
+			return nil, fmt.Errorf("five-column CSV supports only two location levels; use a full ZIP backup for deeper hierarchies")
+		}
+		values := make([]string, 5)
+		copy(values, row.FolderPath)
+		if !row.IsLocation {
+			values[2] = row.Name
+			values[3] = row.ModelNumber
+			values[4] = strconv.FormatFloat(row.Quantity, 'f', -1, 64)
+		}
+		rows = append(rows, values)
+	}
+	return rows, nil
+}

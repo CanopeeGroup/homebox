@@ -601,7 +601,7 @@ func (svc *EntityService) ExportCSV(ctx context.Context, gid uuid.UUID, hbURL st
 
 	_, csvSpan := entityServiceTracer().Start(ctx, "service.EntityService.ExportCSV.encode")
 	defer csvSpan.End()
-	rows, err := sheet.CSV()
+	rows, err := sheet.CompactCSV()
 	if err != nil {
 		recordServiceSpanError(csvSpan, err)
 		recordServiceSpanError(span, err)

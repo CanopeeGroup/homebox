@@ -57,28 +57,26 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Import/export CSV dans Collection → Outils
 
-Les boutons d’import/export de base acceptent désormais ce format UTF-8 :
+Le CSV exporté contient uniquement cinq colonnes (UTF-8, séparateur point-virgule) :
 
 ```csv
-Subfolder-level1;Subfolder-level2
-A;A0110
-A;A0120
+Subfolder-level1;Subfolder-level2;HB.name;HB.model_number;HB.quantity
+A;A0110;;;
+A;A0110;Objet exemple;REF-001;2
 ```
 
-Les colonnes décrivent la hiérarchie parent/sous-emplacement. Une seconde colonne vide importe seulement
-le parent. Les lignes vides, doublons et chemins déjà présents ne recréent pas les emplacements.
-Un même nom sous deux parents différents correspond à deux emplacements distincts.
-Un fichier contenant uniquement ces colonnes ne crée aucun objet.
+Une ligne sans nom d’objet importe uniquement les emplacements ; une ligne avec HB.name
+crée l’objet dans le chemin indiqué, avec son numéro de modèle et sa quantité.
+Les chemins d’emplacement existants ou répétés sont réutilisés. Les anciens CSV Homebox restent acceptés.
+Sans HB.import_ref dans ce format réduit, réimporter des lignes d’objets crée de nouveaux objets.
 
-L’export CSV de base utilise le point-virgule et conserve les colonnes HB.* des objets, avec les colonnes
-Subfolder-level1, Subfolder-level2 (puis niveaux supplémentaires si nécessaire).
-HB.is_location distingue un emplacement d’un objet : les colonnes Subfolder décrivent le chemin complet
-de l’emplacement, ou l’emplacement de l’objet. Les anciens fichiers à virgule ou tabulation restent acceptés.
-Les lignes d’emplacement reconstruisent la hiérarchie sans écraser les métadonnées existantes.
+Le format à cinq colonnes est prévu pour deux niveaux d’emplacements. Si une hiérarchie est plus profonde,
+l’export est refusé explicitement pour ne pas perdre ni modifier les relations : utiliser la sauvegarde ZIP complète.
+Le CSV réduit n’est pas une sauvegarde complète (photos, métadonnées et relations entre objets non incluses).
+Les données absentes du CSV ne sont pas supprimées de la base par l’export.
 
 Les boutons de la page Emplacements et le système parallèle sont retirés.
 L’import reste progressif : les créations réussies sont conservées en cas d’erreur.
-La sauvegarde ZIP complète reste inchangée.
 
 ### Emplacements et navigation
 
