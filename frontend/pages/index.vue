@@ -388,7 +388,7 @@
                   <FormTextField
                     id="login-username"
                     v-model="email"
-                    :label="$t('global.email')"
+                    :label="$t('index.login_identifier')"
                     name="username"
                     autocomplete="username"
                     :required="true"

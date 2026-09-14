@@ -50,6 +50,8 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Utilisateurs et collections
 
+- Connexion avec le courriel ou le nom du profil, sans distinction de casse ; mot de passe inchangé.
+  En cas de noms identiques, utiliser le courriel. Une correspondance de courriel reste prioritaire.
 - Premier utilisateur administrateur de la solution ; sur une installation existante sans administrateur,
   une migration promeut le compte le plus ancien.
 - Gestion des comptes dans **Réglages → Utilisateurs** : ajout, modification, suppression,

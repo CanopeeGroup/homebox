@@ -133,6 +133,20 @@ func (r *UserRepository) GetOneID(ctx context.Context, id uuid.UUID) (UserOut, e
 	return out, nil
 }
 
+// GetOneLogin preserves email login and accepts an unambiguous display name.
+// Only rejects duplicate names rather than choosing an arbitrary account.
+func (r *UserRepository) GetOneLogin(ctx context.Context, identifier string) (UserOut, error) {
+	identifier = strings.TrimSpace(identifier)
+	out, err := r.GetOneEmail(ctx, identifier)
+	if !ent.IsNotFound(err) {
+		return out, err
+	}
+	return mapUserOutErr(r.db.User.Query().
+		Where(user.NameEqualFold(identifier)).
+		WithGroups().
+		Only(ctx))
+}
+
 func (r *UserRepository) GetOneEmail(ctx context.Context, email string) (UserOut, error) {
 	ctx, span := entityTracer().Start(ctx, "repo.UserRepository.GetOneEmail",
 		trace.WithAttributes(attribute.Int("user.email.length", len(email))))

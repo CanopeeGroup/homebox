@@ -497,6 +497,7 @@
         "dont_join_group": "Vous ne voulez pas joindre un groupe ?",
         "joining_group": "Vous rejoignez un groupe existant !",
         "login": "Se connecter",
+        "login_identifier": "Nom d’utilisateur ou courriel",
         "or": "ou",
         "register": "S'enregistrer",
         "remember_me": "Se souvenir de moi",
@@ -507,7 +508,7 @@
         "title": "Organisez et Étiquetez Vos Affaires",
         "toast": {
             "invalid_email": "Adresse e-mail non valide",
-            "invalid_email_password": "E-mail ou mot de passe invalide",
+            "invalid_email_password": "Identifiant ou mot de passe invalide",
             "login_success": "Connexion réussie",
             "oidc_access_denied": "Accès refusé : votre compte n'appartient pas au rôle ou au groupe requis",
             "oidc_auth_failed": "Échec de l'authentification",

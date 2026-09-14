@@ -453,7 +453,7 @@ func (svc *UserService) Login(ctx context.Context, username, password string, ex
 		))
 	defer span.End()
 
-	usr, err := svc.repos.Users.GetOneEmail(ctx, username)
+	usr, err := svc.repos.Users.GetOneLogin(ctx, username)
 	if err != nil {
 		span.SetAttributes(
 			attribute.Bool("user.found", false),

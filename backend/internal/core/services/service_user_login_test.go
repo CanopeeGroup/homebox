@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,6 +34,28 @@ func TestLogin_EndToEnd(t *testing.T) {
 		_, err := tSvc.User.Login(ctx, reg.Email, "wrong-password", false)
 		require.Error(t, err)
 		assert.ErrorIs(t, err, ErrorInvalidLogin)
+	})
+
+	t.Run("name login ignores case and surrounding spaces", func(t *testing.T) {
+		tok, err := tSvc.User.Login(ctx, "  "+strings.ToUpper(reg.Name)+"  ", password, false)
+		require.NoError(t, err)
+		assert.NotEmpty(t, tok.Raw)
+	})
+
+	t.Run("name login still checks the password", func(t *testing.T) {
+		_, err := tSvc.User.Login(ctx, reg.Name, "wrong-password", false)
+		require.ErrorIs(t, err, ErrorInvalidLogin)
+	})
+
+	t.Run("duplicate names require email login", func(t *testing.T) {
+		_, err := tSvc.User.RegisterUser(ctx, UserRegistration{
+			Name: reg.Name, Email: fk.Email(), Password: password,
+		})
+		require.NoError(t, err)
+		_, err = tSvc.User.Login(ctx, reg.Name, password, false)
+		require.ErrorIs(t, err, ErrorInvalidLogin)
+		_, err = tSvc.User.Login(ctx, reg.Email, password, false)
+		require.NoError(t, err)
 	})
 
 	t.Run("nonexistent user is rejected with the same generic error", func(t *testing.T) {
