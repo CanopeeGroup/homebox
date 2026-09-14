@@ -347,6 +347,7 @@
   }
 
   watchDebounced([page, pageSize, query, selectedLocations], search, { debounce: 250, maxWait: 1000 });
+  onServerEvent(ServerEvent.EntityMutation, useDebounceFn(search, 200));
 
   async function submit() {
     // Set URL Params

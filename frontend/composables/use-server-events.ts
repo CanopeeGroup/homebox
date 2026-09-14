@@ -24,6 +24,10 @@ const RECONNECT_MAX_DELAY_MS = 30000;
 
 const listeners = new Map<ServerEvent, (() => void)[]>();
 
+export function dispatchServerEvent(event: ServerEvent) {
+  listeners.get(event)?.forEach(callback => callback());
+}
+
 function getWebSocketProtocols() {
   const auth = useAuthContext();
   if (!auth.attachmentToken) {
@@ -103,11 +107,11 @@ function connect(onmessage: (m: EventMessage) => void) {
 
   const thorttled = new Map<ServerEvent, (m: EventMessage) => void>();
 
-  thorttled.set(ServerEvent.EntityMutation, useThrottleFn(onmessage, 1000));
-  thorttled.set(ServerEvent.TagMutation, useThrottleFn(onmessage, 1000));
-  thorttled.set(ServerEvent.UserMutation, useThrottleFn(onmessage, 1000));
-  thorttled.set(ServerEvent.ExportMutation, useThrottleFn(onmessage, 500));
-  thorttled.set(ServerEvent.ImportMutation, useThrottleFn(onmessage, 500));
+  thorttled.set(ServerEvent.EntityMutation, useThrottleFn(onmessage, 1000, true, true));
+  thorttled.set(ServerEvent.TagMutation, useThrottleFn(onmessage, 1000, true, true));
+  thorttled.set(ServerEvent.UserMutation, useThrottleFn(onmessage, 1000, true, true));
+  thorttled.set(ServerEvent.ExportMutation, useThrottleFn(onmessage, 500, true, true));
+  thorttled.set(ServerEvent.ImportMutation, useThrottleFn(onmessage, 500, true, true));
 
   ws.onmessage = msg => {
     const pm = JSON.parse(msg.data);
@@ -140,7 +144,7 @@ export function onServerEvent(event: ServerEvent, callback: () => void) {
 
         connect(e => {
           console.debug("received event", e);
-          listeners.get(e.event)?.forEach(c => c());
+          dispatchServerEvent(e.event);
         });
       }
     );
@@ -152,7 +156,7 @@ export function onServerEvent(event: ServerEvent, callback: () => void) {
     clearReconnectTimer();
     connect(e => {
       console.debug("received event", e);
-      listeners.get(e.event)?.forEach(c => c());
+      dispatchServerEvent(e.event);
     });
   }
 

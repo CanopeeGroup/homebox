@@ -1,6 +1,7 @@
 import { PublicApi } from "~~/lib/api/public";
 import { UserClient } from "~~/lib/api/user";
 import { Requests } from "~~/lib/requests";
+import { dispatchServerEvent, ServerEvent } from "./use-server-events";
 
 export type Observer = {
   handler: (r: Response, req?: RequestInit) => void;
@@ -39,6 +40,13 @@ export function useUserApi(): UserClient {
 
   const requests = new Requests("", "", headers);
   requests.addResponseInterceptor(logger);
+  requests.addResponseInterceptor((response, request) => {
+    if (response.ok && ["POST", "PUT", "PATCH", "DELETE"].includes(request?.method?.toUpperCase() ?? "")) {
+      if (!new URL(response.url).pathname.includes("/users/logout")) {
+        dispatchServerEvent(ServerEvent.EntityMutation);
+      }
+    }
+  });
   requests.addResponseInterceptor(async r => {
     if (r.status === 401) {
       console.error("unauthorized request, invalidating session");

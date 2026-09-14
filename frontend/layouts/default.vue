@@ -200,11 +200,7 @@
                   <MdiMagnify />
                 </Button>
               </div>
-              <div>
-                <Button size="icon" @click="openScanner">
-                  <MdiQrcodeScan />
-                </Button>
-              </div>
+              <div></div>
             </div>
           </div>
 
@@ -277,7 +273,6 @@
   import { useDialog } from "~/components/ui/dialog-provider";
   import { Input } from "~/components/ui/input";
   import { Button } from "~/components/ui/button";
-  import { toast } from "@/components/ui/sonner";
   import { DialogID, type NoParamDialogIDs } from "~/components/ui/dialog-provider/utils";
   import ModalConfirm from "~/components/ModalConfirm.vue";
   import OutdatedModal from "~/components/App/OutdatedModal.vue";
@@ -325,23 +320,6 @@
       if (document.activeElement && "blur" in document.activeElement) {
         (document.activeElement as HTMLElement).blur();
       }
-    }
-  };
-
-  const openScanner = () => {
-    // request permission
-    if (navigator.mediaDevices) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then(() => {
-          openDialog(DialogID.Scanner);
-        })
-        .catch(err => {
-          console.error(err);
-          toast.error(t("scanner.permission_denied"));
-        });
-    } else {
-      toast.error(t("scanner.unsupported"));
     }
   };
 
@@ -500,11 +478,17 @@
     }
   });
 
-  onServerEvent(ServerEvent.EntityMutation, () => {
+  const nuxtApp = useNuxtApp();
+  const refreshDisplay = useDebounceFn(() => {
     locationStore.refreshChildren();
     locationStore.refreshParents();
     locationStore.refreshTree();
-  });
+    void nuxtApp.runWithContext(() => refreshNuxtData());
+  }, 150);
+  onServerEvent(ServerEvent.EntityMutation, refreshDisplay);
+  onServerEvent(ServerEvent.ImportMutation, refreshDisplay);
+  onServerEvent(ServerEvent.UserMutation, refreshDisplay);
+  onServerEvent(ServerEvent.ExportMutation, refreshDisplay);
 
   const api = useUserApi();
 

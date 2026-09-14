@@ -6,7 +6,6 @@ export const useLocationStore = defineStore("locations", {
   state: () => ({
     parents: null as EntitySummary[] | null,
     Locations: null as EntitySummary[] | null,
-    client: useUserApi(),
     tree: null as TreeItem[] | null,
     refreshLocationsPromise: null as Promise<void> | null,
   }),
@@ -18,14 +17,16 @@ export const useLocationStore = defineStore("locations", {
      */
     parentLocations(state): EntitySummary[] {
       if (state.parents === null) {
-        this.client.items.getLocations({ filterChildren: true }).then(result => {
-          if (result.error) {
-            console.error(result.error);
-            return;
-          }
+        useUserApi()
+          .items.getLocations({ filterChildren: true })
+          .then(result => {
+            if (result.error) {
+              console.error(result.error);
+              return;
+            }
 
-          this.parents = result.data;
-        });
+            this.parents = result.data;
+          });
       }
       return state.parents ?? [];
     },
@@ -40,12 +41,16 @@ export const useLocationStore = defineStore("locations", {
       }
 
       if (this.refreshLocationsPromise === null) {
-        this.refreshLocationsPromise = this.refreshChildren().then(() => {});
+        this.refreshLocationsPromise = this.refreshChildren()
+          .then(() => {})
+          .finally(() => {
+            this.refreshLocationsPromise = null;
+          });
       }
       await this.refreshLocationsPromise;
     },
     async refreshParents(): ReturnType<ItemsApi["getLocations"]> {
-      const result = await this.client.items.getLocations({ filterChildren: true });
+      const result = await useUserApi().items.getLocations({ filterChildren: true });
       if (result.error) {
         return result;
       }
@@ -54,7 +59,7 @@ export const useLocationStore = defineStore("locations", {
       return result;
     },
     async refreshChildren(): ReturnType<ItemsApi["getLocations"]> {
-      const result = await this.client.items.getLocations({ filterChildren: false });
+      const result = await useUserApi().items.getLocations({ filterChildren: false });
       if (result.error) {
         return result;
       }
@@ -63,7 +68,7 @@ export const useLocationStore = defineStore("locations", {
       return result;
     },
     async refreshTree(): ReturnType<ItemsApi["getTree"]> {
-      const result = await this.client.items.getTree();
+      const result = await useUserApi().items.getTree();
       if (result.error) {
         return result;
       }

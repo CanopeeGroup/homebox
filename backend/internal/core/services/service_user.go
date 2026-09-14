@@ -224,18 +224,7 @@ func (svc *UserService) RegisterUser(ctx context.Context, data UserRegistration,
 			tagsCreated++
 		}
 
-		log.Debug().Msg("creating default locations")
 		locsCreated := 0
-		for _, loc := range defaultLocations() {
-			_, err := svc.repos.Entities.CreateContainer(bootstrapCtx, usr.DefaultGroupID, loc)
-			if err != nil {
-				recordServiceSpanError(bootstrapSpan, err)
-				bootstrapSpan.End()
-				recordServiceSpanError(span, err)
-				return repo.UserOut{}, err
-			}
-			locsCreated++
-		}
 
 		// Seeding locations lazily creates the "Location" entity type, but the
 		// "Item" type isn't created until the first item — leaving the new group
@@ -677,17 +666,7 @@ func (svc *UserService) registerOIDCUser(ctx context.Context, issuer, subject, e
 		tagsCreated++
 	}
 
-	log.Debug().Str("issuer", issuer).Str("subject", subject).Msg("creating default locations for OIDC user")
 	locsCreated := 0
-	for _, loc := range defaultLocations() {
-		_, err := svc.repos.Entities.CreateContainer(bootstrapCtx, group.ID, loc)
-		if err != nil {
-			recordServiceSpanError(bootstrapSpan, err)
-			log.Err(err).Msg("Failed to create default location")
-			continue
-		}
-		locsCreated++
-	}
 
 	// Ensure both default entity types exist (see RegisterUser): seeding
 	// locations only creates the "Location" type, not "Item".
