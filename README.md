@@ -8,6 +8,112 @@
 > Ceci est le fork personnalisé de HomeBox maintenu par **leroyconstant**.
 > Les différences avec le projet officiel, les instructions Docker et la stratégie de mise à jour sont détaillées dans [FORK_CHANGES.md](FORK_CHANGES.md).
 
+## Personnalisations du fork
+
+Les changements ci-dessous sont disponibles sur la branche `feature/template-import-export`.
+Le dépôt conserve les sources du projet officiel ; les fonctionnalités et captures officielles
+présentées plus bas ne reflètent donc pas nécessairement cette interface personnalisée.
+
+### Modèles et recherche
+
+- Vue exclusivement en liste compacte, avec une police réduite.
+- Sélection individuelle ou de tous les modèles et suppression groupée.
+- Import et export JSON et CSV avec séparateur point-virgule.
+- Les modèles sont inclus dans les résultats de recherche.
+- Quantité `0` autorisée et utilisée par défaut pour les objets et les modèles.
+
+### Création et fiches des objets
+
+- Sélection du modèle via le champ **Sélection Produit**.
+- Sélecteurs Produit et Emplacement Parent adaptés aux téléphones, aux tablettes et au clavier tactile.
+- Correction de la recherche dans les sélecteurs et des soumissions involontaires lors d’une sélection.
+- Réinitialisation du produit et de l’emplacement après chaque création, avec notification de confirmation.
+- Traduction en français des libellés des formulaires concernés.
+- Suppression de la description, de la photo, de Numériser et d’Importer un produit dans le formulaire de création.
+- Suppression des champs Assuré et Archivé de la fiche et du formulaire de modification ; les données existantes sont conservées.
+- Suppression du bouton Afficher Vide et de l’onglet Entretien de la fiche.
+- Suppression des actions Étiquettes, Télécharger l’étiquette, Imprimer et QR Code en haut de la fiche.
+- Suppression du bouton de numérisation/QR Code dans l’en-tête global, en haut à droite.
+
+### Emplacements et navigation
+
+- Emplacements de premier niveau en petites tuiles ; sous-emplacements en liste hiérarchique.
+- Bouton escalier pour afficher ou masquer les sous-emplacements, repliés par défaut.
+- Retrait des blocs Détails/Notes des pages d’emplacement et simplification des formulaires Description/Photo.
+- Aucun emplacement de démonstration créé automatiquement pour les nouveaux comptes, y compris OIDC.
+  Les emplacements déjà présents ne sont pas supprimés.
+- La page Emplacements remplace l’accueil après connexion ; les anciennes adresses d’accueil sont redirigées.
+- Menu **Réglages** regroupant Entretien, Profil, Collection et, pour les administrateurs, Utilisateurs.
+- Descriptions distinctes pour chaque module de Réglages.
+- Retrait des menus Balises, Clés API et Types d’entités ; création d’objets disponible par défaut.
+  Ces retraits d’interface ne constituent pas une suppression de toutes les API correspondantes.
+
+### Utilisateurs et collections
+
+- Premier utilisateur administrateur de la solution ; sur une installation existante sans administrateur,
+  une migration promeut le compte le plus ancien.
+- Gestion des comptes dans **Réglages → Utilisateurs** : ajout, modification, suppression,
+  changement facultatif du mot de passe et attribution du statut Administrateur.
+- Routes d’administration protégées côté serveur.
+- Protection contre la suppression de son propre compte depuis ce module et contre la suppression
+  ou la rétrogradation du dernier administrateur.
+- Retrait des boutons Invitations et Notifiants du module Collection.
+- Paramètres et Outils visibles uniquement pour le propriétaire de la collection.
+  Le renommage reste protégé côté serveur par le droit de propriété de la collection.
+- Les droits d’administration globale et de propriété d’une collection sont distincts.
+- Devise EUR par défaut pour les nouvelles collections ; migration des collections existantes vers EUR.
+
+### Journal d’activité
+
+- Journal persistant par collection, avec date, utilisateur, action, ressource et nombre d’éléments concernés.
+- Opérations présentées sous forme de phrases lisibles ; détection de certains traitements groupés.
+- Historique conservé sans suppression automatique liée à la limite d’affichage.
+- Pagination de 1 000 opérations, compteur total et navigation entre pages.
+- Export CSV UTF-8 avec séparateur point-virgule, récupérant toutes les pages de la collection sélectionnée.
+- Tri stable par date et identifiant, et indexation du journal par collection et date.
+
+### Actualisation de l’affichage
+
+- Actualisation après les écritures réussies dans l’interface, en complément des événements WebSocket.
+- Rafraîchissement des données des pages, des arbres d’emplacement et des résultats de recherche.
+- Regroupement des rafraîchissements rapprochés et traitement du dernier événement WebSocket d’une série.
+- Correction du client mis en cache dans le magasin d’emplacements pour utiliser la collection courante.
+- Ces corrections ont passé le lint des fichiers frontend concernés ; leur validation fonctionnelle
+  complète sur téléphone, tablette et installation Docker reste nécessaire.
+
+### Déployer et mettre à jour ce fork
+
+L’image officielle `ghcr.io/sysadminsmedia/homebox` ne contient pas ces personnalisations.
+Construire l’image à partir de la branche du fork :
+
+```bash
+git clone --branch feature/template-import-export https://github.com/leroyconstant/homebox.git
+cd homebox
+docker compose build --no-cache
+docker compose up -d
+```
+
+Pour mettre à jour un clone déjà installé :
+
+```bash
+git fetch origin
+git switch feature/template-import-export
+git pull --ff-only origin feature/template-import-export
+docker compose build --no-cache
+docker compose up -d
+docker compose logs --tail=100 homebox
+```
+
+Sauvegarder les données avant chaque mise à jour importante. Utiliser un volume nommé ou un montage
+persistant explicite pour `/data`, qui contient notamment la base SQLite et les fichiers joints.
+Ne pas utiliser `docker compose down --volumes` pour une mise à jour : cette option supprime les volumes
+du projet. Les montages de dossiers hôtes ne sont pas effacés par cette commande.
+Les migrations de base sont appliquées au démarrage. Une actualisation sans cache du navigateur
+peut être nécessaire après la reconstruction du frontend.
+
+La branche dédiée facilite l’intégration des changements officiels, mais cette compatibilité nécessite
+de résoudre les conflits et de tester les migrations sur une copie des données ; elle n’est pas automatique.
+
 <p align="center" style="width: 100%;">
    <a href="https://homebox.software/en/">Docs</a>
    |
