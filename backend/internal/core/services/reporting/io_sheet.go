@@ -36,7 +36,7 @@ func (s *IOSheet) indexHeaders() {
 			s.custom = append(s.custom, i)
 		}
 
-		if strings.HasPrefix(h, "HB.") {
+		if strings.HasPrefix(h, "HB.") || strings.HasPrefix(h, "Subfolder-level") {
 			s.index[h] = i
 		}
 	}
@@ -117,7 +117,22 @@ func (s *IOSheet) Read(data io.Reader) error {
 		return fmt.Errorf("sheet must have at least 1 row of data (header + 1)")
 	}
 
+	s.index = nil
+	s.custom = nil
 	s.headers = sheet[0]
+	for i := range s.headers {
+		s.headers[i] = strings.TrimSpace(strings.TrimPrefix(s.headers[i], "\uFEFF"))
+	}
+	_, level1 := s.GetColumn("Subfolder-level1")
+	_, level2 := s.GetColumn("Subfolder-level2")
+	if level1 != level2 {
+		return fmt.Errorf("Subfolder-level1 and Subfolder-level2 must be provided together")
+	}
+	if !level1 {
+		if _, _, err := parseHeaders(s.headers); err != nil {
+			return err
+		}
+	}
 	s.Rows = make([]ExportCSVRow, len(sheet)-1)
 
 	for i, row := range sheet[1:] {
@@ -194,6 +209,24 @@ func (s *IOSheet) Read(data io.Reader) error {
 			})
 		}
 
+		if level1 {
+			for level := 1; ; level++ {
+				col, ok := s.GetColumn(fmt.Sprintf("Subfolder-level%d", level))
+				if !ok { break }
+				rowData.FolderPath = append(rowData.FolderPath, strings.TrimSpace(row[col]))
+			}
+			for len(rowData.FolderPath) > 0 && rowData.FolderPath[len(rowData.FolderPath)-1] == "" {
+				rowData.FolderPath = rowData.FolderPath[:len(rowData.FolderPath)-1]
+			}
+			for _, name := range rowData.FolderPath {
+				if name == "" || len(name) > 255 { return fmt.Errorf("row %d: invalid location name or missing parent", i+2) }
+			}
+			rowData.Location = rowData.FolderPath
+			rowData.LocationOnly = rowData.IsLocation || strings.TrimSpace(rowData.Name) == ""
+		} else if rowData.IsLocation {
+			rowData.Location = append(rowData.Location, rowData.Name)
+			rowData.LocationOnly = true
+		}
 		s.Rows[i] = rowData
 	}
 
@@ -250,7 +283,13 @@ func (s *IOSheet) ReadItems(ctx context.Context, entities []repo.EntityOut, gid 
 			}
 		})
 
+		isLocation := item.EntityType != nil && item.EntityType.IsLocation
+		folderPath := append(LocationString{}, locString...)
+		if isLocation { folderPath = append(folderPath, item.Name) }
+
 		s.Rows[i] = ExportCSVRow{
+			IsLocation: isLocation,
+			FolderPath: folderPath,
 			// fill struct
 			Location: locString,
 			TagStr:   tagString,
@@ -303,6 +342,14 @@ func (s *IOSheet) ReadItems(ctx context.Context, entities []repo.EntityOut, gid 
 		}
 
 		s.headers = append(s.headers, primaryCSVTag(tag))
+	}
+
+	depth := 2
+	for _, row := range s.Rows {
+		if len(row.FolderPath) > depth { depth = len(row.FolderPath) }
+	}
+	for level := 1; level <= depth; level++ {
+		s.headers = append(s.headers, fmt.Sprintf("Subfolder-level%d", level))
 	}
 
 	for _, h := range customHeaders {
@@ -377,6 +424,12 @@ func (s *IOSheet) CSV() ([][]string, error) {
 			}
 
 			memcsv[rowIdx][col] = v
+		}
+
+		for level, name := range row.FolderPath {
+			if col, ok := s.GetColumn(fmt.Sprintf("Subfolder-level%d", level+1)); ok {
+				memcsv[rowIdx][col] = name
+			}
 		}
 
 		for _, f := range row.Fields {

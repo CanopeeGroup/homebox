@@ -169,7 +169,7 @@ func (svc *EntityService) EnsureImportRef(ctx context.Context, gid uuid.UUID) (i
 }
 
 func serializeLocation[T ~[]string](location T) string {
-	return strings.Join(location, "/")
+	return fmt.Sprintf("%q", []string(location))
 }
 
 // CsvImport imports entities from a CSV file using the standard defined format.
@@ -277,6 +277,7 @@ func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.
 
 	for i := range sheet.Rows {
 		row := sheet.Rows[i]
+		if strings.TrimSpace(row.Name) == "" && len(row.Location) == 0 { continue }
 
 		rowCtx, rowSpan := entityServiceTracer().Start(importCtx, "service.EntityService.CsvImport.row",
 			trace.WithAttributes(
@@ -350,6 +351,12 @@ func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.
 			recordServiceSpanError(importSpan, err)
 			recordServiceSpanError(span, err)
 			return 0, err
+		}
+
+		if row.LocationOnly {
+			finished++
+			rowSpan.End()
+			continue
 		}
 
 		// Auto-incrementing an asset ID is only appropriate when a brand new
@@ -484,6 +491,7 @@ func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.
 // as a cache of already-known location paths and is updated in place with any
 // locations that are created. It returns the ID of the row's leaf location.
 func (svc *EntityService) csvImportRowLocation(ctx context.Context, gid uuid.UUID, row reporting.ExportCSVRow, locationMap map[string]uuid.UUID) (uuid.UUID, error) {
+	if len(row.Location) == 0 { return uuid.Nil, nil }
 	path := serializeLocation(row.Location)
 
 	locationID, ok := locationMap[path]
@@ -537,7 +545,7 @@ func (svc *EntityService) csvImportRowLocation(ctx context.Context, gid uuid.UUI
 func (svc *EntityService) patchCSVParentRefs(ctx context.Context, gid uuid.UUID, rows []reporting.ExportCSVRow) error {
 	for i := range rows {
 		row := rows[i]
-		if row.ImportRef == "" || row.ParentImportRef == "" {
+		if row.LocationOnly || row.ImportRef == "" || row.ParentImportRef == "" {
 			continue
 		}
 

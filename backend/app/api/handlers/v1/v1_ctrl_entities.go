@@ -576,6 +576,7 @@ func (ctrl *V1Controller) HandleEntitiesExport() errchain.HandlerFunc {
 			attribute.Int("csv.rows.count", len(csvData)))
 		defer writeSpan.End()
 		writer := csv.NewWriter(w)
+		writer.Comma = ';'
 		if err := writer.WriteAll(csvData); err != nil {
 			recordCtrlSpanError(writeSpan, err)
 			log.Err(err).Msg("failed to write CSV export response")

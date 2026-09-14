@@ -14,6 +14,9 @@ type ExportItemFields struct {
 }
 
 type ExportCSVRow struct {
+	IsLocation       bool               `csv:"HB.is_location"`
+	FolderPath       LocationString     `csv:"-"`
+	LocationOnly     bool               `csv:"-"`
 	PurchaseDate     types.Date         `csv:"HB.purchase_date|HB.purchase_time"`
 	WarrantyExpires  types.Date         `csv:"HB.warranty_expires"`
 	SoldDate         types.Date         `csv:"HB.sold_date|HB.sold_time"`

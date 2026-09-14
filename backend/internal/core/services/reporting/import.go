@@ -28,23 +28,25 @@ var (
 // It is assumed that the first row is the header row and that the separator is the same
 // for all rows.
 //
-// Supported separators are `,` and `\t`
+// Supported separators are comma, tab and semicolon
 func determineSeparator(data []byte) (rune, error) {
 	// First row
 	firstRow := bytes.Split(data, []byte("\n"))[0]
 
-	// find first comma or /t
-	comma := bytes.IndexByte(firstRow, ',')
-	tab := bytes.IndexByte(firstRow, '\t')
-
-	switch {
-	case comma == -1 && tab == -1:
-		return 0, errors.New("could not determine separator")
-	case tab > comma:
-		return '\t', nil
-	default:
-		return ',', nil
+	// Compare parsed header widths, respecting quoted separators.
+	best, width := rune(0), 0
+	for _, separator := range []rune{',', '\t', ';'} {
+		reader := csv.NewReader(bytes.NewReader(firstRow))
+		reader.Comma = separator
+		header, err := reader.Read()
+		if err == nil && len(header) > width {
+			best, width = separator, len(header)
+		}
 	}
+	if width < 2 {
+		return 0, errors.New("could not determine separator")
+	}
+	return best, nil
 }
 
 // separatorDetectionBufferSize is the buffer size for reading CSV headers

@@ -25,11 +25,16 @@
         </span>
       </div>
 
+      <p class="text-sm text-muted-foreground">
+        Emplacements : Subfolder-level1;Subfolder-level2. Les lignes vides et chemins existants sont ignorés.
+        Les fichiers Homebox habituels restent acceptés.
+      </p>
+
       <form class="flex flex-col gap-4" @submit.prevent="submitCsvFile">
         <Input ref="importRef" type="file" accept=".csv,.tsv" @change="setFile" />
 
         <DialogFooter>
-          <Button type="submit" :disabled="!importCsv"> {{ $t("global.submit") }} </Button>
+          <Button type="submit" :disabled="!importCsv || importLoading"> {{ $t("global.submit") }} </Button>
         </DialogFooter>
       </form>
     </DialogContent>
@@ -86,6 +91,7 @@
   }
 
   async function submitCsvFile() {
+    if (importLoading.value) return;
     if (!importCsv.value) {
       toast.error(t("components.app.import_dialog.toast.please_select_file"));
       return;
@@ -97,6 +103,8 @@
 
     if (error) {
       toast.error(t("components.app.import_dialog.toast.import_failed"));
+      importLoading.value = false;
+      return;
     }
 
     // Reset
