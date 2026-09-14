@@ -1,9 +1,8 @@
 <script setup lang="ts">
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
-  import type { AnyDetail, Detail, Details } from "~~/components/global/DetailsSection/types";
+  import type { AnyDetail, Details } from "~~/components/global/DetailsSection/types";
   import { filterZeroValues } from "~~/components/global/DetailsSection/types";
-  import type { ItemAttachment } from "~~/lib/api/types/data-contracts";
   import MdiPackageVariant from "~icons/mdi/package-variant";
   import MdiPlus from "~icons/mdi/plus";
   import MdiMinus from "~icons/mdi/minus";
@@ -37,9 +36,7 @@
   import DateTime from "~/components/global/DateTime.vue";
   import Markdown from "~/components/global/Markdown.vue";
   import BaseCard from "@/components/Base/Card.vue";
-  import CopyText from "@/components/global/CopyText.vue";
   import DetailsSection from "~/components/global/DetailsSection/DetailsSection.vue";
-  import ItemAttachmentsList from "~/components/Item/AttachmentsList.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
 
   const { t } = useI18n();
@@ -115,13 +112,6 @@
     }
   }
 
-  type FilteredAttachments = {
-    attachments: ItemAttachment[];
-    warranty: ItemAttachment[];
-    manuals: ItemAttachment[];
-    receipts: ItemAttachment[];
-  };
-
   type Photo = {
     thumbnailSrc?: string;
     originalSrc: string;
@@ -150,41 +140,6 @@
         }
         return acc;
       }, [] as Photo[]) || []
-    );
-  });
-
-  const attachments = computed<FilteredAttachments>(() => {
-    if (!item.value) {
-      return {
-        attachments: [],
-        manuals: [],
-        warranty: [],
-        receipts: [],
-      };
-    }
-
-    return item.value.attachments.reduce(
-      (acc, attachment) => {
-        if (attachment.type === "photo") {
-          return acc;
-        }
-        if (attachment.type === "warranty") {
-          acc.warranty.push(attachment);
-        } else if (attachment.type === "manual") {
-          acc.manuals.push(attachment);
-        } else if (attachment.type === "receipt") {
-          acc.receipts.push(attachment);
-        } else {
-          acc.attachments.push(attachment);
-        }
-        return acc;
-      },
-      {
-        attachments: [] as ItemAttachment[],
-        warranty: [] as ItemAttachment[],
-        manuals: [] as ItemAttachment[],
-        receipts: [] as ItemAttachment[],
-      }
     );
   });
 
@@ -217,24 +172,8 @@
         slot: "quantity",
       },
       {
-        name: "items.serial_number",
-        text: item.value?.serialNumber,
-        copyable: true,
-      },
-      {
         name: "items.model_number",
         text: item.value?.modelNumber,
-        copyable: true,
-      },
-      {
-        name: "items.manufacturer",
-        text: item.value?.manufacturer,
-        copyable: true,
-      },
-      {
-        name: "items.notes",
-        type: "markdown",
-        text: item.value?.notes,
       },
       ...assetID.value,
       ...item.value.fields.map(field => {
@@ -265,157 +204,6 @@
     return ret;
   });
 
-  const showAttachments = computed(() => {
-    if (preferences.value?.showEmpty) {
-      return true;
-    }
-
-    return (
-      attachments.value.attachments.length > 0 ||
-      attachments.value.warranty.length > 0 ||
-      attachments.value.manuals.length > 0 ||
-      attachments.value.receipts.length > 0
-    );
-  });
-
-  const attachmentDetails = computed(() => {
-    const details: Detail[] = [];
-
-    const push = (name: string, slot: string) => {
-      details.push({
-        name,
-        text: "",
-        slot,
-      });
-    };
-
-    if (attachments.value.attachments.length > 0) {
-      push("items.attachments", "attachments");
-    }
-
-    if (attachments.value.warranty.length > 0) {
-      push("items.warranty", "warranty");
-    }
-
-    if (attachments.value.manuals.length > 0) {
-      push("items.manuals", "manuals");
-    }
-
-    if (attachments.value.receipts.length > 0) {
-      push("items.receipts", "receipts");
-    }
-
-    return details;
-  });
-
-  const showWarranty = computed(() => {
-    if (preferences.value.showEmpty) {
-      return true;
-    }
-    return item.value?.lifetimeWarranty || validDate(item.value?.warrantyExpires);
-  });
-
-  const warrantyDetails = computed(() => {
-    const details: Details = [
-      {
-        name: "items.lifetime_warranty",
-        text: item.value?.lifetimeWarranty ? "Yes" : "No",
-      },
-    ];
-
-    if (item.value?.lifetimeWarranty) {
-      details.push({
-        name: "items.warranty_expires",
-        text: "N/A",
-      });
-    } else {
-      details.push({
-        name: "items.warranty_expires",
-        text: item.value?.warrantyExpires || "",
-        type: "date",
-        date: true,
-      });
-    }
-
-    details.push({
-      name: "items.warranty_details",
-      type: "markdown",
-      text: item.value?.warrantyDetails || "",
-    });
-
-    if (!preferences.value.showEmpty) {
-      return filterZeroValues(details);
-    }
-
-    return details;
-  });
-
-  const showPurchase = computed(() => {
-    if (preferences.value.showEmpty) {
-      return true;
-    }
-    return item.value?.purchaseFrom || item.value?.purchasePrice !== 0 || validDate(item.value?.purchaseDate);
-  });
-
-  const purchaseDetails = computed<Details>(() => {
-    const v: Details = [
-      {
-        name: "items.purchased_from",
-        text: item.value?.purchaseFrom || "",
-      },
-      {
-        name: "items.purchase_price",
-        text: String(item.value?.purchasePrice) || "",
-        type: "currency",
-      },
-      {
-        name: "items.purchase_date",
-        text: item.value?.purchaseDate || "",
-        type: "date",
-        date: true,
-      },
-    ];
-
-    if (!preferences.value.showEmpty) {
-      return filterZeroValues(v);
-    }
-
-    return v;
-  });
-
-  const showSold = computed(() => {
-    if (preferences.value.showEmpty) {
-      return true;
-    }
-    return item.value?.soldTo || item.value?.soldPrice !== 0 || validDate(item.value?.soldDate);
-  });
-
-  const soldDetails = computed<Details>(() => {
-    const v: Details = [
-      {
-        name: "items.sold_to",
-        text: item.value?.soldTo || "",
-      },
-      {
-        name: "items.sold_price",
-        text: String(item.value?.soldPrice) || "",
-        type: "currency",
-      },
-      {
-        name: "items.sold_at",
-        text: item.value?.soldDate || "",
-        type: "date",
-        date: true,
-      },
-    ];
-
-    if (!preferences.value.showEmpty) {
-      return filterZeroValues(v);
-    }
-
-    return v;
-  });
-
   function openImageDialog(img: Photo, itemId: string) {
     openDialog(DialogID.ItemImage, {
       params: {
@@ -433,10 +221,6 @@
       },
     });
   }
-
-  const currentUrl = computed(() => {
-    return window.location.href;
-  });
 
   const currentPath = computed(() => {
     return route.path;
@@ -738,13 +522,6 @@
         <!-- anything in this is not rendered if on another page -->
         <BaseCard v-if="!hasNested" collapsable>
           <template #title> {{ $t("items.details") }} </template>
-          <template #title-actions>
-            <div class="mt-2 flex flex-wrap items-center justify-between gap-4">
-              <div class="space-x-1">
-                <CopyText :text="currentUrl" :icon-size="16" />
-              </div>
-            </div>
-          </template>
           <DetailsSection :details="itemDetails">
             <template #quantity="{ detail }">
               <div class="flex items-center">
@@ -773,58 +550,6 @@
                 <img class="max-h-[200px] rounded" :src="img.thumbnailSrc" :alt="$t('items.photo')" loading="lazy" />
               </button>
             </div>
-          </BaseCard>
-
-          <BaseCard v-if="showAttachments" collapsable>
-            <template #title> {{ $t("items.attachments") }} </template>
-            <DetailsSection v-if="attachmentDetails.length > 0" :details="attachmentDetails">
-              <template #manuals>
-                <ItemAttachmentsList
-                  v-if="attachments.manuals.length > 0"
-                  :attachments="attachments.manuals"
-                  :item-id="item.id"
-                />
-              </template>
-              <template #attachments>
-                <ItemAttachmentsList
-                  v-if="attachments.attachments.length > 0"
-                  :attachments="attachments.attachments"
-                  :item-id="item.id"
-                />
-              </template>
-              <template #warranty>
-                <ItemAttachmentsList
-                  v-if="attachments.warranty.length > 0"
-                  :attachments="attachments.warranty"
-                  :item-id="item.id"
-                />
-              </template>
-              <template #receipts>
-                <ItemAttachmentsList
-                  v-if="attachments.receipts.length > 0"
-                  :attachments="attachments.receipts"
-                  :item-id="item.id"
-                />
-              </template>
-            </DetailsSection>
-            <div v-else>
-              <p class="px-6 pb-4 text-foreground/70">{{ $t("items.no_attachments") }}</p>
-            </div>
-          </BaseCard>
-
-          <BaseCard v-if="showPurchase" collapsable>
-            <template #title> {{ $t("items.purchase_details") }} </template>
-            <DetailsSection :details="purchaseDetails" />
-          </BaseCard>
-
-          <BaseCard v-if="showWarranty" collapsable>
-            <template #title> {{ $t("items.warranty_details") }} </template>
-            <DetailsSection :details="warrantyDetails" />
-          </BaseCard>
-
-          <BaseCard v-if="showSold" collapsable>
-            <template #title> {{ $t("items.sold_details") }} </template>
-            <DetailsSection :details="soldDetails" />
           </BaseCard>
         </template>
       </div>
