@@ -300,6 +300,9 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 }
 
 func registerMimes() {
+	if err := mime.AddExtensionType(".webmanifest", "application/manifest+json"); err != nil {
+		panic(err)
+	}
 	err := mime.AddExtensionType(".js", "application/javascript")
 	if err != nil {
 		panic(err)
@@ -328,6 +331,9 @@ func notFoundHandler() errchain.HandlerFunc {
 
 		contentType := mime.TypeByExtension(filepath.Ext(requestedPath))
 		w.Header().Set("Content-Type", contentType)
+		if requestedPath == "/sw.js" || requestedPath == "/manifest.webmanifest" || requestedPath == "/pwa-cache-cleanup.js" {
+			w.Header().Set("Cache-Control", "no-cache")
+		}
 		_, err = io.Copy(w, f)
 		return err
 	}

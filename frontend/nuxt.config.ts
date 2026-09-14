@@ -52,33 +52,37 @@ export default defineNuxtConfig({
   app: {
     head: {
       script: [{ src: "/set-theme.js" }],
+      meta: [
+        { name: "theme-color", content: "#5b7f67" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-title", content: "Homebox" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      ],
+      link: [{ rel: "apple-touch-icon", href: "/pwa-192x192.png" }],
     },
   },
 
   css: ["@/assets/css/main.css"],
 
   pwa: {
+    strategies: "generateSW",
+    includeAssets: ["favicon.svg", "pwa-192x192.png", "pwa-512x512.png"],
     workbox: {
+      globPatterns: ["**/*.{js,css,html,png,svg,woff,woff2}"],
+      navigateFallback: "/",
       navigateFallbackDenylist: [/^\/api/],
       cleanupOutdatedCaches: true,
+      importScripts: ["/pwa-cache-cleanup.js"],
       runtimeCaching: [
         {
-          urlPattern: /^\/api/,
-          handler: "NetworkFirst",
+          urlPattern: ({ url }) => url.pathname === "/api" || url.pathname.startsWith("/api/"),
+          handler: "NetworkOnly",
           method: "GET",
-          options: {
-            cacheName: "api-cache",
-            cacheableResponse: { statuses: [0, 200] },
-            expiration: { maxAgeSeconds: 60 * 60 * 24 },
-          },
         },
       ],
     },
     registerType: "autoUpdate",
     injectRegister: "script",
-    injectManifest: {
-      swSrc: "sw.js",
-    },
     devOptions: {
       // Enable to troubleshoot during development
       enabled: false,
@@ -86,7 +90,12 @@ export default defineNuxtConfig({
     manifest: {
       name: "Homebox",
       short_name: "Homebox",
-      description: "Home Inventory App",
+      description: "Gestion des objets, des produits et des emplacements",
+      id: "/",
+      scope: "/",
+      lang: "fr",
+      display: "standalone",
+      background_color: "#ffffff",
       theme_color: "#5b7f67",
       start_url: "/locations",
       icons: [

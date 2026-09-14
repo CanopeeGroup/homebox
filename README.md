@@ -10,6 +10,24 @@
 
 ## Personnalisations du fork
 
+### Installation PWA
+
+L’application peut être installée sur ordinateur, téléphone ou tablette, avec une icône
+Homebox et une fenêtre indépendante. Elle s’ouvre sur Emplacements (ou demande une connexion).
+
+- Déployer le conteneur derrière un reverse proxy **HTTPS avec certificat valide**.
+  Une adresse HTTP sur le réseau local ne suffit pas pour le service worker ; localhost est une exception de développement.
+- Android/Chrome et ordinateur/Chrome ou Edge : ouvrir le site puis choisir Installer l’application
+  dans le menu du navigateur (ou son icône d’installation).
+- iPhone/iPad : ouvrir le site dans Safari, puis Partager → Sur l’écran d’accueil.
+- Après publication : reconstruire l’image Docker et rouvrir l’application avec une connexion réseau.
+  Le service worker vérifie les mises à jour ; si nécessaire, fermer puis rouvrir l’application.
+
+Seuls les fichiers statiques de l’interface sont précachés. Les réponses API, pièces jointes et données
+privées ne sont pas mises en cache par le service worker. L’ancien cache `api-cache` est supprimé
+lors de son activation. La consultation et les modifications des stocks nécessitent une connexion réseau ;
+aucune synchronisation hors ligne n’est proposée.
+
 Les changements ci-dessous sont disponibles sur la branche `feature/template-import-export`.
 Le dépôt conserve les sources du projet officiel ; les fonctionnalités et captures officielles
 présentées plus bas ne reflètent donc pas nécessairement cette interface personnalisée.
