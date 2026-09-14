@@ -132,7 +132,7 @@ export function createTemplateCsv(templates: EntityTemplateOut[]): string {
   return `\uFEFF${TEMPLATE_CSV_HEADERS.join(";")}\r\n${rows.join("\r\n")}\r\n`;
 }
 
-function parseCsvRows(csv: string): string[][] {
+export function parseCsvRows(csv: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let value = "";

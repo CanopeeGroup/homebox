@@ -55,6 +55,28 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 - Suppression des actions Étiquettes, Télécharger l’étiquette, Imprimer et QR Code en haut de la fiche.
 - Suppression du bouton de numérisation/QR Code dans l’en-tête global, en haut à droite.
 
+### Import/export des emplacements en CSV
+
+Dans **Emplacements**, boutons Importer CSV et Exporter CSV. Format UTF-8, séparateur point-virgule :
+
+```csv
+Subfolder-level1;Subfolder-level2
+A;A0110
+A;A0120
+```
+
+Chaque niveau est un emplacement, relié au niveau précédent. Une seconde colonne vide crée uniquement
+le parent. Les lignes vides et les chemins répétés sont ignorés ; les emplacements déjà présents sont réutilisés.
+Un même nom sous deux parents différents reste deux emplacements distincts. Les chemins existants ambigus
+sont refusés. Aucun objet ni emplacement existant n’est supprimé par cet import.
+
+Les niveaux plus profonds utilisent Subfolder-level3, etc. L’export conserve tous les niveaux, y compris
+les parents sans enfant. Les noms avec point-virgule ou guillemets sont échappés. Les objets, photos et autres
+métadonnées ne sont pas inclus : le système de sauvegarde complète existant reste disponible.
+
+L’import est séquentiel et non transactionnel : si une erreur survient, le nombre de créations est indiqué ;
+les créations déjà réussies restent présentes. Le fichier peut être relancé sans recréer ces chemins.
+
 ### Emplacements et navigation
 
 - Écran de connexion sans liens GitHub, Noc.social, Discord et documentation ;
