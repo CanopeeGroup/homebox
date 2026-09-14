@@ -55,20 +55,25 @@
     <MdiSelectSearch class="size-10" />
     <p>{{ $t("items.no_results") }}</p>
   </div>
-  <ul v-else-if="compactList" class="divide-y rounded-lg border bg-background">
-    <li v-for="row in table.getRowModel().rows" :key="row.original.id" class="flex items-center gap-3 px-3 py-2">
+  <ul v-else-if="compactList" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <li
+      v-for="row in table.getRowModel().rows"
+      :key="row.original.id"
+      class="flex min-h-24 items-start gap-3 rounded-lg border bg-background p-4 shadow-sm transition-colors hover:border-primary/50"
+    >
       <Checkbox
         v-if="preferences.quickActions.enabled"
+        class="mt-1 shrink-0"
         :model-value="row.getIsSelected()"
         :aria-label="$t('components.item.view.selectable.select_row')"
         @update:model-value="row.toggleSelected(!!$event)"
       />
-      <NuxtLink :to="`/item/${row.original.id}`" class="min-w-0 flex-1 break-words text-sm hover:underline">
-        {{ row.original.name }}
+      <NuxtLink :to="`/item/${row.original.id}`" class="flex min-w-0 flex-1 flex-col gap-2 self-stretch">
+        <span class="break-words text-base font-medium leading-snug hover:underline">
+          {{ row.original.name }}
+        </span>
+        <span class="text-sm text-muted-foreground"> {{ $t("items.quantity") }} : {{ row.original.quantity }} </span>
       </NuxtLink>
-      <span class="shrink-0 text-sm text-muted-foreground">
-        {{ $t("items.quantity") }} : {{ row.original.quantity }}
-      </span>
     </li>
   </ul>
   <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
