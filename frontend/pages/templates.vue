@@ -5,6 +5,8 @@
   import MdiDownload from "~icons/mdi/download";
   import MdiUpload from "~icons/mdi/upload";
   import MdiDelete from "~icons/mdi/delete";
+  import MdiChevronLeft from "~icons/mdi/chevron-left";
+  import MdiChevronRight from "~icons/mdi/chevron-right";
   import { Button } from "@/components/ui/button";
   import { Checkbox } from "@/components/ui/checkbox";
   import { useDialog } from "@/components/ui/dialog-provider";
@@ -55,6 +57,17 @@
   const importing = ref(false);
   const exporting = ref(false);
   const selectedTemplateIds = ref<string[]>([]);
+  const pageSize = 100;
+  const currentPage = ref(1);
+  const totalPages = computed(() => Math.max(1, Math.ceil((templates.value?.length ?? 0) / pageSize)));
+  const paginatedTemplates = computed(() => {
+    const start = (currentPage.value - 1) * pageSize;
+    return (templates.value ?? []).slice(start, start + pageSize);
+  });
+
+  watch(totalPages, pageCount => {
+    if (currentPage.value > pageCount) currentPage.value = pageCount;
+  });
   const allTemplatesSelected = computed(
     () =>
       !!templates.value?.length && templates.value.every(template => selectedTemplateIds.value.includes(template.id))
@@ -238,7 +251,7 @@
 
     <div v-if="templates && templates.length > 0" class="flex flex-col gap-1">
       <TemplateCard
-        v-for="tpl in templates"
+        v-for="tpl in paginatedTemplates"
         :key="tpl.id"
         :template="tpl"
         compact
@@ -248,6 +261,30 @@
         @deleted="handleRefresh"
         @duplicated="handleDuplicated"
       />
+    </div>
+
+    <div v-if="templates && templates.length > 0" class="mt-4 flex items-center justify-center gap-3">
+      <Button
+        size="icon"
+        variant="outline"
+        :disabled="currentPage === 1"
+        aria-label="Page précédente"
+        @click="currentPage--"
+      >
+        <MdiChevronLeft />
+      </Button>
+      <span class="min-w-24 text-center text-sm text-muted-foreground">
+        {{ currentPage }} / {{ totalPages }}
+      </span>
+      <Button
+        size="icon"
+        variant="outline"
+        :disabled="currentPage === totalPages"
+        aria-label="Page suivante"
+        @click="currentPage++"
+      >
+        <MdiChevronRight />
+      </Button>
     </div>
 
     <div v-else class="flex flex-col items-center justify-center py-12 text-center">
