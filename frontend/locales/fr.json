@@ -694,7 +694,7 @@
         "collapse_tree": "Minimiser la liste",
         "expand_tree": "Ouvrir l’arborescence",
         "hide_items": "Masquer les éléments",
-        "location_items_delete_confirm": "Êtes-vous certain de vouloir supprimer cet emplacement et tous ses articles ? Cette action est irréversible.",
+        "location_items_delete_confirm": "Supprimer cet emplacement, tous ses sous-emplacements et tous les objets qu’ils contiennent ? Leurs pièces jointes seront également supprimées. Cette action est irréversible.",
         "no_results": "aucun emplacement trouver",
         "show_items": "afficher les elements",
         "toast": {

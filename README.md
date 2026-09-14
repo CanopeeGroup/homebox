@@ -80,6 +80,12 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 
 ### Emplacements et navigation
 
+- Suppression d’un emplacement : suppression de tous les sous-emplacements et objets descendants,
+  du niveau le plus profond jusqu’au parent, avec nettoyage des pièces jointes par le mécanisme existant.
+  Confirmation explicite et filtrage par collection ; les emplacements indépendants sont conservés.
+  La suppression est progressive et non transactionnelle : en cas d’erreur, les suppressions déjà réussies
+  ne sont pas annulées. Faire une sauvegarde ZIP avant une suppression importante.
+
 - Écran de connexion sans liens GitHub, Noc.social, Discord et documentation ;
   sélecteur de langue conservé. Pied de page de version retiré de l’écran de connexion et des pages de l’application.
 - Dans une fiche d’emplacement, les sous-emplacements sont affichés avant les articles.

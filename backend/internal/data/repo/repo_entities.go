@@ -1322,7 +1322,57 @@ func (r *EntityRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+// DeleteByGroup removes a location and every descendant, deepest first.
+// Object deletion retains its previous behavior. Every lookup is group-scoped.
 func (r *EntityRepository) DeleteByGroup(ctx context.Context, gid, id uuid.UUID) error {
+	root, err := r.db.Entity.Query().
+		Where(entity.ID(id), entity.HasGroupWith(group.ID(gid))).
+		WithEntityType().
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+	if root.Edges.EntityType == nil || !root.Edges.EntityType.IsLocation {
+		return r.deleteOneByGroup(ctx, gid, id)
+	}
+
+	// Preflight the entire subtree before removing anything, including objects
+	// containing other objects. No recursive call stack or oversized IN queries.
+	nodes, err := r.db.Entity.Query().
+		Where(entity.HasGroupWith(group.ID(gid))).
+		WithParent().
+		All(ctx)
+	if err != nil {
+		return err
+	}
+	children := make(map[uuid.UUID][]uuid.UUID)
+	for _, node := range nodes {
+		if node.Edges.Parent != nil {
+			parentID := node.Edges.Parent.ID
+			children[parentID] = append(children[parentID], node.ID)
+		}
+	}
+	order := []uuid.UUID{id}
+	seen := map[uuid.UUID]bool{id: true}
+	for index := 0; index < len(order); index++ {
+		for _, childID := range children[order[index]] {
+			if seen[childID] {
+				return fmt.Errorf("cycle detected in location subtree; deletion aborted")
+			}
+			seen[childID] = true
+			order = append(order, childID)
+		}
+	}
+	for index := len(order) - 1; index >= 0; index-- {
+		if err := r.deleteOneByGroup(ctx, gid, order[index]); err != nil {
+			return fmt.Errorf("could not delete descendant %s: %w", order[index], err)
+		}
+	}
+	return nil
+}
+
+// deleteOneByGroup also cleans attachments and emits the mutation event.
+func (r *EntityRepository) deleteOneByGroup(ctx context.Context, gid, id uuid.UUID) error {
 	ctx, span := entityTracer().Start(ctx, "repo.EntityRepository.DeleteByGroup",
 		trace.WithAttributes(
 			attribute.String("group.id", gid.String()),
