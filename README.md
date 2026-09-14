@@ -25,6 +25,8 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 ### Création et fiches des objets
 
 - Sélection du modèle via le champ **Sélection Produit**.
+- Champ Numéro de modèle disponible pour la création manuelle d’un objet sans produit sélectionné,
+  enregistré sur l’objet et réinitialisé après création.
 - Sélecteurs Produit et Emplacement Parent adaptés aux téléphones, aux tablettes et au clavier tactile.
 - Correction de la recherche dans les sélecteurs et des soumissions involontaires lors d’une sélection.
 - Réinitialisation du produit et de l’emplacement après chaque création, avec notification de confirmation.

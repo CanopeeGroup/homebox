@@ -124,6 +124,12 @@
         step="any"
         :min="0"
       />
+      <FormTextField
+        v-if="!isLocationCreation && !selectedTemplate && !templateData"
+        v-model="form.modelNumber"
+        :label="$t('items.model_number')"
+        :max-length="255"
+      />
       <div class="mt-4 flex flex-row-reverse">
         <Button :disabled="loading || initializing" type="submit" class="group" data-entity-create-submit="true">
           <div class="relative mx-2">
@@ -357,6 +363,7 @@
       selectedEntityType.value = null;
       clearTemplate();
       form.name = "";
+      form.modelNumber = "";
       form.location = {} as EntityOut;
       initializing.value = true;
       try {
