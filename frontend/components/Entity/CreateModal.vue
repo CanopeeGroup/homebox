@@ -4,6 +4,19 @@
       <span>{{ isLocationCreation ? $t("menu.create_location") : $t("menu.create_object") }}</span>
     </template>
     <form class="flex min-w-0 flex-col gap-2" @submit.prevent="submitCreate">
+      <div class="flex justify-end">
+        <Button :disabled="loading || initializing" type="submit" class="group" data-entity-create-submit="true">
+          <div class="relative mx-2">
+            <div
+              class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:rotate-[360deg]"
+            >
+              <MdiPackageVariant class="size-5 group-hover:hidden" />
+              <MdiPackageVariantClosed class="hidden size-5 group-hover:block" />
+            </div>
+          </div>
+          {{ $t("global.create") }}
+        </Button>
+      </div>
       <TemplateSelector
         v-if="!isLocationCreation"
         v-model="selectedTemplate"
@@ -130,19 +143,7 @@
         step="any"
         :min="0"
       />
-      <div class="mt-4 flex flex-row-reverse">
-        <Button :disabled="loading || initializing" type="submit" class="group" data-entity-create-submit="true">
-          <div class="relative mx-2">
-            <div
-              class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:rotate-[360deg]"
-            >
-              <MdiPackageVariant class="size-5 group-hover:hidden" />
-              <MdiPackageVariantClosed class="hidden size-5 group-hover:block" />
-            </div>
-          </div>
-          {{ $t("global.create") }}
-        </Button>
-      </div>
+
     </form>
   </BaseModal>
 </template>
