@@ -117,18 +117,18 @@
         :min-length="1"
       />
       <FormTextField
+        v-if="!isLocationCreation && !selectedTemplate && !templateData"
+        v-model="form.modelNumber"
+        :label="$t('items.model_number')"
+        :max-length="255"
+      />
+      <FormTextField
         v-if="!isLocationCreation"
         v-model.number="form.quantity"
         :label="$t('components.item.create_modal.item_quantity')"
         type="number"
         step="any"
         :min="0"
-      />
-      <FormTextField
-        v-if="!isLocationCreation && !selectedTemplate && !templateData"
-        v-model="form.modelNumber"
-        :label="$t('items.model_number')"
-        :max-length="255"
       />
       <div class="mt-4 flex flex-row-reverse">
         <Button :disabled="loading || initializing" type="submit" class="group" data-entity-create-submit="true">

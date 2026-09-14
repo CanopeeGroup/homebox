@@ -200,7 +200,7 @@
                 "item_description": "Description de l'article",
                 "item_name": "Nom de l'article",
                 "item_photo": "Photo de l'article 📷",
-                "item_quantity": "Quantité d'articles",
+                "item_quantity": "Quantités",
                 "parent_item": "Article parent",
                 "product_tooltip_input_barcode": "Remplir avec un code-barre entré manuellement",
                 "product_tooltip_scan_barcode": "Remplir avec un barre-code d'une 📷",
