@@ -37,6 +37,7 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Emplacements et navigation
 
+- Dans une fiche d’emplacement, les sous-emplacements sont affichés avant les articles.
 - Fiches d’emplacement : retrait des actions Étiquettes, téléchargement, impression et QR Code.
 - Objets d’un emplacement en petites tuiles sans photo, avec nom et quantité, sans choix Carte/Tableau ;
   pagination et sélection groupée conservées.
@@ -53,6 +54,10 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Utilisateurs et collections
 
+- Sur une base vide, formulaire automatique de création du premier administrateur.
+  Après initialisation, l’inscription publique est fermée côté serveur et le bouton S’enregistrer est masqué.
+  Les comptes supplémentaires sont créés dans Réglages → Utilisateurs par un administrateur.
+  Les comptes existants sont conservés ; l’initialisation locale nécessite que la connexion locale soit activée.
 - Connexion avec le courriel ou le nom du profil, sans distinction de casse ; mot de passe inchangé.
   En cas de noms identiques, utiliser le courriel. Une correspondance de courriel reste prioritaire.
 - Premier utilisateur administrateur de la solution ; sur une installation existante sans administrateur,

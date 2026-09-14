@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -80,6 +81,28 @@ type registerOptions struct {
 // HBOX_DEMO_PASSWORD must be accepted as-is regardless of length.
 func SkipPasswordValidation() RegisterOption {
 	return func(o *registerOptions) { o.skipPasswordValidation = true }
+}
+
+var initialUserMu sync.Mutex
+
+func (svc *UserService) NeedsInitialUser(ctx context.Context) (bool, error) {
+	count, err := svc.repos.Users.Count(ctx)
+	return count == 0, err
+}
+
+// RegisterInitialUser serializes public initialization and closes it after setup.
+func (svc *UserService) RegisterInitialUser(ctx context.Context, data UserRegistration) (repo.UserOut, error) {
+	initialUserMu.Lock()
+	defer initialUserMu.Unlock()
+	needed, err := svc.NeedsInitialUser(ctx)
+	if err != nil {
+		return repo.UserOut{}, err
+	}
+	if !needed {
+		return repo.UserOut{}, fmt.Errorf("platform already initialized")
+	}
+	data.GroupToken = ""
+	return svc.RegisterUser(ctx, data)
 }
 
 // RegisterUser creates a new user and group in the data with the provided data. It also bootstraps the user's group

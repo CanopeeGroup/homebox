@@ -298,17 +298,17 @@
         </div>
       </BaseCard>
 
-      <!-- Items in this location -->
-      <section v-if="location && items">
-        <ItemViewSelectable :items="items" compact-list @refresh="refreshItemList" />
-      </section>
-
       <!-- Child locations -->
       <section v-if="location && location.children && location.children.length > 0" class="mt-6">
         <BaseSectionHeader class="mb-5"> {{ $t("locations.child_locations") }} </BaseSectionHeader>
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <LocationCard v-for="child in location.children" :key="child.id" :location="child" />
         </div>
+      </section>
+
+      <!-- Items in this location -->
+      <section v-if="location && items" class="mt-6">
+        <ItemViewSelectable :items="items" compact-list @refresh="refreshItemList" />
       </section>
     </div>
   </div>

@@ -108,12 +108,16 @@ func (ctrl *V1Controller) HandleUserRegistration() errchain.HandlerFunc {
 			attribute.Bool("registration.has_group_token", regData.GroupToken != ""),
 		)
 
-		if !ctrl.allowRegistration && regData.GroupToken == "" {
+		needsSetup, err := ctrl.svc.User.NeedsInitialUser(spanCtx)
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusInternalServerError)
+		}
+		if !needsSetup {
 			span.SetAttributes(attribute.String("registration.outcome", "registration_disabled"))
 			return validate.NewRequestError(fmt.Errorf("user registration disabled"), http.StatusForbidden)
 		}
 
-		usr, err := ctrl.svc.User.RegisterUser(spanCtx, regData)
+		usr, err := ctrl.svc.User.RegisterInitialUser(spanCtx, regData)
 		if err != nil {
 			recordCtrlSpanError(span, err)
 			span.SetAttributes(attribute.String("registration.outcome", "register_failed"))

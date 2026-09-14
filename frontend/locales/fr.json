@@ -498,6 +498,7 @@
         "joining_group": "Vous rejoignez un groupe existant !",
         "login": "Se connecter",
         "login_identifier": "Nom d’utilisateur ou courriel",
+        "initialize_admin": "Créer le premier administrateur",
         "or": "ou",
         "register": "S'enregistrer",
         "remember_me": "Se souvenir de moi",

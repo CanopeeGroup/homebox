@@ -57,7 +57,7 @@
   const oidcError = ref<string | null>(null);
   const shownErrorMessage = ref(false);
 
-  const { data: status } = useAsyncData(async () => {
+  const { data: status, refresh: refreshStatus } = useAsyncData(async () => {
     const { data } = await api.status();
 
     if (data.demo) {
@@ -136,10 +136,12 @@
       name: username.value,
       email: email.value,
       password: password.value,
-      token: groupToken.value,
+      token: "",
     });
 
     if (error) {
+      loading.value = false;
+      await refreshStatus();
       toast.error(t("index.toast.problem_registering"), {
         classes: {
           title: "login-error",
@@ -152,10 +154,11 @@
 
     loading.value = false;
     registerForm.value = false;
+    await refreshStatus();
   }
 
   onMounted(() => {
-    if (groupToken.value !== "") {
+    if (status.value?.allowRegistration) {
       registerForm.value = true;
     }
 
@@ -218,6 +221,13 @@
   }
 
   const [registerForm, toggleLogin] = useToggle();
+  watch(
+    () => status.value?.allowRegistration,
+    allowed => {
+      registerForm.value = !!allowed;
+    },
+    { immediate: true }
+  );
 </script>
 
 <template>
@@ -305,12 +315,18 @@
       <div class="grid min-h-[50vh] p-6 sm:place-items-center">
         <div>
           <Transition name="slide-fade">
-            <form v-if="registerForm" id="register-form" name="register" method="post" @submit.prevent="registerUser">
+            <form
+              v-if="registerForm && status?.allowRegistration"
+              id="register-form"
+              name="register"
+              method="post"
+              @submit.prevent="registerUser"
+            >
               <Card class="md:w-[500px]">
                 <CardHeader>
                   <CardTitle class="flex items-center gap-2">
                     <MdiAccount class="mr-1 size-7" />
-                    {{ $t("index.register") }}
+                    {{ $t("index.initialize_admin") }}
                   </CardTitle>
                 </CardHeader>
                 <CardContent class="flex flex-col gap-2">
@@ -360,7 +376,7 @@
                     :class="loading ? 'loading' : ''"
                     :disabled="loading || !canRegister"
                   >
-                    {{ $t("index.register") }}
+                    {{ $t("index.initialize_admin") }}
                   </Button>
                 </CardFooter>
               </Card>

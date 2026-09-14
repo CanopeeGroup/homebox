@@ -183,6 +183,10 @@ func (ctrl *V1Controller) initOIDCProvider() {
 //	@Router		/v1/status [GET]
 func (ctrl *V1Controller) HandleBase(ready ReadyFunc, build Build) errchain.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
+		needsSetup, err := ctrl.svc.User.NeedsInitialUser(r.Context())
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusInternalServerError)
+		}
 		return server.JSON(w, http.StatusOK, APISummary{
 			Healthy:           ready(),
 			Title:             "Homebox",
@@ -190,7 +194,7 @@ func (ctrl *V1Controller) HandleBase(ready ReadyFunc, build Build) errchain.Hand
 			Build:             build,
 			Latest:            ctrl.svc.BackgroundService.GetLatestVersion(),
 			Demo:              ctrl.isDemo,
-			AllowRegistration: ctrl.allowRegistration,
+			AllowRegistration: needsSetup && ctrl.config.Options.AllowLocalLogin,
 			LabelPrinting:     ctrl.config.LabelMaker.PrintCommand != nil,
 			OIDC: OIDCStatus{
 				Enabled:      ctrl.config.OIDC.Enabled,

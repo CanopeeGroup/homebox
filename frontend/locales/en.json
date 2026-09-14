@@ -541,6 +541,7 @@
         "joining_group": "You're Joining an Existing Group!",
         "login": "Login",
         "login_identifier": "Username or email",
+        "initialize_admin": "Create the first administrator",
         "or": "or",
         "register": "Register",
         "remember_me": "Remember Me",
