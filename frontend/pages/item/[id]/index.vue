@@ -143,23 +143,6 @@
     );
   });
 
-  const assetID = computed<Details>(() => {
-    if (!item.value) {
-      return [];
-    }
-
-    if (item.value?.assetId === "000-000") {
-      return [];
-    }
-
-    return [
-      {
-        name: "items.asset_id",
-        text: item.value?.assetId,
-      },
-    ];
-  });
-
   const itemDetails = computed<Details>(() => {
     if (!item.value) {
       return [];
@@ -175,7 +158,6 @@
         name: "items.model_number",
         text: item.value?.modelNumber,
       },
-      ...assetID.value,
       ...item.value.fields.map(field => {
         /**
          * Support Special URL Syntax
