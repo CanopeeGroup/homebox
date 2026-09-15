@@ -19,9 +19,16 @@
           <span class="mx-auto">
             {{ location.name }}
           </span>
-          <Badge :class="{ 'opacity-0': !hasCount }">
-            {{ count }}
-          </Badge>
+          <span
+            v-if="hasCount"
+            class="flex shrink-0 items-center gap-1 text-primary"
+            :title="`${count} article(s) présent(s)`"
+            :aria-label="`${count} article(s) présent(s)`"
+          >
+            <MdiTag class="size-5" />
+            <Badge>{{ count }}</Badge>
+          </span>
+          <span v-else class="size-6" aria-hidden="true" />
         </h2>
       </div>
     </NuxtLink>
@@ -32,6 +39,7 @@
   import type { EntityOut, EntitySummary } from "~~/lib/api/types/data-contracts";
   import MdiArrowUp from "~icons/mdi/arrow-down";
   import MdiMapMarkerOutline from "~icons/mdi/map-marker-outline";
+  import MdiTag from "~icons/mdi/tag";
   import { Card } from "@/components/ui/card";
   import { Badge } from "@/components/ui/badge";
 
@@ -47,7 +55,7 @@
   });
 
   const hasCount = computed(() => {
-    return !!(props.location as EntitySummary).itemCount;
+    return (props.location as EntitySummary).itemCount > 0;
   });
 
   const count = computed(() => {
