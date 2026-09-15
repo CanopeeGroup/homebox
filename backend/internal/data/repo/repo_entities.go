@@ -2708,18 +2708,20 @@ func (r *EntityRepository) DeleteContainerByGroup(ctx context.Context, gid, id u
 // ============================================================================
 
 type TreeItem struct {
-	ID       uuid.UUID   `json:"id"`
-	Name     string      `json:"name"`
-	Type     string      `json:"type"`
-	Children []*TreeItem `json:"children"`
+	ID        uuid.UUID   `json:"id"`
+	Name      string      `json:"name"`
+	Type      string      `json:"type"`
+	ItemCount int         `json:"itemCount"`
+	Children  []*TreeItem `json:"children"`
 }
 
 type FlatTreeItem struct {
-	ID       uuid.UUID
-	Name     string
-	Type     string
-	ParentID uuid.UUID
-	Level    int
+	ID        uuid.UUID
+	Name      string
+	Type      string
+	ParentID  uuid.UUID
+	Level     int
+	ItemCount int
 }
 
 type TreeQuery struct {
@@ -2843,7 +2845,14 @@ func (r *EntityRepository) Tree(ctx context.Context, gid uuid.UUID, tq TreeQuery
 				 NAME,
 				 level,
 				 parent_id,
-				 node_type
+				 node_type,
+				 CASE WHEN node_type = 'location' THEN (
+					SELECT COUNT(*)
+					FROM entities direct_child
+					JOIN entity_types direct_child_type ON direct_child_type.id = direct_child.entity_type_entities
+					WHERE direct_child.entity_children = tree.id
+					AND direct_child_type.is_location = false
+				 ) ELSE 0 END AS item_count
 		FROM    (
 					SELECT  *
 					FROM    entity_tree
@@ -2908,7 +2917,7 @@ func (r *EntityRepository) Tree(ctx context.Context, gid uuid.UUID, tq TreeQuery
 	var flatItems []FlatTreeItem
 	for rows.Next() {
 		var item FlatTreeItem
-		if err := rows.Scan(&item.ID, &item.Name, &item.Level, &item.ParentID, &item.Type); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &item.Level, &item.ParentID, &item.Type, &item.ItemCount); err != nil {
 			recordSpanError(querySpan, err)
 			querySpan.End()
 			recordSpanError(span, err)
@@ -2948,8 +2957,9 @@ func ConvertEntitiesToTree(items []FlatTreeItem) []TreeItem {
 		node := &TreeItem{
 			ID:       item.ID,
 			Name:     item.Name,
-			Type:     item.Type,
-			Children: []*TreeItem{},
+			Type:      item.Type,
+			ItemCount: item.ItemCount,
+			Children:  []*TreeItem{},
 		}
 
 		itemMap[item.ID] = node
