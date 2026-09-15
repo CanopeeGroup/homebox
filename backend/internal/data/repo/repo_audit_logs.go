@@ -23,6 +23,7 @@ type AuditLogEntry struct {
 	Resource  string    `json:"resource"`
 	Path      string    `json:"path"`
 	Count     int       `json:"count"`
+	Quantity  *float64  `json:"quantity,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
@@ -31,14 +32,14 @@ func NewAuditLogRepository(db *ent.Client, driver string) *AuditLogRepository {
 }
 
 func (r *AuditLogRepository) Create(ctx context.Context, entry AuditLogEntry) error {
-	query := `INSERT INTO audit_logs (id, group_id, user_id, user_name, action, resource, path, item_count, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO audit_logs (id, group_id, user_id, user_name, action, resource, path, item_count, quantity, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	if r.postgres {
-		query = `INSERT INTO audit_logs (id, group_id, user_id, user_name, action, resource, path, item_count, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+		query = `INSERT INTO audit_logs (id, group_id, user_id, user_name, action, resource, path, item_count, quantity, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
 	}
 	_, err := r.db.Sql().ExecContext(ctx, query, entry.ID, entry.GroupID, entry.UserID, entry.UserName,
-		entry.Action, entry.Resource, entry.Path, entry.Count, entry.CreatedAt)
+		entry.Action, entry.Resource, entry.Path, entry.Count, entry.Quantity, entry.CreatedAt)
 	return err
 }
 
@@ -53,10 +54,10 @@ func (r *AuditLogRepository) Count(ctx context.Context, groupID uuid.UUID) (int,
 }
 
 func (r *AuditLogRepository) GetPage(ctx context.Context, groupID uuid.UUID, limit, offset int) ([]AuditLogEntry, error) {
-	query := `SELECT id, group_id, user_id, user_name, action, resource, path, item_count, created_at
+	query := `SELECT id, group_id, user_id, user_name, action, resource, path, item_count, quantity, created_at
 		FROM audit_logs WHERE group_id = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`
 	if r.postgres {
-		query = `SELECT id, group_id, user_id, user_name, action, resource, path, item_count, created_at
+		query = `SELECT id, group_id, user_id, user_name, action, resource, path, item_count, quantity, created_at
 			FROM audit_logs WHERE group_id = $1 ORDER BY created_at DESC, id DESC LIMIT $2 OFFSET $3`
 	}
 	rows, err := r.db.Sql().QueryContext(ctx, query, groupID, limit, offset)
@@ -69,7 +70,7 @@ func (r *AuditLogRepository) GetPage(ctx context.Context, groupID uuid.UUID, lim
 	for rows.Next() {
 		var entry AuditLogEntry
 		if err := rows.Scan(&entry.ID, &entry.GroupID, &entry.UserID, &entry.UserName, &entry.Action,
-			&entry.Resource, &entry.Path, &entry.Count, &entry.CreatedAt); err != nil {
+			&entry.Resource, &entry.Path, &entry.Count, &entry.Quantity, &entry.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan audit log: %w", err)
 		}
 		entries = append(entries, entry)
