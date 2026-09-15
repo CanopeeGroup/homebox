@@ -386,20 +386,23 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 		// Keep a readable object name before the handler consumes the request or
 		// deletes the object. The body is restored unchanged for the handler.
 		objectName := ""
+		var objectQuantity *float64
 		itemCount := 1
 		if r.Body != nil {
 			body, readErr := io.ReadAll(r.Body)
 			if readErr == nil {
 				r.Body = io.NopCloser(bytes.NewReader(body))
 				var payload struct {
-					Name        string `json:"name"`
-					DefaultName string `json:"defaultName"`
+					Name        string   `json:"name"`
+					DefaultName string   `json:"defaultName"`
+					Quantity    *float64 `json:"quantity"`
 				}
 				if json.Unmarshal(body, &payload) == nil {
 					objectName = strings.TrimSpace(payload.Name)
 					if objectName == "" {
 						objectName = strings.TrimSpace(payload.DefaultName)
 					}
+					objectQuantity = payload.Quantity
 				}
 				var raw map[string]any
 				if json.Unmarshal(body, &raw) == nil {
@@ -419,6 +422,11 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 		if resource == "admin" && len(pathParts) > 1 && pathParts[1] == "users" {
 			resource = "users"
 		}
+		// Creating an item from a template is still an entity operation. Keep
+		// the journal wording focused on the object that was created.
+		if resource == "templates" && len(pathParts) > 2 && pathParts[2] == "create-item" {
+			resource = "entities"
+		}
 		if objectName == "" {
 			for _, part := range pathParts[1:] {
 				id, parseErr := uuid.Parse(part)
@@ -433,6 +441,8 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 				case "items", "entities":
 					if item, getErr := a.repos.Entities.GetOne(r.Context(), id); getErr == nil {
 						objectName = item.Name
+						quantity := item.Quantity
+						objectQuantity = &quantity
 					}
 				case "users":
 					if user, getErr := a.repos.Users.GetOneID(r.Context(), id); getErr == nil {
@@ -471,6 +481,7 @@ func (a *app) mwAudit(next errchain.Handler) errchain.Handler {
 			Resource:  resource,
 			Path:      objectName,
 			Count:     itemCount,
+			Quantity:  objectQuantity,
 			CreatedAt: time.Now().UTC(),
 		}
 		if auditErr := a.repos.AuditLogs.Create(r.Context(), entry); auditErr != nil {
