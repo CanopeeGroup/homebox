@@ -41,7 +41,7 @@
                   v-for="location in dialogLocations"
                   :key="location.id"
                   :value="location.id"
-                  class="gap-2"
+                  class="mb-1 gap-2 rounded-md border border-border/70 px-2 py-2"
                   @select="handleDialogLocation(location)"
                 >
                   <button
@@ -70,12 +70,6 @@
                   >
                     <Check class="size-4" />
                   </button>
-                </CommandItem>
-              </CommandGroup>
-              <CommandGroup v-if="value">
-                <CommandItem value="clear-location-selection" @select="clearSelection">
-                  <X class="mr-2 size-4" />
-                  <span class="text-destructive">{{ $t("components.location.selector.clear") }}</span>
                 </CommandItem>
               </CommandGroup>
             </CommandList>
