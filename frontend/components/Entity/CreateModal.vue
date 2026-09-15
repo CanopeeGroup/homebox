@@ -5,7 +5,7 @@
     </template>
     <form class="flex min-w-0 flex-col gap-2" @submit.prevent="submitCreate">
       <div class="flex justify-end">
-        <Button :disabled="loading || initializing" type="submit" class="group" data-entity-create-submit="true">
+        <Button :disabled="loading || initializing || (!isLocationCreation && !templateData)" type="submit" class="group" data-entity-create-submit="true">
           <div class="relative mx-2">
             <div
               class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:rotate-[360deg]"
@@ -117,23 +117,14 @@
         :trigger-search="triggerSearch"
       />
       <FormTextField
+        v-if="isLocationCreation"
         ref="nameInput"
         v-model="form.name"
         :trigger-focus="focused"
         :autofocus="true"
-        :label="
-          isLocationCreation
-            ? $t('components.location.create_modal.location_name')
-            : $t('components.item.create_modal.item_name')
-        "
+        :label="$t('components.location.create_modal.location_name')"
         :max-length="255"
         :min-length="1"
-      />
-      <FormTextField
-        v-if="!isLocationCreation && !selectedTemplate && !templateData"
-        v-model="form.modelNumber"
-        :label="$t('items.model_number')"
-        :max-length="255"
       />
       <FormTextField
         v-if="!isLocationCreation"
@@ -270,9 +261,7 @@
 
     // Pre-fill form with template defaults
     form.quantity = data.defaultQuantity;
-    if (data.defaultName) {
-      form.name = data.defaultName;
-    }
+    form.name = data.defaultName || data.name;
     if (data.defaultDescription) {
       form.description = data.defaultDescription;
     }
@@ -306,9 +295,7 @@
     templateData.value = data;
     templateUserSelected.value = true;
     form.quantity = data.defaultQuantity;
-    if (data.defaultName) {
-      form.name = data.defaultName;
-    }
+    form.name = data.defaultName || data.name;
     if (data.defaultDescription) {
       form.description = data.defaultDescription;
     }
@@ -450,6 +437,11 @@
     // backend, so block creation up front rather than firing a doomed request.
     if (!selectedEntityType.value?.id) {
       toast.error(t("components.entity.create_modal.toast.please_select_entity_type"));
+      return;
+    }
+
+    if (!selectedEntityType.value?.isLocation && !templateData.value) {
+      toast.error(t("components.template.selector.select"));
       return;
     }
 
