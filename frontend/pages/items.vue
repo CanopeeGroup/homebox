@@ -325,14 +325,20 @@
     ]);
     const { data, error } = itemsResult;
     const normalizedQuery = query.value.trim().toLocaleLowerCase();
-    locationResults.value = locationsResult.error ? [] : (locationsResult.data.items ?? []);
+    const containsQuery = (value: unknown) =>
+      typeof value === "string" && value.toLocaleLowerCase().includes(normalizedQuery);
+
+    // Keep each result family independent. Older backend images may not yet
+    // expose defaultModelNumber in template summaries; a missing optional field
+    // must never abort item and location search rendering.
+    locationResults.value = locationsResult.error ? [] : (locationsResult.data?.items ?? []);
     templateResults.value = templatesResult.error
       ? []
-      : templatesResult.data.filter(
+      : (templatesResult.data ?? []).filter(
           template =>
-            template.name.toLocaleLowerCase().includes(normalizedQuery) ||
-            template.defaultModelNumber.toLocaleLowerCase().includes(normalizedQuery) ||
-            template.description.toLocaleLowerCase().includes(normalizedQuery)
+            containsQuery(template.name) ||
+            containsQuery(template.defaultModelNumber) ||
+            containsQuery(template.description)
         );
 
     function resetItems() {
