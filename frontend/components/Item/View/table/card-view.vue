@@ -3,7 +3,13 @@
   import type { EntitySummary } from "~/lib/api/types/data-contracts";
   import type { Table as TableType } from "@tanstack/vue-table";
   import MdiSelectSearch from "~icons/mdi/select-search";
+  import MdiPencil from "~icons/mdi/pencil";
   import { Checkbox } from "@/components/ui/checkbox";
+  import { Button } from "@/components/ui/button";
+  import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+  import { Input } from "@/components/ui/input";
+  import { Label } from "@/components/ui/label";
+  import { toast } from "@/components/ui/sonner";
   import DropdownAction from "./data-table-dropdown.vue";
 
   const preferences = useViewPreferences();
@@ -14,14 +20,75 @@
     compactList?: boolean;
   }>();
 
-  defineEmits<{
+  const emit = defineEmits<{
     (e: "refresh"): void;
   }>();
+
+  const api = useUserApi();
+  const quantityDialogOpen = ref(false);
+  const quantityItem = ref<EntitySummary | null>(null);
+  const editedQuantity = ref(0);
+  const savingQuantity = ref(false);
+
+  function openQuantityEditor(item: EntitySummary) {
+    quantityItem.value = item;
+    editedQuantity.value = item.quantity;
+    quantityDialogOpen.value = true;
+  }
+
+  async function saveQuantity() {
+    if (!quantityItem.value || !Number.isFinite(editedQuantity.value) || editedQuantity.value < 0) return;
+
+    savingQuantity.value = true;
+    const { error } = await api.items.patch(quantityItem.value.id, {
+      quantity: editedQuantity.value,
+    });
+    savingQuantity.value = false;
+
+    if (error) {
+      toast.error("Impossible de modifier la quantité.");
+      return;
+    }
+
+    quantityDialogOpen.value = false;
+    toast.success("Quantité modifiée.");
+    emit("refresh");
+  }
 
   const selectedCount = computed(() => props.table.getSelectedRowModel().rows.length);
 </script>
 
 <template>
+  <Dialog v-model:open="quantityDialogOpen">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>{{ $t("global.quantity") }} — {{ quantityItem?.name }}</DialogTitle>
+      </DialogHeader>
+      <form class="flex flex-col gap-4" @submit.prevent="saveQuantity">
+        <div class="flex flex-col gap-2">
+          <Label for="direct-item-quantity">{{ $t("global.quantity") }}</Label>
+          <Input
+            id="direct-item-quantity"
+            v-model.number="editedQuantity"
+            type="number"
+            min="0"
+            step="any"
+            inputmode="decimal"
+            autofocus
+          />
+        </div>
+        <div class="flex justify-end gap-2">
+          <Button type="button" variant="outline" @click="quantityDialogOpen = false">
+            {{ $t("global.cancel") }}
+          </Button>
+          <Button type="submit" :disabled="savingQuantity || editedQuantity < 0">
+            {{ $t("global.save") }}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
+
   <Teleport to="#selectable-subtitle" defer>
     <Checkbox
       class="size-6 p-0"
@@ -70,12 +137,20 @@
         :aria-label="$t('components.item.view.selectable.select_row')"
         @update:model-value="row.toggleSelected(!!$event)"
       />
-      <NuxtLink :to="`/item/${row.original.id}`" class="flex min-w-0 flex-1 flex-col gap-2 self-stretch">
-        <span class="break-words text-base font-medium leading-snug hover:underline">
+      <div class="flex min-w-0 flex-1 flex-col gap-2 self-stretch">
+        <NuxtLink :to="`/item/${row.original.id}`" class="break-words text-base font-medium leading-snug hover:underline">
           {{ row.original.name }}
-        </span>
-        <span class="text-sm text-muted-foreground"> {{ $t("items.quantity") }} : {{ row.original.quantity }} </span>
-      </NuxtLink>
+        </NuxtLink>
+        <div class="mt-auto flex flex-wrap items-center gap-2">
+          <span class="text-sm text-muted-foreground">
+            {{ $t("items.quantity") }} : {{ row.original.quantity }}
+          </span>
+          <Button size="sm" variant="outline" class="ml-auto h-8" @click="openQuantityEditor(row.original)">
+            <MdiPencil class="mr-1 size-4" />
+            {{ $t("global.edit") }}
+          </Button>
+        </div>
+      </div>
     </li>
   </ul>
   <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
