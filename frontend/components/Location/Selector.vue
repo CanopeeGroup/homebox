@@ -23,6 +23,7 @@
       <DialogRoot v-model:open="open">
         <DialogContent
           class="z-[100] flex h-dvh max-h-dvh w-screen max-w-none flex-col gap-3 rounded-none p-3 sm:h-[80dvh] sm:max-h-[80dvh] sm:w-[min(90vw,48rem)] sm:max-w-3xl sm:rounded-lg sm:p-5"
+          @open-auto-focus="$event.preventDefault()"
         >
           <DialogHeader class="shrink-0">
             <DialogTitle>{{ $t("components.location.selector.parent_location") }}</DialogTitle>
