@@ -8,6 +8,7 @@
   import MdiMagnify from "~icons/mdi/magnify";
   import MdiDelete from "~icons/mdi/delete";
   import MdiFileDocumentMultiple from "~icons/mdi/file-document-multiple";
+  import MdiMapMarker from "~icons/mdi/map-marker";
   import { Button } from "@/components/ui/button";
   import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
   import { Label } from "@/components/ui/label";
@@ -37,6 +38,7 @@
   const loading = useMinLoader(500);
   const items = ref<EntitySummary[]>([]);
   const templateResults = ref<EntityTemplateSummary[]>([]);
+  const locationResults = ref<EntitySummary[]>([]);
   const total = ref(0);
 
   // Using useRouteQuery directly has two downsides
@@ -118,10 +120,9 @@
       }
     }
 
-    // trigger search if no changes
-    if (!qLoc) {
-      search();
-    }
+    // Always run the initial query. The header search navigates directly to
+    // /items?q=..., so waiting for a filter change would leave the page empty.
+    await search();
 
     loading.value = false;
     window.scroll({
@@ -295,7 +296,8 @@
 
     await router.push({ query: push_query as LocationQueryRaw });
 
-    const [itemsResult, templatesResult] = await Promise.all([
+    const hasQuery = !!query.value.trim();
+    const [itemsResult, locationsResult, templatesResult] = await Promise.all([
       api.items.getAll({
         q: query.value || "",
         parentIds: locIDs.value,
@@ -309,15 +311,27 @@
         orderBy: orderBy.value,
         fields,
       }),
-      query.value.trim() ? api.templates.getAll() : Promise.resolve({ data: [], error: null }),
+      hasQuery
+        ? api.items.getAll({
+            q: query.value,
+            isLocation: true,
+            includeArchived: includeArchived.value,
+            page: 1,
+            pageSize: 100,
+            orderBy: "name",
+          })
+        : Promise.resolve({ data: { items: [], page: 1, pageSize: 100, total: 0, totalPrice: 0 }, error: null }),
+      hasQuery ? api.templates.getAll() : Promise.resolve({ data: [], error: null }),
     ]);
     const { data, error } = itemsResult;
     const normalizedQuery = query.value.trim().toLocaleLowerCase();
+    locationResults.value = locationsResult.error ? [] : (locationsResult.data.items ?? []);
     templateResults.value = templatesResult.error
       ? []
       : templatesResult.data.filter(
           template =>
             template.name.toLocaleLowerCase().includes(normalizedQuery) ||
+            template.defaultModelNumber.toLocaleLowerCase().includes(normalizedQuery) ||
             template.description.toLocaleLowerCase().includes(normalizedQuery)
         );
 
@@ -336,11 +350,10 @@
 
     if (!data.items || data.items.length === 0) {
       resetItems();
-      return;
+    } else {
+      total.value = data.total;
+      items.value = data.items;
     }
-
-    total.value = data.total;
-    items.value = data.items;
 
     loading.value = false;
     initialSearch.value = false;
@@ -510,6 +523,24 @@
     </div>
 
     <section>
+      <div v-if="query.trim() && locationResults.length" class="mb-6">
+        <h2 class="mb-2 flex items-center gap-2 text-lg font-semibold">
+          <MdiMapMarker />
+          Emplacements ({{ locationResults.length }})
+        </h2>
+        <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+          <NuxtLink
+            v-for="location in locationResults"
+            :key="location.id"
+            :to="`/location/${location.id}`"
+            class="flex items-center gap-2 rounded-md border bg-card px-3 py-2 transition-colors hover:bg-accent"
+          >
+            <MdiMapMarker class="size-4 shrink-0 text-primary" />
+            <span class="truncate font-medium">{{ location.name }}</span>
+          </NuxtLink>
+        </div>
+      </div>
+
       <div v-if="query.trim() && templateResults.length" class="mb-6">
         <h2 class="mb-2 flex items-center gap-2 text-lg font-semibold">
           <MdiFileDocumentMultiple />
