@@ -51,6 +51,9 @@
                 <Check :class="cn('mr-2 h-4 w-4', value?.id === template.id ? 'opacity-100' : 'opacity-0')" />
                 <div class="flex w-full min-w-0 flex-col">
                   <div class="truncate">{{ template.name }}</div>
+                  <div v-if="template.defaultModelNumber" class="mt-1 truncate text-xs font-medium text-muted-foreground">
+                    Référence : {{ template.defaultModelNumber }}
+                  </div>
                   <div v-if="template.description" class="mt-1 line-clamp-2 text-xs text-muted-foreground">
                     {{ template.description }}
                   </div>
@@ -345,7 +348,9 @@
   const TEMPLATE_PAGE_SIZE = 100;
   const allFilteredTemplates = computed(() => {
     if (!templates.value) return [];
-    return fuzzysort.go(search.value, templates.value, { key: "name", all: true }).map(i => i.obj);
+    return fuzzysort
+      .go(search.value, templates.value, { keys: ["name", "defaultModelNumber"], all: true })
+      .map(i => i.obj);
   });
   const filteredTemplates = computed(() => allFilteredTemplates.value.slice(0, visibleTemplateLimit.value));
   const hasMoreTemplates = computed(() => visibleTemplateLimit.value < allFilteredTemplates.value.length);
