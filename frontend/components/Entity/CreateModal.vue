@@ -20,9 +20,10 @@
       <TemplateSelector
         v-if="!isLocationCreation"
         v-model="selectedTemplate"
+        dialog
         @template-selected="handleTemplateSelected"
       />
-      <LocationSelector v-model="form.location" />
+      <LocationSelector v-model="form.location" :dialog="!isLocationCreation" />
 
       <!-- Template Info Display - Collapsible banner with distinct styling -->
       <div v-if="templateData" class="rounded-lg border-l-4 border-l-primary bg-primary/5 p-3">
