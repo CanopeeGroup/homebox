@@ -91,11 +91,12 @@ type (
 	}
 
 	EntityTemplateSummary struct {
-		ID          uuid.UUID `json:"id"`
-		Name        string    `json:"name"`
-		Description string    `json:"description"`
-		CreatedAt   time.Time `json:"createdAt"`
-		UpdatedAt   time.Time `json:"updatedAt"`
+		ID                 uuid.UUID `json:"id"`
+		Name               string    `json:"name"`
+		Description        string    `json:"description"`
+		DefaultModelNumber string    `json:"defaultModelNumber"`
+		CreatedAt          time.Time `json:"createdAt"`
+		UpdatedAt          time.Time `json:"updatedAt"`
 	}
 
 	EntityTemplateOut struct {
@@ -146,11 +147,12 @@ func mapTemplateFieldSlice(fields []*ent.TemplateField) []TemplateField {
 
 func mapEntityTemplateSummary(template *ent.EntityTemplate) EntityTemplateSummary {
 	return EntityTemplateSummary{
-		ID:          template.ID,
-		Name:        template.Name,
-		Description: template.Description,
-		CreatedAt:   template.CreatedAt,
-		UpdatedAt:   template.UpdatedAt,
+		ID:                 template.ID,
+		Name:               template.Name,
+		Description:        template.Description,
+		DefaultModelNumber: template.DefaultModelNumber,
+		CreatedAt:          template.CreatedAt,
+		UpdatedAt:          template.UpdatedAt,
 	}
 }
 
