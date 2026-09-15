@@ -6,7 +6,8 @@
   import MdiPencil from "~icons/mdi/pencil";
   import { Checkbox } from "@/components/ui/checkbox";
   import { Button } from "@/components/ui/button";
-  import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+  import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+  import { DialogRoot } from "reka-ui";
   import { Input } from "@/components/ui/input";
   import { Label } from "@/components/ui/label";
   import { toast } from "@/components/ui/sonner";
@@ -59,7 +60,7 @@
 </script>
 
 <template>
-  <Dialog v-model:open="quantityDialogOpen">
+  <DialogRoot v-model:open="quantityDialogOpen">
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>{{ $t("global.quantity") }} — {{ quantityItem?.name }}</DialogTitle>
@@ -87,7 +88,7 @@
         </div>
       </form>
     </DialogContent>
-  </Dialog>
+  </DialogRoot>
 
   <Teleport to="#selectable-subtitle" defer>
     <Checkbox
