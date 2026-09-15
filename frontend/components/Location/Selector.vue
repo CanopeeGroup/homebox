@@ -31,6 +31,7 @@
             <CommandInput
               v-model="search"
               class="shrink-0"
+              :auto-focus="false"
               :placeholder="$t('components.location.selector.search_location')"
               :display-value="_ => ''"
             />
