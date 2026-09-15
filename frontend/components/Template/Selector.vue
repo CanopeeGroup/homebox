@@ -299,13 +299,22 @@
 
   const api = useUserApi();
 
-  const { data: templates } = useAsyncData("templates-selector", async () => {
-    const { data, error } = await api.templates.getAll();
-    if (error) {
-      return [];
+  // The stable AsyncData key shares one in-memory result between selector
+  // instances. A shallow ref avoids proxying every field in large template sets.
+  const { data: templates } = useAsyncData(
+    "templates-selector",
+    async () => {
+      const { data, error } = await api.templates.getAll();
+      if (error) {
+        return [];
+      }
+      return data;
+    },
+    {
+      deep: false,
+      dedupe: "defer",
     }
-    return data;
-  });
+  );
 
   function selectTemplate(template: EntityTemplateSummary) {
     if (value.value?.id !== template.id) {
@@ -325,10 +334,16 @@
     open.value = false;
   }
 
+  const TEMPLATE_RENDER_LIMIT = 100;
   const filteredTemplates = computed(() => {
     if (!templates.value) return [];
-    const filtered = fuzzysort.go(search.value, templates.value, { key: "name", all: true }).map(i => i.obj);
-    return filtered;
+    // Search the complete cached collection, but only mount the best matches.
+    // Rendering thousands of CommandItem components is the main opening delay
+    // on mobile browsers.
+    return fuzzysort
+      .go(search.value, templates.value, { key: "name", all: true })
+      .slice(0, TEMPLATE_RENDER_LIMIT)
+      .map(i => i.obj);
   });
 
   watch(
