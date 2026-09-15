@@ -1273,6 +1273,8 @@ export interface TotalsByOrganizer {
 export interface TreeItem {
   children: TreeItem[];
   id: string;
+  /** Number of items stored directly in this location. */
+  itemCount: number;
   name: string;
   type: string;
 }
