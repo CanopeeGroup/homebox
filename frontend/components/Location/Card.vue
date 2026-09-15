@@ -7,28 +7,25 @@
           'px-3 py-2': dense,
         }"
       >
-        <h2 class="flex items-center justify-between gap-2">
-          <div class="relative size-6">
-            <div
-              class="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover/location-card:-rotate-90"
-            >
-              <MdiMapMarkerOutline class="size-6 group-hover/location-card:hidden" />
-              <MdiArrowUp class="hidden size-6 group-hover/location-card:block" />
-            </div>
-          </div>
-          <span class="mx-auto">
+        <h2 class="relative flex min-h-6 items-center justify-center px-16 text-center">
+          <span
+            class="absolute left-0 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center transition-transform duration-300 group-hover/location-card:-rotate-90"
+          >
+            <MdiMapMarkerOutline class="size-6 group-hover/location-card:hidden" />
+            <MdiArrowUp class="hidden size-6 group-hover/location-card:block" />
+          </span>
+          <span class="min-w-0 truncate">
             {{ location.name }}
           </span>
           <span
             v-if="hasCount"
-            class="flex shrink-0 items-center gap-1 text-primary"
+            class="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-1 text-primary"
             :title="`${count} article(s) présent(s)`"
             :aria-label="`${count} article(s) présent(s)`"
           >
             <MdiTag class="size-5" />
             <Badge>{{ count }}</Badge>
           </span>
-          <span v-else class="size-6" aria-hidden="true" />
         </h2>
       </div>
     </NuxtLink>
