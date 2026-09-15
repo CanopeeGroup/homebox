@@ -38,18 +38,38 @@
             <CommandList class="!max-h-none min-h-0 flex-1 overscroll-contain">
               <CommandGroup>
                 <CommandItem
-                  v-for="location in filteredLocations"
+                  v-for="location in dialogLocations"
                   :key="location.id"
                   :value="location.id"
-                  @select="selectLocation(location as unknown as EntitySummary)"
+                  class="gap-2"
+                  @select="handleDialogLocation(location)"
                 >
-                  <Check :class="cn('mr-2 h-4 w-4', value?.id === location.id ? 'opacity-100' : 'opacity-0')" />
-                  <div class="min-w-0">
+                  <button
+                    v-if="location.hasChildren && !search.trim()"
+                    type="button"
+                    class="flex size-7 shrink-0 items-center justify-center rounded hover:bg-accent"
+                    :aria-label="expandedLocationIds.has(location.id) ? 'Masquer les sous-emplacements' : 'Afficher les sous-emplacements'"
+                    @click.stop.prevent="toggleLocation(location.id)"
+                  >
+                    <ChevronDown v-if="expandedLocationIds.has(location.id)" class="size-4" />
+                    <ChevronRight v-else class="size-4" />
+                  </button>
+                  <span v-else class="size-7 shrink-0" />
+                  <div class="min-w-0 flex-1" :style="{ paddingLeft: `${location.depth * 0.75}rem` }">
                     <div class="truncate">{{ location.name }}</div>
-                    <div v-if="location.name !== location.treeString" class="mt-1 truncate text-xs text-muted-foreground">
+                    <div v-if="search.trim() && location.name !== location.treeString" class="mt-1 truncate text-xs text-muted-foreground">
                       {{ location.treeString }}
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    class="flex size-8 shrink-0 items-center justify-center rounded border hover:bg-accent"
+                    :class="{ 'border-primary text-primary': value?.id === location.id }"
+                    :aria-label="`Sélectionner ${location.name}`"
+                    @click.stop.prevent="selectLocation(location as unknown as EntitySummary)"
+                  >
+                    <Check class="size-4" />
+                  </button>
                 </CommandItem>
               </CommandGroup>
               <CommandGroup v-if="value">
@@ -194,7 +214,7 @@
 
 <script setup lang="ts">
   import { useMediaQuery } from "@vueuse/core";
-  import { Check, ChevronsUpDown, X } from "lucide-vue-next";
+  import { Check, ChevronDown, ChevronRight, ChevronsUpDown, X } from "lucide-vue-next";
   import fuzzysort from "fuzzysort";
   import { Button } from "~/components/ui/button";
   import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "~/components/ui/command";
@@ -221,7 +241,61 @@
   const search = ref("");
   const id = useId();
   const locations = useFlatLocations(props.currentLocation);
+  const locationStore = useLocationStore();
   const value = useVModel(props, "modelValue", emit);
+  const expandedLocationIds = ref(new Set<string>());
+
+  type DialogLocation = {
+    id: string;
+    name: string;
+    treeString: string;
+    depth: number;
+    hasChildren: boolean;
+  };
+
+  const dialogLocations = computed<DialogLocation[]>(() => {
+    if (search.value.trim()) {
+      return filteredLocations.value.map(location => ({
+        ...location,
+        depth: 0,
+        hasChildren: false,
+      }));
+    }
+
+    const visible: DialogLocation[] = [];
+    const appendVisible = (nodes: typeof locationStore.tree, depth: number, path: string) => {
+      for (const node of nodes ?? []) {
+        const treeString = path ? `${path} > ${node.name}` : node.name;
+        visible.push({
+          id: node.id,
+          name: node.name,
+          treeString,
+          depth,
+          hasChildren: node.children.length > 0,
+        });
+        if (node.children.length > 0 && expandedLocationIds.value.has(node.id)) {
+          appendVisible(node.children, depth + 1, treeString);
+        }
+      }
+    };
+    appendVisible(locationStore.tree, 0, "");
+    return visible;
+  });
+
+  function toggleLocation(id: string) {
+    const next = new Set(expandedLocationIds.value);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    expandedLocationIds.value = next;
+  }
+
+  function handleDialogLocation(location: DialogLocation) {
+    if (location.hasChildren && !search.value.trim()) {
+      toggleLocation(location.id);
+      return;
+    }
+    selectLocation(location as unknown as EntitySummary);
+  }
 
   function selectLocation(location: EntitySummary) {
     if (value.value?.id !== location.id) {
