@@ -101,12 +101,10 @@
   const quantityDialogOpen = ref(false);
   const editedQuantity = ref(0);
   const savingQuantity = ref(false);
-  const quantityInputActivated = ref(false);
 
   function openQuantityEditor() {
     if (!item.value) return;
     editedQuantity.value = item.value.quantity;
-    quantityInputActivated.value = false;
     quantityDialogOpen.value = true;
   }
 
@@ -424,7 +422,7 @@
     <ItemImageDialog />
 
     <DialogRoot v-model:open="quantityDialogOpen">
-      <DialogContent class="z-[100] sm:max-w-md" @open-auto-focus="$event.preventDefault()">
+      <DialogContent class="z-[100] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{{ $t("global.quantity") }} — {{ item.name }}</DialogTitle>
         </DialogHeader>
@@ -438,8 +436,7 @@
               min="0"
               step="any"
               inputmode="decimal"
-              :readonly="!quantityInputActivated"
-              @pointerdown="quantityInputActivated = true"
+              autofocus
             />
           </div>
           <div class="flex justify-end gap-2">
