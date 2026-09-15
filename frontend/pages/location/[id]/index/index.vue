@@ -167,7 +167,7 @@
     return a.attachments.length > 0 || a.warranty.length > 0 || a.manuals.length > 0 || a.receipts.length > 0;
   });
 
-  const { data: childLocations, refresh: refreshChildLocations } = useAsyncData(
+  const { data: childLocations } = useAsyncData(
     () => locationId.value + "_child_locations",
     async () => {
       if (!locationId.value) {
@@ -181,7 +181,7 @@
       });
 
       if (resp.error) {
-        toast.error(t("locations.toast.failed_load_locations"));
+        toast.error(t("locations.toast.failed_load_location"));
         return [];
       }
 
