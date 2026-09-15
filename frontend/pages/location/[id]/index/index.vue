@@ -2,7 +2,7 @@
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import type { ItemAttachment } from "~~/lib/api/types/data-contracts";
-  import MdiPackageVariant from "~icons/mdi/package-variant";
+  import MdiArrowLeft from "~icons/mdi/arrow-left";
   import MdiPlus from "~icons/mdi/plus";
   import MdiPencil from "~icons/mdi/pencil";
   import MdiDelete from "~icons/mdi/delete";
@@ -81,6 +81,14 @@
 
   function goToEdit() {
     navigateTo(`/location/${locationId.value}/edit`);
+  }
+
+  function goBack() {
+    if (window.history.state?.back) {
+      window.history.back();
+      return;
+    }
+    navigateTo("/locations");
   }
 
   // Photos
@@ -212,11 +220,17 @@
       <Card class="p-3">
         <header :class="{ 'mb-2': location?.description }">
           <div class="flex flex-wrap items-end gap-2">
-            <div
-              class="mb-auto flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              class="mb-auto size-12 shrink-0 rounded-full"
+              aria-label="Retour à la page précédente"
+              title="Retour"
+              @click="goBack"
             >
-              <MdiPackageVariant class="size-7" />
-            </div>
+              <MdiArrowLeft class="size-7" />
+            </Button>
             <div>
               <Breadcrumb v-if="location?.parent">
                 <BreadcrumbList>
