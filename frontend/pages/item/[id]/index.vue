@@ -3,7 +3,7 @@
   import { toast } from "@/components/ui/sonner";
   import type { AnyDetail, Details } from "~~/components/global/DetailsSection/types";
   import { filterZeroValues } from "~~/components/global/DetailsSection/types";
-  import MdiPackageVariant from "~icons/mdi/package-variant";
+  import MdiArrowLeft from "~icons/mdi/arrow-left";
   import MdiPlus from "~icons/mdi/plus";
   import MdiMinus from "~icons/mdi/minus";
   import MdiDelete from "~icons/mdi/delete";
@@ -52,6 +52,14 @@
 
   const itemId = computed<string>(() => route.params.id as string);
   const preferences = useViewPreferences();
+
+  function goBack() {
+    if (window.history.state?.back) {
+      window.history.back();
+      return;
+    }
+    navigateTo("/locations");
+  }
 
   const temporaryDuplicateSettings = ref<DuplicateSettings>({
     copyMaintenance: preferences.value.duplicateSettings.copyMaintenance,
@@ -401,11 +409,17 @@
       <Card class="p-3">
         <header :class="{ 'mb-2': item.description }">
           <div class="flex flex-wrap items-end gap-2">
-            <div
-              class="mb-auto flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              class="mb-auto size-12 shrink-0 rounded-full"
+              aria-label="Retour à la page précédente"
+              title="Retour"
+              @click="goBack"
             >
-              <MdiPackageVariant class="size-7" />
-            </div>
+              <MdiArrowLeft class="size-7" />
+            </Button>
             <div>
               <Breadcrumb v-if="fullpath && fullpath.length > 0">
                 <BreadcrumbList>
