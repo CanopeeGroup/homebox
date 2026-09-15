@@ -10,6 +10,7 @@
   import MdiPlusBoxMultipleOutline from "~icons/mdi/plus-box-multiple-outline";
   import MdiContentSaveEdit from "~icons/mdi/content-save-edit";
   import MdiDotsVertical from "~icons/mdi/dots-vertical";
+  import MdiPencil from "~icons/mdi/pencil";
   import { Separator } from "@/components/ui/separator";
   import {
     DropdownMenu,
@@ -33,6 +34,9 @@
   import ItemImageDialog from "~/components/Item/ImageDialog.vue";
   import ItemDuplicateSettings from "~/components/Item/DuplicateSettings.vue";
   import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+  import { DialogRoot } from "reka-ui";
+  import { Input } from "@/components/ui/input";
+  import { Label } from "@/components/ui/label";
   import DateTime from "~/components/global/DateTime.vue";
   import Markdown from "~/components/global/Markdown.vue";
   import BaseCard from "@/components/Base/Card.vue";
@@ -93,6 +97,36 @@
 
     lastRoute.value = route.fullPath;
   });
+
+  const quantityDialogOpen = ref(false);
+  const editedQuantity = ref(0);
+  const savingQuantity = ref(false);
+
+  function openQuantityEditor() {
+    if (!item.value) return;
+    editedQuantity.value = item.value.quantity;
+    quantityDialogOpen.value = true;
+  }
+
+  async function saveQuantity() {
+    if (!item.value || !Number.isFinite(editedQuantity.value) || editedQuantity.value < 0) return;
+
+    savingQuantity.value = true;
+    const response = await api.items.patch(item.value.id, {
+      id: item.value.id,
+      quantity: editedQuantity.value,
+    });
+    savingQuantity.value = false;
+
+    if (response.error) {
+      toast.error(t("items.toast.failed_adjust_quantity"));
+      return;
+    }
+
+    if (response.data) item.value = response.data;
+    quantityDialogOpen.value = false;
+    toast.success("Quantité modifiée.");
+  }
 
   async function adjustQuantity(amount: number) {
     if (!item.value) {
@@ -386,6 +420,36 @@
     <Title>{{ item.name }}</Title>
 
     <ItemImageDialog />
+
+    <DialogRoot v-model:open="quantityDialogOpen">
+      <DialogContent class="z-[100] sm:max-w-md" @open-auto-focus="$event.preventDefault()">
+        <DialogHeader>
+          <DialogTitle>{{ $t("global.quantity") }} — {{ item.name }}</DialogTitle>
+        </DialogHeader>
+        <form class="flex flex-col gap-4" @submit.prevent="saveQuantity">
+          <div class="flex flex-col gap-2">
+            <Label for="item-detail-quantity">{{ $t("global.quantity") }}</Label>
+            <Input
+              id="item-detail-quantity"
+              v-model.number="editedQuantity"
+              type="number"
+              min="0"
+              step="any"
+              inputmode="decimal"
+            />
+          </div>
+          <div class="flex justify-end gap-2">
+            <Button type="button" variant="outline" @click="quantityDialogOpen = false">
+              {{ $t("global.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="savingQuantity || editedQuantity < 0">
+              {{ $t("global.save") }}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </DialogRoot>
+
     <Dialog :dialog-id="DialogID.DuplicateTemporarySettings">
       <DialogContent>
         <DialogHeader>
@@ -520,11 +584,13 @@
           <template #title> {{ $t("items.details") }} </template>
           <DetailsSection :details="itemDetails">
             <template #quantity="{ detail }">
-              <div class="flex items-center">
-                {{ detail.text }}
-                <span
-                  class="my-0 ml-4 inline-flex gap-2 opacity-10 transition-opacity duration-75 group-hover:opacity-100"
-                >
+              <div class="flex flex-wrap items-center gap-2">
+                <span>{{ detail.text }}</span>
+                <Button size="sm" variant="outline" @click="openQuantityEditor">
+                  <MdiPencil class="mr-1 size-4" />
+                  {{ $t("global.edit") }}
+                </Button>
+                <span class="inline-flex gap-2 opacity-10 transition-opacity duration-75 group-hover:opacity-100">
                   <Button size="icon" variant="outline" class="size-8 rounded-full" @click="adjustQuantity(-1)">
                     <MdiMinus class="size-3" />
                   </Button>
