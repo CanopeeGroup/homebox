@@ -935,6 +935,8 @@ export interface EntityTemplateOut {
 
 export interface EntityTemplateSummary {
   createdAt: Date | string;
+  /** Default model reference used by template search. */
+  defaultModelNumber: string;
   description: string;
   id: string;
   name: string;
