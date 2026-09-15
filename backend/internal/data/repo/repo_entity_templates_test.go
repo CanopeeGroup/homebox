@@ -59,6 +59,7 @@ func TestEntityTemplatesRepository_GetAll(t *testing.T) {
 		if r.ID == created.ID {
 			found = true
 			assert.Equal(t, data.Name, r.Name)
+			assert.Equal(t, *data.DefaultModelNumber, r.DefaultModelNumber)
 		}
 	}
 	assert.True(t, found)
