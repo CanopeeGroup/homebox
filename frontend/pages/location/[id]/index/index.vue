@@ -167,6 +167,31 @@
     return a.attachments.length > 0 || a.warranty.length > 0 || a.manuals.length > 0 || a.receipts.length > 0;
   });
 
+  const { data: childLocations, refresh: refreshChildLocations } = useAsyncData(
+    () => locationId.value + "_child_locations",
+    async () => {
+      if (!locationId.value) {
+        return [];
+      }
+
+      const resp = await api.items.getAll({
+        parentIds: [locationId.value],
+        isLocation: true,
+        orderBy: "name",
+      });
+
+      if (resp.error) {
+        toast.error(t("locations.toast.failed_load_locations"));
+        return [];
+      }
+
+      return resp.data.items ?? [];
+    },
+    {
+      watch: [locationId],
+    }
+  );
+
   const { data: items, refresh: refreshItemList } = useAsyncData(
     () => locationId.value + "_item_list",
     async () => {
@@ -313,10 +338,10 @@
       </BaseCard>
 
       <!-- Child locations -->
-      <section v-if="location && location.children && location.children.length > 0" class="mt-6">
+      <section v-if="childLocations && childLocations.length > 0" class="mt-6">
         <BaseSectionHeader class="mb-5"> {{ $t("locations.child_locations") }} </BaseSectionHeader>
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <LocationCard v-for="child in location.children" :key="child.id" :location="child" />
+          <LocationCard v-for="child in childLocations" :key="child.id" :location="child" />
         </div>
       </section>
 
