@@ -10,6 +10,7 @@ defineOptions({
 
 const props = defineProps<ComboboxInputProps & {
   class?: HTMLAttributes['class']
+  autoFocus?: boolean
 }>()
 
 const delegatedProps = computed(() => {
