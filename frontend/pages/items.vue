@@ -528,12 +528,12 @@
           <MdiMapMarker />
           Emplacements ({{ locationResults.length }})
         </h2>
-        <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+        <div class="flex flex-col gap-2">
           <NuxtLink
             v-for="location in locationResults"
             :key="location.id"
             :to="`/location/${location.id}`"
-            class="flex items-center gap-2 rounded-md border bg-card px-3 py-2 transition-colors hover:bg-accent"
+            class="flex w-full items-center gap-2 rounded-md border bg-card px-3 py-2 transition-colors hover:bg-accent"
           >
             <MdiMapMarker class="size-4 shrink-0 text-primary" />
             <span class="truncate font-medium">{{ location.name }}</span>
@@ -546,12 +546,12 @@
           <MdiFileDocumentMultiple />
           {{ $t("items.template_results", { count: templateResults.length }) }}
         </h2>
-        <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+        <div class="flex flex-col gap-2">
           <NuxtLink
             v-for="template in templateResults"
             :key="template.id"
             :to="`/template/${template.id}`"
-            class="rounded-md border bg-card px-3 py-2 transition-colors hover:bg-accent"
+            class="block w-full rounded-md border bg-card px-3 py-2 transition-colors hover:bg-accent"
           >
             <p class="truncate font-medium">{{ template.name }}</p>
             <p v-if="template.description" class="truncate text-sm text-muted-foreground">
@@ -564,6 +564,7 @@
         :items="items"
         :location-flat-tree="locationFlatTree"
         :pagination="pagination"
+        compact-list
         disable-sort
         @refresh="async () => search()"
       />
