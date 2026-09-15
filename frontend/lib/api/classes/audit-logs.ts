@@ -9,6 +9,7 @@ export interface AuditLogEntry {
   resource: string;
   path: string;
   count: number;
+  quantity?: number | null;
   createdAt: Date | string;
 }
 
