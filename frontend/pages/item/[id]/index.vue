@@ -101,10 +101,12 @@
   const quantityDialogOpen = ref(false);
   const editedQuantity = ref(0);
   const savingQuantity = ref(false);
+  const quantityInputActivated = ref(false);
 
   function openQuantityEditor() {
     if (!item.value) return;
     editedQuantity.value = item.value.quantity;
+    quantityInputActivated.value = false;
     quantityDialogOpen.value = true;
   }
 
@@ -436,6 +438,8 @@
               min="0"
               step="any"
               inputmode="decimal"
+              :readonly="!quantityInputActivated"
+              @pointerdown="quantityInputActivated = true"
             />
           </div>
           <div class="flex justify-end gap-2">
