@@ -2,6 +2,7 @@
   /* eslint-disable vue/no-undef-components -- recursive component resolved from its SFC filename */
   import MdiChevronRight from "~icons/mdi/chevron-right";
   import MdiMapMarker from "~icons/mdi/map-marker";
+  import MdiTag from "~icons/mdi/tag";
   import type { TreeItem } from "~/lib/api/types/data-contracts";
 
   defineOptions({ name: "LocationCompactTree" });
@@ -22,6 +23,14 @@
       >
         <MdiMapMarker class="size-4 shrink-0 text-muted-foreground" />
         <span class="min-w-0 flex-1 truncate">{{ location.name }}</span>
+        <span
+          v-if="location.itemCount > 0"
+          class="flex shrink-0 items-center text-primary"
+          :title="`${location.itemCount} article(s) présent(s)`"
+          :aria-label="`${location.itemCount} article(s) présent(s)`"
+        >
+          <MdiTag class="size-4" />
+        </span>
         <MdiChevronRight class="size-4 shrink-0 text-muted-foreground" />
       </NuxtLink>
       <LocationCompactTree v-if="location.children?.length" :locations="location.children" class="ml-4" />
