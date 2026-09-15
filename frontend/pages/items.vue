@@ -192,12 +192,6 @@
     }
   });
 
-  watch(negateTags, (newV, oldV) => {
-    if (newV !== oldV) {
-      search();
-    }
-  });
-
   watch(onlyWithoutPhoto, (newV, oldV) => {
     if (newV && onlyWithPhoto.value) {
       // this triggers the watch on onlyWithPhoto
