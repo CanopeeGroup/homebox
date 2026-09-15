@@ -26,6 +26,7 @@
     <DialogRoot v-model:open="open">
       <DialogContent
         class="z-[100] flex h-dvh max-h-dvh w-screen max-w-none flex-col gap-3 rounded-none p-3 sm:h-[80dvh] sm:max-h-[80dvh] sm:w-[min(90vw,48rem)] sm:max-w-3xl sm:rounded-lg sm:p-5"
+        @open-auto-focus="$event.preventDefault()"
       >
         <DialogHeader class="shrink-0">
           <DialogTitle>{{ $t("components.template.selector.label") }}</DialogTitle>
@@ -63,6 +64,11 @@
               </CommandItem>
             </CommandGroup>
           </CommandList>
+          <div v-if="hasMoreTemplates" class="shrink-0 border-t p-2">
+            <Button type="button" variant="outline" class="w-full" @click="showMoreTemplates">
+              + Plus
+            </Button>
+          </div>
         </Command>
       </DialogContent>
     </DialogRoot>
@@ -294,6 +300,7 @@
   const open = ref(false);
   const useTouchLayout = useMediaQuery("(max-width: 1024px), (pointer: coarse)");
   const search = ref("");
+  const visibleTemplateLimit = ref(100);
   const id = useId();
   const value = useVModel(props, "modelValue", emit);
 
@@ -334,16 +341,24 @@
     open.value = false;
   }
 
-  const TEMPLATE_RENDER_LIMIT = 100;
-  const filteredTemplates = computed(() => {
+  const TEMPLATE_PAGE_SIZE = 100;
+  const allFilteredTemplates = computed(() => {
     if (!templates.value) return [];
-    // Search the complete cached collection, but only mount the best matches.
-    // Rendering thousands of CommandItem components is the main opening delay
-    // on mobile browsers.
-    return fuzzysort
-      .go(search.value, templates.value, { key: "name", all: true })
-      .slice(0, TEMPLATE_RENDER_LIMIT)
-      .map(i => i.obj);
+    return fuzzysort.go(search.value, templates.value, { key: "name", all: true }).map(i => i.obj);
+  });
+  const filteredTemplates = computed(() => allFilteredTemplates.value.slice(0, visibleTemplateLimit.value));
+  const hasMoreTemplates = computed(() => visibleTemplateLimit.value < allFilteredTemplates.value.length);
+
+  function showMoreTemplates() {
+    visibleTemplateLimit.value += TEMPLATE_PAGE_SIZE;
+  }
+
+  watch(search, () => {
+    visibleTemplateLimit.value = TEMPLATE_PAGE_SIZE;
+  });
+
+  watch(open, isOpen => {
+    if (!isOpen) visibleTemplateLimit.value = TEMPLATE_PAGE_SIZE;
   });
 
   watch(
