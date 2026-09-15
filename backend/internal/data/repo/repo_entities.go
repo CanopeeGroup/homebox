@@ -814,7 +814,9 @@ func (r *EntityRepository) QueryByGroup(ctx context.Context, gid uuid.UUID, q En
 	}, nil
 }
 
-// getChildItemCounts returns a map of entity ID → sum of child item quantities for the given location IDs.
+// getChildItemCounts returns a map of location ID → number of direct child items.
+// Count rows rather than summing quantities: an item with quantity 0 still
+// means the location contains an item and must display the presence indicator.
 func (r *EntityRepository) getChildItemCounts(ctx context.Context, gid uuid.UUID, locationIDs []uuid.UUID) (map[uuid.UUID]float64, error) {
 	ctx, span := entityTracer().Start(ctx, "repo.EntityRepository.getChildItemCounts",
 		trace.WithAttributes(
@@ -837,7 +839,7 @@ func (r *EntityRepository) getChildItemCounts(ctx context.Context, gid uuid.UUID
 	}
 
 	query := fmt.Sprintf(`
-		SELECT e.entity_children, COALESCE(SUM(e.quantity), 0)
+		SELECT e.entity_children, COUNT(e.id)
 		FROM entities e
 		JOIN entity_types et ON et.id = e.entity_type_entities
 		WHERE e.group_entities = $1
