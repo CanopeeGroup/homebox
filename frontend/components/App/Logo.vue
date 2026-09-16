@@ -1,5 +1,26 @@
+<script setup lang="ts">
+const auth = useAuthContext();
+const api = useUserApi();
+const avatar = useState<string | null>("admin-profile-avatar", () => null);
+
+onMounted(async () => {
+  if (!auth.user?.isSuperuser || avatar.value) return;
+  const { data, error } = await api.user.getSettings();
+  if (!error && data?.item && typeof data.item.adminAvatar === "string") {
+    avatar.value = data.item.adminAvatar;
+  }
+});
+</script>
+
 <template>
+  <img
+    v-if="auth.user?.isSuperuser && avatar"
+    :src="avatar"
+    alt="Avatar administrateur"
+    class="size-full rounded-full object-cover"
+  />
   <svg
+    v-else
     viewBox="0 0 10817 9730"
     xmlns="http://www.w3.org/2000/svg"
     xml:space="preserve"
