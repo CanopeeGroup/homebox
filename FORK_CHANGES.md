@@ -1,8 +1,8 @@
-# Fork HomeBox de leroyconstant
+# Fork HomeBox de Canopee
 
 Ce dépôt est un fork personnalisé de [sysadminsmedia/homebox](https://github.com/sysadminsmedia/homebox), adapté à une gestion d’inventaire simplifiée et orientée vers les objets, les modèles et les emplacements.
 
-Les développements personnalisés sont publiés sur la branche `feature/template-import-export` et regroupés dans la [pull request #1](https://github.com/leroyconstant/homebox/pull/1).
+Les développements personnalisés sont publiés sur la branche Main
 
 ## Fonctionnalités ajoutées
 
@@ -76,7 +76,7 @@ Les développements personnalisés sont publiés sur la branche `feature/templat
 Cloner directement la branche personnalisée :
 
 ```bash
-git clone --branch feature/template-import-export https://github.com/leroyconstant/homebox.git
+git clone --branch feature/template-import-export https://github.com/canopeegroup/homebox.git
 cd homebox
 docker compose build --pull
 docker compose up -d
@@ -133,5 +133,5 @@ Les modifications du schéma utilisent des migrations séparées pour SQLite et 
 ## Projet d’origine
 
 - Projet officiel : [sysadminsmedia/homebox](https://github.com/sysadminsmedia/homebox)
-- Fork : [leroyconstant/homebox](https://github.com/leroyconstant/homebox)
+- Fork : [canopeegroup/homebox](https://github.com/canopeegroup/homebox)
 - Licence : identique à celle du projet HomeBox d’origine.
