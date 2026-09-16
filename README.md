@@ -5,7 +5,7 @@
 <h1 align="center" style="margin-top: -10px;"> HomeBox </h1>
 
 > [!IMPORTANT]
-> Ceci est le fork personnalisé de HomeBox maintenu par **leroyconstant**.
+> Ceci est le fork personnalisé de HomeBox maintenu par **Canopee**
 > Les différences avec le projet officiel, les instructions Docker et la stratégie de mise à jour sont détaillées dans [FORK_CHANGES.md](FORK_CHANGES.md).
 
 ## Personnalisations du fork
