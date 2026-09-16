@@ -22,6 +22,7 @@
     table: TableType<EntitySummary>;
     dataLength: number;
     externalPagination?: PaginationType;
+    compactControls?: boolean;
   }>();
 
   const setPage = (page: number) => {
@@ -41,7 +42,12 @@
 <template>
   <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-0">
     <div class="order-2 flex items-center gap-2 md:order-1">
-      <Button class="size-10 p-0" variant="outline" @click="openDialog(DialogID.ItemTableSettings)">
+      <Button
+        v-if="!compactControls"
+        class="size-10 p-0"
+        variant="outline"
+        @click="openDialog(DialogID.ItemTableSettings)"
+      >
         <MdiTableCog />
       </Button>
       <div class="text-sm text-muted-foreground">
@@ -63,7 +69,7 @@
         @update:page="val => setPage(val)"
       >
         <PaginationList v-slot="{ items: pageItems }" class="flex items-center gap-1">
-          <PaginationFirst @click="() => setPage(1)" />
+          <PaginationFirst v-if="!compactControls" @click="() => setPage(1)" />
           <template v-for="(item, index) in pageItems">
             <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
               <Button
@@ -77,6 +83,7 @@
             <PaginationEllipsis v-else :key="item.type" :index="index" />
           </template>
           <PaginationLast
+            v-if="!compactControls"
             @click="
               () =>
                 setPage(
