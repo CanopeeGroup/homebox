@@ -97,20 +97,12 @@ func (ctrl *V1Controller) HandleCreateMissingThumbnails() errchain.HandlerFunc {
 	return actionHandlerFactory("create missing thumbnails", ctrl.repo.Attachments.CreateMissingThumbnails)
 }
 
-// WipeInventoryOptions represents the options for wiping inventory
-type WipeInventoryOptions struct {
-	WipeTags        bool `json:"wipeTags"`
-	WipeLocations   bool `json:"wipeLocations"`
-	WipeMaintenance bool `json:"wipeMaintenance"`
-}
-
 // HandleWipeInventory godoc
 //
 //	@Summary		Wipe Inventory
-//	@Description	Deletes all items in the inventory
+//	@Description	Permanently deletes the complete inventory, including templates, locations, tags and maintenance records
 //	@Tags			Actions
 //	@Produce		json
-//	@Param			options	body		WipeInventoryOptions	false	"Wipe options"
 //	@Success		200		{object}	ActionAmountResult
 //	@Router			/v1/actions/wipe-inventory [Post]
 //	@Security		Bearer
@@ -130,18 +122,10 @@ func (ctrl *V1Controller) HandleWipeInventory() errchain.HandlerFunc {
 			return validate.NewRequestError(errors.New("only group owners can wipe inventory"), http.StatusForbidden)
 		}
 
-		// Parse options from request body
-		var options WipeInventoryOptions
-		if err := server.Decode(r, &options); err != nil {
-			// If no body provided, use default (false for all)
-			options = WipeInventoryOptions{
-				WipeTags:        false,
-				WipeLocations:   false,
-				WipeMaintenance: false,
-			}
-		}
-
-		totalCompleted, err := ctrl.repo.Entities.WipeInventory(ctx, ctx.GID, options.WipeTags, options.WipeLocations, options.WipeMaintenance)
+		// The endpoint is intentionally all-or-nothing. The UI requires an
+		// explicit confirmation before calling it, and no partial wipe options
+		// are accepted here.
+		totalCompleted, err := ctrl.repo.Entities.WipeInventory(ctx, ctx.GID, true, true, true)
 		if err != nil {
 			log.Err(err).Str("action_ref", "wipe inventory").Msg("failed to run action")
 			return validate.NewRequestError(err, http.StatusInternalServerError)
@@ -149,12 +133,8 @@ func (ctrl *V1Controller) HandleWipeInventory() errchain.HandlerFunc {
 
 		// Publish mutation events for wiped resources
 		if ctrl.bus != nil {
-			if options.WipeTags {
-				ctrl.bus.Publish(eventbus.EventTagMutation, eventbus.GroupMutationEvent{GID: ctx.GID})
-			}
-			if options.WipeLocations {
-				ctrl.bus.Publish(eventbus.EventEntityMutation, eventbus.GroupMutationEvent{GID: ctx.GID})
-			}
+			ctrl.bus.Publish(eventbus.EventTagMutation, eventbus.GroupMutationEvent{GID: ctx.GID})
+			ctrl.bus.Publish(eventbus.EventEntityMutation, eventbus.GroupMutationEvent{GID: ctx.GID})
 		}
 
 		return server.JSON(w, http.StatusOK, ActionAmountResult{Completed: totalCompleted})
