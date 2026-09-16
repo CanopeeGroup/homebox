@@ -455,13 +455,13 @@ func (s *ExportService) buildArtifact(ctx context.Context, exportID, gid uuid.UU
 	size := stat.Size()
 
 	artifactPath := fmt.Sprintf("%s/exports/%s.zip", gid.String(), exportID.String())
-	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetConnString())
+	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetScopedConnString())
 	if err != nil {
 		return "", 0, fmt.Errorf("open bucket: %w", err)
 	}
 	defer func() { _ = bucket.Close() }()
 
-	bw, err := bucket.NewWriter(ctx, s.repos.Attachments.GetFullPath(artifactPath), &blob.WriterOptions{
+	bw, err := bucket.NewWriter(ctx, s.repos.Attachments.GetScopedPath(artifactPath), &blob.WriterOptions{
 		ContentType: "application/zip",
 	})
 	if err != nil {
@@ -519,14 +519,14 @@ func (s *ExportService) copyAttachmentBlobs(ctx context.Context, zw *zip.Writer,
 		return err
 	}
 
-	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetConnString())
+	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetScopedConnString())
 	if err != nil {
 		return err
 	}
 	defer func() { _ = bucket.Close() }()
 
 	for _, ref := range refs {
-		r, err := bucket.NewReader(ctx, s.repos.Attachments.GetFullPath(ref.path), nil)
+		r, err := bucket.NewReader(ctx, s.repos.Attachments.GetScopedPath(ref.path), nil)
 		if err != nil {
 			// Don't fail the whole export for one missing blob; just skip it.
 			// On import the attachment row will exist but the blob won't —
@@ -791,13 +791,13 @@ func (s *ExportService) runImport(ctx context.Context, gid, userID, importID uui
 	}
 
 	// Stream the upload to a temp file so we can use archive/zip's seek API.
-	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetConnString())
+	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetScopedConnString())
 	if err != nil {
 		return fmt.Errorf("open bucket: %w", err)
 	}
 	defer func() { _ = bucket.Close() }()
 
-	r, err := bucket.NewReader(ctx, s.repos.Attachments.GetFullPath(uploadKey), nil)
+	r, err := bucket.NewReader(ctx, s.repos.Attachments.GetScopedPath(uploadKey), nil)
 	if err != nil {
 		return fmt.Errorf("open upload: %w", err)
 	}
@@ -911,7 +911,7 @@ func (s *ExportService) runImport(ctx context.Context, gid, userID, importID uui
 // progress field stays current during what can be the slowest phase of a
 // restore.
 func (s *ExportService) restoreAttachmentBlobs(ctx context.Context, zr *zip.Reader, idMap map[string]string, onProgress func(done, total int)) error {
-	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetConnString())
+	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetScopedConnString())
 	if err != nil {
 		return err
 	}
@@ -950,7 +950,7 @@ func (s *ExportService) restoreAttachmentBlobs(ctx context.Context, zr *zip.Read
 		if err != nil {
 			return err
 		}
-		w, err := bucket.NewWriter(ctx, s.repos.Attachments.GetFullPath(att.Path), &blob.WriterOptions{
+		w, err := bucket.NewWriter(ctx, s.repos.Attachments.GetScopedPath(att.Path), &blob.WriterOptions{
 			ContentType: att.MimeType,
 		})
 		if err != nil {
@@ -977,12 +977,12 @@ func (s *ExportService) restoreAttachmentBlobs(ctx context.Context, zr *zip.Read
 
 // deleteUpload removes the staged import zip from blob storage.
 func (s *ExportService) deleteUpload(ctx context.Context, uploadKey string) error {
-	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetConnString())
+	bucket, err := blob.OpenBucket(ctx, s.repos.Attachments.GetScopedConnString())
 	if err != nil {
 		return err
 	}
 	defer func() { _ = bucket.Close() }()
-	return bucket.Delete(ctx, s.repos.Attachments.GetFullPath(uploadKey))
+	return bucket.Delete(ctx, s.repos.Attachments.GetScopedPath(uploadKey))
 }
 
 func (s *ExportService) publishImportFinished(gid uuid.UUID) {
