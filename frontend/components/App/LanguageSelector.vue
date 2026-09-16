@@ -44,47 +44,50 @@
 </script>
 
 <template>
-  <div class="w-full" :class="{ 'p-5 pt-0': expanded }">
-    <Label v-if="expanded" for="language"> {{ $t("profile.language") }} </Label>
-    <Select
-      id="language"
-      v-model="$i18n.locale"
-      @update:model-value="
-        event => {
-          setLanguage(event as string);
-        }
-      "
-    >
-      <SelectTrigger>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem v-for="lang in $i18n.availableLocales" :key="lang" :value="lang">
-          {{ $t(`languages.${lang}`) }} ({{ $t(`languages.${lang}`, 1, { locale: lang }) }})
-        </SelectItem>
-      </SelectContent>
-    </Select>
-    <template v-if="expanded">
-      <Label for="overrideLocale"> {{ $t("profile.override_locale") }} </Label>
+  <div class="w-full">
+    <ProfileAdminAvatar v-if="expanded" />
+    <div :class="{ 'p-5 pt-0': expanded }">
+      <Label v-if="expanded" for="language"> {{ $t("profile.language") }} </Label>
       <Select
-        id="overrideLocale"
-        :model-value="preferences.overrideFormatLocale"
+        id="language"
+        v-model="$i18n.locale"
         @update:model-value="
-          val => {
-            setOverrideLocale(val?.toString());
+          event => {
+            setLanguage(event as string);
           }
         "
       >
         <SelectTrigger>
-          <SelectValue :placeholder="$t('profile.no_override')" />
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="locale in locales" :key="locale.code" :value="locale.code">
-            {{ locale.name }} - ({{ locale.localName }})
+          <SelectItem v-for="lang in $i18n.availableLocales" :key="lang" :value="lang">
+            {{ $t(`languages.${lang}`) }} ({{ $t(`languages.${lang}`, 1, { locale: lang }) }})
           </SelectItem>
         </SelectContent>
       </Select>
-      <p class="m-2 text-sm">{{ $t("profile.example") }}: {{ $t("global.created") }} {{ dateExample }}</p>
-    </template>
+      <template v-if="expanded">
+        <Label for="overrideLocale"> {{ $t("profile.override_locale") }} </Label>
+        <Select
+          id="overrideLocale"
+          :model-value="preferences.overrideFormatLocale"
+          @update:model-value="
+            val => {
+              setOverrideLocale(val?.toString());
+            }
+          "
+        >
+          <SelectTrigger>
+            <SelectValue :placeholder="$t('profile.no_override')" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="locale in locales" :key="locale.code" :value="locale.code">
+              {{ locale.name }} - ({{ locale.localName }})
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <p class="m-2 text-sm">{{ $t("profile.example") }}: {{ $t("global.created") }} {{ dateExample }}</p>
+      </template>
+    </div>
   </div>
 </template>
