@@ -46,7 +46,13 @@ func TestWipeInventory_Integration(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// 3. Create items
+	// 3. Create a template. A complete inventory wipe must remove models too.
+	templateData := templateFactory()
+	templateData.Name = "Test inventory template"
+	template, err := tRepos.EntityTemplates.Create(context.Background(), tGroup.ID, templateData)
+	require.NoError(t, err)
+
+	// 4. Create items
 	entity1, err := tRepos.Entities.Create(context.Background(), tGroup.ID, EntityCreate{
 		Name:         "Test Laptop",
 		Description:  "Work laptop",
@@ -74,7 +80,7 @@ func TestWipeInventory_Integration(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// 4. Create maintenance entries
+	// 5. Create maintenance entries
 	_, err = tRepos.MaintEntry.Create(context.Background(), tGroup.ID, entity1.ID, MaintenanceEntryCreate{
 		CompletedDate: types.DateFromTime(time.Now()),
 		Name:          "Laptop cleaning",
@@ -99,12 +105,12 @@ func TestWipeInventory_Integration(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// 5. Verify entities exist
+	// 6. Verify entities exist
 	allEntities, err := tRepos.Entities.GetAll(context.Background(), tGroup.ID)
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, len(allEntities), 3, "Should have at least 3 entities")
 
-	// 6. Verify maintenance entries exist
+	// 7. Verify maintenance entries exist
 	maint1List, err := tRepos.MaintEntry.GetMaintenanceByItemID(context.Background(), tGroup.ID, entity1.ID, MaintenanceFilters{})
 	require.NoError(t, err)
 	assert.NotEmpty(t, maint1List, "Entity 1 should have maintenance records")
@@ -113,27 +119,31 @@ func TestWipeInventory_Integration(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, maint2List, "Entity 2 should have maintenance records")
 
-	// 7. Test wipe inventory with all options enabled
+	// 8. Wipe the complete inventory
 	deleted, err := tRepos.Entities.WipeInventory(context.Background(), tGroup.ID, true, true, true)
 	require.NoError(t, err)
 	assert.Positive(t, deleted, "Should have deleted entities")
 
-	// 8. Verify all entities are deleted
+	// 9. Verify all entities are deleted
 	allEntitiesAfter, err := tRepos.Entities.GetAll(context.Background(), tGroup.ID)
 	require.NoError(t, err)
 	assert.Empty(t, allEntitiesAfter, "All entities should be deleted")
 
-	// 9. Verify maintenance entries are deleted
+	// 10. Verify maintenance entries are deleted
 	maint1After, err := tRepos.MaintEntry.GetMaintenanceByItemID(context.Background(), tGroup.ID, entity1.ID, MaintenanceFilters{})
 	require.NoError(t, err)
 	assert.Empty(t, maint1After, "Entity 1 maintenance records should be deleted")
 
-	// 10. Verify tags are deleted
+	// 11. Verify tags are deleted
 	_, err = tRepos.Tags.GetOneByGroup(context.Background(), tGroup.ID, tag1.ID)
 	require.Error(t, err, "Tag 1 should be deleted")
 
 	_, err = tRepos.Tags.GetOneByGroup(context.Background(), tGroup.ID, tag2.ID)
 	require.Error(t, err, "Tag 2 should be deleted")
+
+	// 12. Verify templates are deleted
+	_, err = tRepos.EntityTemplates.GetOne(context.Background(), tGroup.ID, template.ID)
+	require.Error(t, err, "Template should be deleted")
 }
 
 // TestWipeInventory_SelectiveWipe tests wiping only certain entity types
