@@ -240,6 +240,7 @@
           :pagination="pagination"
           :data-length="data.length"
           :external-pagination="externalPagination"
+          :compact-controls="compactList"
         />
       </div>
       <div>
@@ -251,6 +252,7 @@
           :pagination="pagination"
           :data-length="data.length"
           :external-pagination="externalPagination"
+          :compact-controls="compactList"
         />
       </div>
     </BaseCard>
@@ -261,6 +263,7 @@
           :pagination="pagination"
           :data-length="data.length"
           :external-pagination="externalPagination"
+          :compact-controls="compactList"
         />
       </div>
       <CardView
@@ -275,6 +278,7 @@
           :pagination="pagination"
           :data-length="data.length"
           :external-pagination="externalPagination"
+          :compact-controls="compactList"
         />
       </div>
     </div>
