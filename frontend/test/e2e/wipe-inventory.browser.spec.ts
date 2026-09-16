@@ -53,15 +53,12 @@ test.describe.skip("Wipe Inventory", () => {
     await openWipeInventory(page);
 
     await expect(
-      page.getByText(
-        "Inventory, tags, locations and maintenance records cannot be wiped whilst Homebox is in demo mode.",
-        { exact: false }
-      )
+      page.getByText("The complete inventory, including templates, cannot be wiped while Homebox is in demo mode.", {
+        exact: false,
+      })
     ).toBeVisible();
 
-    await expect(page.locator("input#wipe-tags-checkbox")).toHaveCount(0);
-    await expect(page.locator("input#wipe-locations-checkbox")).toHaveCount(0);
-    await expect(page.locator("input#wipe-maintenance-checkbox")).toHaveCount(0);
+    await expect(page.locator("#wipe-inventory-confirmation-checkbox")).toHaveCount(0);
   });
 
   test.describe.skip("production mode", () => {
@@ -70,7 +67,7 @@ test.describe.skip("Wipe Inventory", () => {
       await login(page);
     });
 
-    test.skip("renders wipe options and submits all flags", async ({ page }) => {
+    test.skip("requires the irreversible operation confirmation", async ({ page }) => {
       await page.route(WIPE_ROUTE, route => {
         route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ completed: 0 }) });
       });
@@ -78,27 +75,16 @@ test.describe.skip("Wipe Inventory", () => {
       await openWipeInventory(page);
       await expect(page.getByText("Wipe Inventory").first()).toBeVisible();
 
-      const tags = page.locator("input#wipe-tags-checkbox");
-      const locations = page.locator("input#wipe-locations-checkbox");
-      const maintenance = page.locator("input#wipe-maintenance-checkbox");
-
-      await expect(tags).toBeVisible();
-      await expect(locations).toBeVisible();
-      await expect(maintenance).toBeVisible();
-
-      await tags.check();
-      await locations.check();
-      await maintenance.check();
+      const confirmation = page.locator("#wipe-inventory-confirmation-checkbox");
+      const confirmButton = page.getByRole("button", { name: "Confirm" }).last();
+      await expect(confirmation).toBeVisible();
+      await expect(confirmButton).toBeDisabled();
+      await confirmation.click();
+      await expect(confirmButton).toBeEnabled();
 
       const requestPromise = page.waitForRequest(WIPE_ROUTE);
-      await page.getByRole("button", { name: "Confirm" }).last().click();
-      const request = await requestPromise;
-
-      expect(request.postDataJSON()).toEqual({
-        wipeTags: true,
-        wipeLocations: true,
-        wipeMaintenance: true,
-      });
+      await confirmButton.click();
+      await requestPromise;
 
       await expect(page.locator("[role='status']").first()).toBeVisible();
     });
@@ -114,69 +100,12 @@ test.describe.skip("Wipe Inventory", () => {
 
       await openWipeInventory(page);
 
+      await page.locator("#wipe-inventory-confirmation-checkbox").click();
       const requestPromise = page.waitForRequest(WIPE_ROUTE);
       await page.getByRole("button", { name: "Confirm" }).last().click();
       await requestPromise;
 
       await expect(page.getByText("Failed to wipe inventory.")).toBeVisible();
     });
-
-    const checkboxCases = [
-      {
-        name: "tags only",
-        selection: { tags: true, locations: false, maintenance: false },
-      },
-      {
-        name: "locations only",
-        selection: { tags: false, locations: true, maintenance: false },
-      },
-      {
-        name: "maintenance only",
-        selection: { tags: false, locations: false, maintenance: true },
-      },
-    ];
-
-    for (const scenario of checkboxCases) {
-      test.skip(`submits correct flags when ${scenario.name} is selected`, async ({ page }) => {
-        await page.route(WIPE_ROUTE, route => {
-          route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ completed: 0 }) });
-        });
-
-        await openWipeInventory(page);
-        await expect(page.getByText("Wipe Inventory").first()).toBeVisible();
-
-        const tags = page.locator("input#wipe-tags-checkbox");
-        const locations = page.locator("input#wipe-locations-checkbox");
-        const maintenance = page.locator("input#wipe-maintenance-checkbox");
-
-        if (scenario.selection.tags) {
-          await tags.check();
-        } else {
-          await tags.uncheck();
-        }
-
-        if (scenario.selection.locations) {
-          await locations.check();
-        } else {
-          await locations.uncheck();
-        }
-
-        if (scenario.selection.maintenance) {
-          await maintenance.check();
-        } else {
-          await maintenance.uncheck();
-        }
-
-        const requestPromise = page.waitForRequest(WIPE_ROUTE);
-        await page.getByRole("button", { name: "Confirm" }).last().click();
-        const request = await requestPromise;
-
-        expect(request.postDataJSON()).toEqual({
-          wipeTags: scenario.selection.tags,
-          wipeLocations: scenario.selection.locations,
-          wipeMaintenance: scenario.selection.maintenance,
-        });
-      });
-    }
   });
 });
