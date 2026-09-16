@@ -4,42 +4,22 @@
       <AlertDialogHeader>
         <AlertDialogTitle>{{ $t("tools.actions_set.wipe_inventory") }}</AlertDialogTitle>
         <AlertDialogDescription>
-          {{ $t("tools.actions_set.wipe_inventory_confirm") }}
+          {{ $t("tools.actions_set.wipe_inventory_sub") }}
         </AlertDialogDescription>
       </AlertDialogHeader>
 
-      <div class="space-y-2">
-        <div class="flex items-center space-x-2">
-          <Checkbox id="wipe-tags-checkbox" v-model="wipeTags" />
-          <label for="wipe-tags-checkbox" class="cursor-pointer text-sm font-medium">
-            {{ $t("tools.actions_set.wipe_inventory_tags") }}
-          </label>
-        </div>
-
-        <div class="flex items-center space-x-2">
-          <Checkbox id="wipe-locations-checkbox" v-model="wipeLocations" />
-          <label for="wipe-locations-checkbox" class="cursor-pointer text-sm font-medium">
-            {{ $t("tools.actions_set.wipe_inventory_locations") }}
-          </label>
-        </div>
-
-        <div class="flex items-center space-x-2">
-          <Checkbox id="wipe-maintenance-checkbox" v-model="wipeMaintenance" />
-          <label for="wipe-maintenance-checkbox" class="cursor-pointer text-sm font-medium">
-            {{ $t("tools.actions_set.wipe_inventory_maintenance") }}
-          </label>
-        </div>
+      <div class="flex items-start space-x-2 rounded-md border border-destructive/40 bg-destructive/5 p-3">
+        <Checkbox id="wipe-inventory-confirmation-checkbox" v-model="confirmed" class="mt-0.5" />
+        <label for="wipe-inventory-confirmation-checkbox" class="cursor-pointer text-sm font-medium leading-5">
+          {{ $t("tools.actions_set.wipe_inventory_confirm") }}
+        </label>
       </div>
-
-      <p class="text-sm text-foreground/90">
-        {{ $t("tools.actions_set.wipe_inventory_note") }}
-      </p>
 
       <AlertDialogFooter>
         <AlertDialogCancel @click="close">
           {{ $t("global.cancel") }}
         </AlertDialogCancel>
-        <Button @click="confirm">
+        <Button variant="destructive" :disabled="!confirmed" @click="confirm">
           {{ $t("global.confirm") }}
         </Button>
       </AlertDialogFooter>
@@ -65,16 +45,12 @@
   const { registerOpenDialogCallback, closeDialog, addAlert, removeAlert } = useDialog();
 
   const dialog = ref(false);
-  const wipeTags = ref(false);
-  const wipeLocations = ref(false);
-  const wipeMaintenance = ref(false);
+  const confirmed = ref(false);
   const isConfirming = ref(false);
 
   registerOpenDialogCallback(DialogID.WipeInventory, () => {
     dialog.value = true;
-    wipeTags.value = false;
-    wipeLocations.value = false;
-    wipeMaintenance.value = false;
+    confirmed.value = false;
     isConfirming.value = false;
   });
 
@@ -102,13 +78,11 @@
   }
 
   function confirm() {
+    if (!confirmed.value) {
+      return;
+    }
     isConfirming.value = true;
-    const result = {
-      wipeTags: wipeTags.value,
-      wipeLocations: wipeLocations.value,
-      wipeMaintenance: wipeMaintenance.value,
-    };
-    closeDialog(DialogID.WipeInventory, result);
+    closeDialog(DialogID.WipeInventory, true);
     dialog.value = false;
     isConfirming.value = false;
   }
