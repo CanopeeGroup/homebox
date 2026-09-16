@@ -283,10 +283,6 @@
               <dt class="text-muted-foreground">{{ $t("components.template.form.item_description") }}</dt>
               <dd class="max-w-[200px] truncate">{{ template.defaultDescription }}</dd>
             </div>
-            <div class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("global.quantity") }}</dt>
-              <dd>{{ template.defaultQuantity }}</dd>
-            </div>
             <div v-if="template.defaultModelNumber" class="flex justify-between">
               <dt class="text-muted-foreground">{{ $t("components.template.form.model_number") }}</dt>
               <dd>{{ template.defaultModelNumber }}</dd>
@@ -298,14 +294,6 @@
             <div v-if="template.defaultLocation" class="flex justify-between">
               <dt class="text-muted-foreground">{{ $t("components.template.form.location") }}</dt>
               <dd>{{ template.defaultLocation.name }}</dd>
-            </div>
-            <div class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("global.insured") }}</dt>
-              <dd>{{ template.defaultInsured ? $t("global.yes") : $t("global.no") }}</dd>
-            </div>
-            <div class="flex justify-between">
-              <dt class="text-muted-foreground">{{ $t("components.template.form.lifetime_warranty") }}</dt>
-              <dd>{{ template.defaultLifetimeWarranty ? $t("global.yes") : $t("global.no") }}</dd>
             </div>
           </dl>
         </div>
