@@ -116,14 +116,14 @@ func (ctrl *V1Controller) HandleExportDownload() errchain.HandlerFunc {
 			return validate.NewRequestError(errors.New("artifact outside group prefix"), http.StatusForbidden)
 		}
 
-		bucket, err := blob.OpenBucket(r.Context(), ctrl.repo.Attachments.GetConnString())
+		bucket, err := blob.OpenBucket(r.Context(), ctrl.repo.Attachments.GetScopedConnString())
 		if err != nil {
 			log.Err(err).Msg("export download: open bucket")
 			return validate.NewRequestError(err, http.StatusInternalServerError)
 		}
 		defer func() { _ = bucket.Close() }()
 
-		reader, err := bucket.NewReader(r.Context(), ctrl.repo.Attachments.GetFullPath(out.ArtifactPath), nil)
+		reader, err := bucket.NewReader(r.Context(), ctrl.repo.Attachments.GetScopedPath(out.ArtifactPath), nil)
 		if err != nil {
 			log.Err(err).Str("artifact_path", out.ArtifactPath).Msg("export download: open reader")
 			return validate.NewRequestError(err, http.StatusInternalServerError)
@@ -177,9 +177,9 @@ func (ctrl *V1Controller) HandleExportDelete() errchain.HandlerFunc {
 			cleanPath := path.Clean(out.ArtifactPath)
 			expectedPrefix := ctx.GID.String() + "/exports/"
 			if strings.HasPrefix(cleanPath, expectedPrefix) {
-				bucket, err := blob.OpenBucket(r.Context(), ctrl.repo.Attachments.GetConnString())
+				bucket, err := blob.OpenBucket(r.Context(), ctrl.repo.Attachments.GetScopedConnString())
 				if err == nil {
-					_ = bucket.Delete(r.Context(), ctrl.repo.Attachments.GetFullPath(cleanPath))
+					_ = bucket.Delete(r.Context(), ctrl.repo.Attachments.GetScopedPath(cleanPath))
 					_ = bucket.Close()
 				}
 			}
@@ -260,14 +260,14 @@ func (ctrl *V1Controller) HandleCollectionImport() errchain.HandlerFunc {
 		uploadID := uuid.New()
 		uploadKey := fmt.Sprintf("%s/imports/%s.zip", ctx.GID.String(), uploadID.String())
 
-		bucket, err := blob.OpenBucket(r.Context(), ctrl.repo.Attachments.GetConnString())
+		bucket, err := blob.OpenBucket(r.Context(), ctrl.repo.Attachments.GetScopedConnString())
 		if err != nil {
 			log.Err(err).Msg("import: open bucket")
 			return validate.NewRequestError(err, http.StatusInternalServerError)
 		}
 		defer func() { _ = bucket.Close() }()
 
-		bw, err := bucket.NewWriter(r.Context(), ctrl.repo.Attachments.GetFullPath(uploadKey),
+		bw, err := bucket.NewWriter(r.Context(), ctrl.repo.Attachments.GetScopedPath(uploadKey),
 			&blob.WriterOptions{ContentType: "application/zip"})
 		if err != nil {
 			log.Err(err).Msg("import: open writer")
@@ -287,7 +287,7 @@ func (ctrl *V1Controller) HandleCollectionImport() errchain.HandlerFunc {
 		row, err := ctrl.svc.Exports.EnqueueImport(r.Context(), ctx.GID, ctx.UID, uploadKey, uploadSize)
 		if err != nil {
 			// Best-effort cleanup of the staged upload if we couldn't enqueue.
-			_ = bucket.Delete(r.Context(), ctrl.repo.Attachments.GetFullPath(uploadKey))
+			_ = bucket.Delete(r.Context(), ctrl.repo.Attachments.GetScopedPath(uploadKey))
 			return validate.NewRequestError(err, http.StatusInternalServerError)
 		}
 
