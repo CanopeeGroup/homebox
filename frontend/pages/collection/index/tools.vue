@@ -24,6 +24,11 @@
             {{ $t("tools.reports_set.bill_of_materials_sub") }}
             <template #button> {{ $t("tools.reports_set.bill_of_materials_button") }} </template>
           </DetailAction>
+          <DetailAction @action="getInventoryPivot()">
+            <template #title>{{ $t("tools.reports_set.inventory_pivot") }}</template>
+            {{ $t("tools.reports_set.inventory_pivot_sub") }}
+            <template #button> {{ $t("tools.reports_set.inventory_pivot_button") }} </template>
+          </DetailAction>
         </div>
       </BaseCard>
       <BaseCard>
@@ -214,6 +219,11 @@
 
   const getBillOfMaterials = () => {
     const url = api.reports.billOfMaterialsURL(prefs.value.collectionId ?? undefined);
+    window.open(url, "_blank");
+  };
+
+  const getInventoryPivot = () => {
+    const url = api.reports.inventoryPivotURL(prefs.value.collectionId ?? undefined);
     window.open(url, "_blank");
   };
 

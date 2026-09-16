@@ -649,3 +649,32 @@ func (svc *EntityService) ExportBillOfMaterialsCSV(ctx context.Context, gid uuid
 	encodeSpan.SetAttributes(attribute.Int("bytes.size", len(out)))
 	return out, nil
 }
+
+func (svc *EntityService) ExportInventoryPivotXLSX(ctx context.Context, gid uuid.UUID) ([]byte, error) {
+	ctx, span := entityServiceTracer().Start(ctx, "service.EntityService.ExportInventoryPivotXLSX",
+		trace.WithAttributes(attribute.String("group.id", gid.String())))
+	defer span.End()
+
+	loadCtx, loadSpan := entityServiceTracer().Start(ctx, "service.EntityService.ExportInventoryPivotXLSX.load")
+	items, err := svc.repo.Entities.GetAll(loadCtx, gid)
+	if err != nil {
+		recordServiceSpanError(loadSpan, err)
+		loadSpan.End()
+		recordServiceSpanError(span, err)
+		return nil, err
+	}
+	loadSpan.SetAttributes(attribute.Int("entities.count", len(items)))
+	loadSpan.End()
+	span.SetAttributes(attribute.Int("entities.count", len(items)))
+
+	_, encodeSpan := entityServiceTracer().Start(ctx, "service.EntityService.ExportInventoryPivotXLSX.encode")
+	defer encodeSpan.End()
+	out, err := reporting.InventoryPivotXLSX(items)
+	if err != nil {
+		recordServiceSpanError(encodeSpan, err)
+		recordServiceSpanError(span, err)
+		return nil, err
+	}
+	encodeSpan.SetAttributes(attribute.Int("bytes.size", len(out)))
+	return out, nil
+}

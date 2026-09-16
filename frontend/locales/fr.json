@@ -988,7 +988,10 @@
             "asset_labels_sub": "Génère un fichier PDF imprimable pour une plage d'identifiants d'actifs. Ils ne sont pas spécifiques à votre inventaire donc vous pouvez les imprimer en avance et les appliquer à votre inventaire par la suite.",
             "bill_of_materials": "Nomenclature",
             "bill_of_materials_button": "Générer une nomenclature",
-            "bill_of_materials_sub": "Génère un fichier CSV (valeurs séparées par des virgules) qui peut être importé dans un tableur. Il s'agit d'un aperçu de votre inventaire contenant les informations essentielles."
+            "bill_of_materials_sub": "Génère un fichier CSV (valeurs séparées par des virgules) qui peut être importé dans un tableur. Il s'agit d'un aperçu de votre inventaire contenant les informations essentielles.",
+            "inventory_pivot": "Tableau croisé dynamique Excel",
+            "inventory_pivot_button": "Générer le fichier Excel",
+            "inventory_pivot_sub": "Génère un classeur Excel contenant les données de l’inventaire et un tableau croisé dynamique qui additionne les quantités pour chaque numéro de modèle."
         },
         "reports_sub": "Générez différents rapports pour votre inventaire.",
         "toast": {

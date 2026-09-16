@@ -8,4 +8,12 @@ export class ReportsAPI extends BaseAPI {
 
     return route("/reporting/bill-of-materials");
   }
+
+  inventoryPivotURL(tenant?: string): string {
+    if (tenant) {
+      return route("/reporting/inventory-pivot", { tenant });
+    }
+
+    return route("/reporting/inventory-pivot");
+  }
 }
