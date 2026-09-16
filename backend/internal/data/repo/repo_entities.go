@@ -16,6 +16,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/attachment"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entityfield"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/group"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/maintenanceentry"
@@ -1444,8 +1445,24 @@ func (r *EntityRepository) WipeInventory(ctx context.Context, gid uuid.UUID, wip
 
 	deleted := 0
 
-	// Wipe maintenance records if requested
-	// IMPORTANT: Must delete maintenance records BEFORE entities since they are linked to entities
+	// Templates are part of the inventory and must always be deleted. Their
+	// custom fields are removed by the database cascade.
+	templateCtx, templateSpan := entityTracer().Start(ctx, "repo.EntityRepository.WipeInventory.templates")
+	templateCount, err := r.db.EntityTemplate.Delete().
+		Where(entitytemplate.HasGroupWith(group.ID(gid))).
+		Exec(templateCtx)
+	if err != nil {
+		recordSpanError(templateSpan, err)
+		templateSpan.End()
+		recordSpanError(span, err)
+		return deleted, err
+	}
+	templateSpan.SetAttributes(attribute.Int("deleted.count", templateCount))
+	templateSpan.End()
+	deleted += templateCount
+
+	// Maintenance records must be deleted before their entities so they are
+	// included in the returned total instead of disappearing via cascade.
 	if wipeMaintenance {
 		maintCtx, maintSpan := entityTracer().Start(ctx, "repo.EntityRepository.WipeInventory.maintenance")
 		maintenanceCount, err := r.db.MaintenanceEntry.Delete().
@@ -1453,20 +1470,23 @@ func (r *EntityRepository) WipeInventory(ctx context.Context, gid uuid.UUID, wip
 			Exec(maintCtx)
 		if err != nil {
 			recordSpanError(maintSpan, err)
+			maintSpan.End()
+			recordSpanError(span, err)
 			log.Err(err).Msg("failed to delete maintenance entries during wipe inventory")
-		} else {
-			maintSpan.SetAttributes(attribute.Int("deleted.count", maintenanceCount))
-			log.Info().Int("count", maintenanceCount).Msg("deleted maintenance entries during wipe inventory")
-			deleted += maintenanceCount
+			return deleted, err
 		}
+		maintSpan.SetAttributes(attribute.Int("deleted.count", maintenanceCount))
 		maintSpan.End()
+		log.Info().Int("count", maintenanceCount).Msg("deleted maintenance entries during wipe inventory")
+		deleted += maintenanceCount
 	}
 
 	loadCtx, loadSpan := entityTracer().Start(ctx, "repo.EntityRepository.WipeInventory.loadEntities")
-	entities, err := r.db.Entity.Query().
-		Where(entity.HasGroupWith(group.ID(gid))).
-		WithAttachments().
-		All(loadCtx)
+	entityQuery := r.db.Entity.Query().Where(entity.HasGroupWith(group.ID(gid)))
+	if !wipeContainers {
+		entityQuery = entityQuery.Where(entity.HasEntityTypeWith(entitytype.IsLocation(false)))
+	}
+	entities, err := entityQuery.WithAttachments().All(loadCtx)
 	if err != nil {
 		recordSpanError(loadSpan, err)
 		loadSpan.End()
@@ -1476,9 +1496,11 @@ func (r *EntityRepository) WipeInventory(ctx context.Context, gid uuid.UUID, wip
 	loadSpan.SetAttributes(attribute.Int("entities.count", len(entities)))
 	loadSpan.End()
 
+	// Delete attachment blobs before deleting any parent location. A bulk
+	// entity delete may cascade through the complete location tree and would
+	// otherwise remove the attachment rows before their files can be cleaned.
 	entCtx, entSpan := entityTracer().Start(ctx, "repo.EntityRepository.WipeInventory.deleteEntities",
 		trace.WithAttributes(attribute.Int("entities.count", len(entities))))
-	entityDeleted := 0
 	attachmentsDeleted := 0
 	for _, e := range entities {
 		for _, att := range e.Edges.Attachments {
@@ -1490,20 +1512,18 @@ func (r *EntityRepository) WipeInventory(ctx context.Context, gid uuid.UUID, wip
 			}
 			attachmentsDeleted++
 		}
+	}
 
-		_, err = r.db.Entity.
-			Delete().
-			Where(
-				entity.ID(e.ID),
-				entity.HasGroupWith(group.ID(gid)),
-			).Exec(entCtx)
-		if err != nil {
-			recordSpanError(entSpan, err)
-			log.Err(err).Str("entity_id", e.ID.String()).Msg("failed to delete entity during wipe inventory")
-			continue
-		}
-
-		entityDeleted++
+	entityDelete := r.db.Entity.Delete().Where(entity.HasGroupWith(group.ID(gid)))
+	if !wipeContainers {
+		entityDelete = entityDelete.Where(entity.HasEntityTypeWith(entitytype.IsLocation(false)))
+	}
+	entityDeleted, err := entityDelete.Exec(entCtx)
+	if err != nil {
+		recordSpanError(entSpan, err)
+		entSpan.End()
+		recordSpanError(span, err)
+		return deleted, err
 	}
 	entSpan.SetAttributes(
 		attribute.Int("entities.deleted.count", entityDeleted),
@@ -1518,32 +1538,15 @@ func (r *EntityRepository) WipeInventory(ctx context.Context, gid uuid.UUID, wip
 		tagCount, err := r.db.Tag.Delete().Where(tag.HasGroupWith(group.ID(gid))).Exec(tagCtx)
 		if err != nil {
 			recordSpanError(tagSpan, err)
+			tagSpan.End()
+			recordSpanError(span, err)
 			log.Err(err).Msg("failed to delete tags during wipe inventory")
-		} else {
-			tagSpan.SetAttributes(attribute.Int("deleted.count", tagCount))
-			log.Info().Int("count", tagCount).Msg("deleted tags during wipe inventory")
-			deleted += tagCount
+			return deleted, err
 		}
+		tagSpan.SetAttributes(attribute.Int("deleted.count", tagCount))
 		tagSpan.End()
-	}
-
-	// Wipe containers (location-type entities) if requested
-	if wipeContainers {
-		containerCtx, containerSpan := entityTracer().Start(ctx, "repo.EntityRepository.WipeInventory.containers")
-		containerCount, err := r.db.Entity.Delete().
-			Where(
-				entity.HasGroupWith(group.ID(gid)),
-				entity.HasEntityTypeWith(entitytype.IsLocation(true)),
-			).Exec(containerCtx)
-		if err != nil {
-			recordSpanError(containerSpan, err)
-			log.Err(err).Msg("failed to delete containers during wipe inventory")
-		} else {
-			containerSpan.SetAttributes(attribute.Int("deleted.count", containerCount))
-			log.Info().Int("count", containerCount).Msg("deleted containers during wipe inventory")
-			deleted += containerCount
-		}
-		containerSpan.End()
+		log.Info().Int("count", tagCount).Msg("deleted tags during wipe inventory")
+		deleted += tagCount
 	}
 
 	span.SetAttributes(attribute.Int("deleted.count.total", deleted))
