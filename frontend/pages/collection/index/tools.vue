@@ -304,11 +304,7 @@
           return;
         }
 
-        const apiResult = await api.actions.wipeInventory({
-          wipeTags: result.wipeTags,
-          wipeLocations: result.wipeLocations,
-          wipeMaintenance: result.wipeMaintenance,
-        });
+        const apiResult = await api.actions.wipeInventory();
 
         if (apiResult.error) {
           toast.error(t("tools.toast.failed_wipe_inventory"));
