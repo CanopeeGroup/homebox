@@ -9,15 +9,11 @@
   import { Card } from "@/components/ui/card";
   import { Button } from "@/components/ui/button";
   import { Separator } from "@/components/ui/separator";
-  import { Switch } from "@/components/ui/switch";
-  import { Label } from "@/components/ui/label";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
   import FormTextField from "~/components/Form/TextField.vue";
-  import FormTextArea from "~/components/Form/TextArea.vue";
   import BaseContainer from "@/components/Base/Container.vue";
   import DateTime from "~/components/global/DateTime.vue";
   import Markdown from "~/components/global/Markdown.vue";
-  import LocationSelector from "~/components/Location/Selector.vue";
   import type { EntityOut } from "~~/lib/api/types/data-contracts";
 
   definePageMeta({
@@ -147,12 +143,6 @@
           :label="$t('components.template.form.template_name')"
           :max-length="255"
         />
-        <FormTextArea
-          v-model="updateData.description"
-          :label="$t('components.template.form.template_description')"
-          :max-length="1000"
-        />
-
         <Separator class="my-2" />
         <h3 class="text-sm font-medium">{{ $t("components.template.form.default_item_values") }}</h3>
         <div class="grid gap-2">
@@ -161,44 +151,11 @@
             :label="$t('components.template.form.item_name')"
             :max-length="255"
           />
-          <FormTextArea
-            v-model="updateData.defaultDescription"
-            :label="$t('components.template.form.item_description')"
-            :max-length="1000"
-          />
-          <div class="grid grid-cols-2 gap-2">
-            <FormTextField
-              v-model.number="updateData.defaultQuantity"
-              :label="$t('global.quantity')"
-              type="number"
-              :min="0"
-              step="any"
-            />
-            <FormTextField
-              v-model="updateData.defaultModelNumber"
-              :label="$t('components.template.form.model_number')"
-              :max-length="255"
-            />
-          </div>
           <FormTextField
-            v-model="updateData.defaultManufacturer"
-            :label="$t('components.template.form.manufacturer')"
+            v-model="updateData.defaultModelNumber"
+            :label="$t('components.template.form.model_number')"
             :max-length="255"
           />
-          <LocationSelector
-            v-model="updateData.defaultLocation"
-            :label="$t('components.template.form.default_location')"
-          />
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2">
-              <Switch id="editInsured" v-model:checked="updateData.defaultInsured" />
-              <Label for="editInsured" class="text-sm">{{ $t("global.insured") }}</Label>
-            </div>
-            <div class="flex items-center gap-2">
-              <Switch id="editWarranty" v-model:checked="updateData.defaultLifetimeWarranty" />
-              <Label for="editWarranty" class="text-sm">{{ $t("components.template.form.lifetime_warranty") }}</Label>
-            </div>
-          </div>
         </div>
 
         <Separator class="my-2" />
