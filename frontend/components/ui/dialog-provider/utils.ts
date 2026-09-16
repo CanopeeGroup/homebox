@@ -86,7 +86,7 @@ export type DialogResultMap = {
   [DialogID.ItemImage]?: { action: "delete"; id: string };
   [DialogID.EditMaintenance]?: boolean;
   [DialogID.ItemChangeDetails]?: boolean;
-  [DialogID.WipeInventory]?: { wipeTags: boolean; wipeLocations: boolean; wipeMaintenance: boolean };
+  [DialogID.WipeInventory]?: boolean;
   [DialogID.CreateGroupInvite]?: GroupInvitation;
 };
 
