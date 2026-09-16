@@ -59,7 +59,7 @@
         }}
       </div>
     </div>
-    <div class="order-1 flex w-full justify-center md:order-2 md:w-auto">
+    <div v-if="!compactControls" class="order-1 flex w-full justify-center md:order-2 md:w-auto">
       <Pagination
         v-slot="{ page }"
         :items-per-page="externalPagination ? externalPagination.pageSize : table.getState().pagination.pageSize"
