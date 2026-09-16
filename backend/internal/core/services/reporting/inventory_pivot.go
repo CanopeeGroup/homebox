@@ -101,8 +101,8 @@ func InventoryPivotXLSX(entities []repo.EntityOut) ([]byte, error) {
 		lastDataRow := row - 1
 		pivotLastRow := lastDataRow + 10
 		if err = workbook.AddPivotTable(&excelize.PivotTableOptions{
-			DataRange:       fmt.Sprintf("'%s'!A1:B%d", inventorySheetName, lastDataRow),
-			PivotTableRange: fmt.Sprintf("'%s'!A3:C%d", pivotSheetName, pivotLastRow),
+			DataRange:       fmt.Sprintf("%s!A1:B%d", inventorySheetName, lastDataRow),
+			PivotTableRange: fmt.Sprintf("%s!A3:C%d", pivotSheetName, pivotLastRow),
 			Name:            "QuantitesParModele",
 			Rows: []excelize.PivotTableField{
 				{Data: "Numéro de modèle", ShowAll: true},
