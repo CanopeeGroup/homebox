@@ -1440,12 +1440,6 @@ export interface TokenResponse {
   token: string;
 }
 
-export interface WipeInventoryOptions {
-  wipeLocations: boolean;
-  wipeMaintenance: boolean;
-  wipeTags: boolean;
-}
-
 export interface Wrapped {
   item: any;
 }
