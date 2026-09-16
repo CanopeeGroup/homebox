@@ -5,14 +5,12 @@
   import MdiLoading from "~icons/mdi/loading";
   import MdiAccount from "~icons/mdi/account";
   import MdiDelete from "~icons/mdi/delete";
-  import MdiFill from "~icons/mdi/fill";
   import { Button } from "@/components/ui/button";
   import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
   import { useDialog } from "@/components/ui/dialog-provider";
   import LanguageSelector from "~/components/App/LanguageSelector.vue";
   import AdminAvatar from "~/components/Profile/AdminAvatar.vue";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
-  import ThemePicker from "~/components/App/ThemePicker.vue";
   import ItemDuplicateSettings from "~/components/Item/DuplicateSettings.vue";
   import FormPassword from "~/components/Form/Password.vue";
   import BaseContainer from "@/components/Base/Container.vue";
@@ -24,25 +22,13 @@
 
   const { t } = useI18n();
 
-  definePageMeta({
-    middleware: ["auth"],
-  });
-  useHead({
-    title: "HomeBox | " + t("menu.profile"),
-  });
+  definePageMeta({ middleware: ["auth"] });
+  useHead({ title: "HomeBox | " + t("menu.profile") });
 
   const api = useUserApi();
   const confirm = useConfirm();
   const { openDialog, closeDialog } = useDialog();
-
   const preferences = useViewPreferences();
-  function setDisplayHeader() {
-    preferences.value.displayLegacyHeader = !preferences.value.displayLegacyHeader;
-  }
-  function setLegacyImageFit() {
-    preferences.value.legacyImageFit = !preferences.value.legacyImageFit;
-  }
-
   const auth = useAuthContext();
 
   const details = computed(() => {
@@ -163,23 +149,6 @@
             <NuxtLink to="/collection/notifiers" class="text-primary underline">{{ $t("profile.moved_notice_link_notifiers") }}</NuxtLink>
             <NuxtLink to="/collection/invites" class="text-primary underline">{{ $t("profile.moved_notice_link_invites") }}</NuxtLink>
           </div>
-        </div>
-      </BaseCard>
-
-      <BaseCard>
-        <template #title>
-          <BaseSectionHeader>
-            <MdiFill class="mr-2" />
-            <span>{{ $t("profile.theme_settings") }}</span>
-            <template #description>{{ $t("profile.theme_settings_sub") }}</template>
-          </BaseSectionHeader>
-        </template>
-        <div class="px-4 pb-4">
-          <div class="mb-3 flex gap-2">
-            <Button variant="secondary" size="sm" @click="setDisplayHeader">{{ $t("profile.display_legacy_header", { currentValue: preferences.displayLegacyHeader }) }}</Button>
-            <Button variant="secondary" size="sm" @click="setLegacyImageFit">{{ $t("profile.legacy_image_fit", { currentValue: preferences.legacyImageFit }) }}</Button>
-          </div>
-          <ThemePicker />
         </div>
       </BaseCard>
 
