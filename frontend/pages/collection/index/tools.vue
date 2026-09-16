@@ -11,19 +11,6 @@
           </BaseSectionHeader>
         </template>
         <div class="divide-y border-t px-6 pb-3">
-          <DetailAction to="/reports/label-generator">
-            <template #title>{{ $t("tools.reports_set.asset_labels") }}</template>
-            {{ $t("tools.reports_set.asset_labels_sub") }}
-            <template #button>
-              {{ $t("tools.reports_set.asset_labels_button") }}
-              <MdiArrowRight class="ml-2" />
-            </template>
-          </DetailAction>
-          <DetailAction @action="getBillOfMaterials()">
-            <template #title>{{ $t("tools.reports_set.bill_of_materials") }}</template>
-            {{ $t("tools.reports_set.bill_of_materials_sub") }}
-            <template #button> {{ $t("tools.reports_set.bill_of_materials_button") }} </template>
-          </DetailAction>
           <DetailAction @action="getInventoryPivot()">
             <template #title>{{ $t("tools.reports_set.inventory_pivot") }}</template>
             {{ $t("tools.reports_set.inventory_pivot_sub") }}
@@ -138,33 +125,11 @@
           </BaseSectionHeader>
         </template>
         <div class="divide-y border-t px-6 pb-3">
-          <DetailAction @action="ensureAssetIDs">
-            <template #title>{{ $t("tools.actions_set.ensure_ids") }}</template>
-            {{ $t("tools.actions_set.ensure_ids_sub") }}
-            <template #button> {{ $t("tools.actions_set.ensure_ids_button") }} </template>
-          </DetailAction>
-          <DetailAction @action="ensureImportRefs">
-            <template #title>{{ $t("tools.actions_set.ensure_import_refs") }}</template>
-            {{ $t("tools.actions_set.ensure_import_refs_sub") }}
-            <template #button> {{ $t("tools.actions_set.ensure_import_refs_button") }} </template>
-          </DetailAction>
           <DetailAction @action="resetItemDateTimes">
             <template #title> {{ $t("tools.actions_set.zero_datetimes") }} </template>
             <!-- eslint-disable-next-line vue/no-v-html -->
             <div v-html="DOMPurify.sanitize($t('tools.actions_set.zero_datetimes_sub'))" />
             <template #button> {{ $t("tools.actions_set.zero_datetimes_button") }} </template>
-          </DetailAction>
-          <DetailAction @action="setPrimaryPhotos">
-            <template #title> {{ $t("tools.actions_set.set_primary_photo") }} </template>
-            <!-- eslint-disable-next-line vue/no-v-html -->
-            <div v-html="DOMPurify.sanitize($t('tools.actions_set.set_primary_photo_sub'))" />
-            <template #button> {{ $t("tools.actions_set.set_primary_photo_button") }} </template>
-          </DetailAction>
-          <DetailAction @action="createMissingThumbnails">
-            <template #title> {{ $t("tools.actions_set.create_missing_thumbnails") }} </template>
-            <!-- eslint-disable-next-line vue/no-v-html -->
-            <div v-html="DOMPurify.sanitize($t('tools.actions_set.create_missing_thumbnails_sub'))" />
-            <template #button> {{ $t("tools.actions_set.create_missing_thumbnails_button") }} </template>
           </DetailAction>
           <DetailAction @action="wipeInventory">
             <template #title> {{ $t("tools.actions_set.wipe_inventory") }} </template>
@@ -183,7 +148,6 @@
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
   import MdiFileChart from "~icons/mdi/file-chart";
-  import MdiArrowRight from "~icons/mdi/arrow-right";
   import MdiDatabase from "~icons/mdi/database";
   import MdiAlert from "~icons/mdi/alert";
   import MdiPackageVariant from "~icons/mdi/package-variant";
@@ -217,11 +181,6 @@
     return data;
   });
 
-  const getBillOfMaterials = () => {
-    const url = api.reports.billOfMaterialsURL(prefs.value.collectionId ?? undefined);
-    window.open(url, "_blank");
-  };
-
   const getInventoryPivot = () => {
     const url = api.reports.inventoryPivotURL(prefs.value.collectionId ?? undefined);
     window.open(url, "_blank");
@@ -230,57 +189,6 @@
   const getExportCSV = () => {
     const url = api.items.exportURL(prefs.value.collectionId ?? undefined);
     window.open(url, "_blank");
-  };
-
-  const ensureAssetIDs = async () => {
-    const { isCanceled } = await confirm.open(t("tools.actions_set.ensure_ids_confirm"));
-
-    if (isCanceled) {
-      return;
-    }
-
-    const result = await api.actions.ensureAssetIDs();
-
-    if (result.error) {
-      toast.error(t("tools.toast.failed_ensure_ids"));
-      return;
-    }
-
-    toast.success(t("tools.toast.asset_success", { results: result.data.completed }));
-  };
-
-  const createMissingThumbnails = async () => {
-    const { isCanceled } = await confirm.open(t("tools.actions_set.create_missing_thumbnails_confirm"));
-
-    if (isCanceled) {
-      return;
-    }
-
-    const result = await api.actions.createMissingThumbnails();
-
-    if (result.error) {
-      toast.error(t("tools.toast.failed_create_missing_thumbnails"));
-      return;
-    }
-
-    toast.success(t("tools.toast.asset_success", { results: result.data.completed }));
-  };
-
-  const ensureImportRefs = async () => {
-    const { isCanceled } = await confirm.open(t("tools.import_export_set.import_ref_confirm"));
-
-    if (isCanceled) {
-      return;
-    }
-
-    const result = await api.actions.ensureImportRefs();
-
-    if (result.error) {
-      toast.error(t("tools.toast.failed_ensure_import_refs"));
-      return;
-    }
-
-    toast.success(t("tools.toast.asset_success", { results: result.data.completed }));
   };
 
   const resetItemDateTimes = async () => {
@@ -294,23 +202,6 @@
 
     if (result.error) {
       toast.error(t("tools.toast.failed_zero_datetimes"));
-      return;
-    }
-
-    toast.success(t("tools.toast.asset_success", { results: result.data.completed }));
-  };
-
-  const setPrimaryPhotos = async () => {
-    const { isCanceled } = await confirm.open(t("tools.actions_set.set_primary_photo_confirm"));
-
-    if (isCanceled) {
-      return;
-    }
-
-    const result = await api.actions.setPrimaryPhotos();
-
-    if (result.error) {
-      toast.error(t("tools.toast.failed_set_primary_photos"));
       return;
     }
 

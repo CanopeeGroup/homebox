@@ -967,6 +967,26 @@
             "zero_datetimes_sub": "Réinitialise la valeur de tous les champs date/heure de votre inventaire à la date de début. Il s'agit de corriger une anomalie introduite au début du développement du site qui entraînait le stockage de la valeur temporelle avec l'heure, ce qui provoquait des problèmes avec les champs de date affichant des valeurs précises. '<a class=\"link\" href=\"https://github.com/hay-kot/homebox/issues/236\" target=\"_blank\">'Voir le rapport 236 de Github pour plus de détails.'</a> '"
         },
         "actions_sub": "Appliquer des actions en masse à votre inventaire. Ces actions sont irréversibles. '<b>'Soyez vigilant.'</b>'",
+        "backups": "Sauvegarde et restauration",
+        "backups_set": {
+            "create": "Créer une sauvegarde",
+            "create_button": "Démarrer la sauvegarde",
+            "create_sub": "Crée une archive ZIP contenant tous les objets, emplacements, champs personnalisés, pièces jointes et entrées d’entretien de cette collection. L’opération s’exécute en arrière-plan ; l’archive apparaîtra dans le tableau lorsqu’elle sera prête.",
+            "delete_confirm": "Supprimer cette sauvegarde ? Cette action est irréversible.",
+            "download": "Télécharger",
+            "failed": "Échec de la sauvegarde. Consultez les journaux du serveur pour obtenir plus de détails.",
+            "list_empty": "Aucune sauvegarde disponible.",
+            "restore": "Restaurer une sauvegarde",
+            "restore_button": "Téléverser et restaurer",
+            "restore_sub": "Téléversez une archive ZIP pour restaurer cette collection. La collection ne doit encore contenir aucun objet ; les emplacements et balises créés par défaut seront automatiquement supprimés pendant la restauration.",
+            "table": {
+                "actions": "Actions",
+                "created": "Créée le",
+                "size": "Taille",
+                "status": "État"
+            }
+        },
+        "backups_sub": "Exportez l’intégralité de la collection — objets, emplacements, pièces jointes et métadonnées — dans une archive ZIP portable. Cette archive peut être restaurée dans une collection vide, sur ce serveur ou sur une autre installation.",
         "demo_mode_error": {
             "wipe_inventory": "L'inventaire, les étiquettes, les emplacements et les entretiens ne peuvent pas être effacés lorsque HomeBox est en mode démonstration. Veuillez vérifier que vous n'êtes pas en mode démo et réessayer."
         },
@@ -996,12 +1016,18 @@
         "reports_sub": "Générez différents rapports pour votre inventaire.",
         "toast": {
             "asset_success": "{ results } ressources ont été mises à jour.",
+            "backup_delete_failed": "Échec de la suppression de la sauvegarde.",
+            "backup_start_failed": "Impossible de démarrer la sauvegarde.",
+            "backup_started": "Sauvegarde démarrée — elle apparaîtra dans le tableau lorsqu’elle sera prête.",
             "failed_create_missing_thumbnails": "Échec de la création des vignettes manquantes.",
             "failed_ensure_ids": "Échec de la vérification des ID de ressources.",
             "failed_ensure_import_refs": "Échec de la vérifications des références d'importation.",
             "failed_set_primary_photos": "Échec de la définition des photos principales.",
             "failed_wipe_inventory": "Échec de l'effacement de l'inventaire.",
             "failed_zero_datetimes": "Échec de la réinitialisation des valeurs de date et d'heure.",
+            "restore_failed": "Échec de la restauration.",
+            "restore_requires_empty": "La restauration nécessite une collection ne contenant aucun objet. Sélectionnez une collection vide récemment créée, puis réessayez.",
+            "restore_started": "Restauration démarrée — actualisez prochainement la page pour afficher les objets importés.",
             "wipe_inventory_success": "Inventaire effacé avec succès. {results} articles ont été effacés."
         }
     }
