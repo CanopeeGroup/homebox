@@ -9,7 +9,9 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
+	pathpkg "path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -259,6 +261,50 @@ func (r *AttachmentRepo) fullPath(relativePath string) string {
 }
 
 func (r *AttachmentRepo) GetFullPath(relativePath string) string {
+	return r.fullPath(relativePath)
+}
+
+// scopedFileBucket folds PrefixPath into a fileblob bucket root. This keeps
+// the physical path unchanged (base/prefix/key), while ensuring the key
+// passed to fileblob is relative to that root. It also avoids a gocloud
+// fileblob containment-check bug when the configured bucket root is "/".
+func (r *AttachmentRepo) scopedFileBucket() (string, bool) {
+	connString := r.GetConnString()
+	prefix := normalizePath(r.storage.PrefixPath)
+	if prefix == "" || !strings.HasPrefix(connString, "file://") {
+		return connString, false
+	}
+
+	u, err := url.Parse(connString)
+	if err != nil {
+		log.Warn().Err(err).Str("conn_string", connString).
+			Msg("failed to scope file storage bucket to prefix")
+		return connString, false
+	}
+	u.Path = pathpkg.Join(u.Path, prefix)
+	query := u.Query()
+	query.Set("create_dir", "true")
+	query.Set("no_tmp_dir", "true")
+	u.RawQuery = query.Encode()
+	return u.String(), true
+}
+
+// GetScopedConnString returns the bucket connection string used by collection
+// backup and restore operations. For file storage, PrefixPath becomes the
+// bucket root so every blob key remains relative and fileblob cannot reject it
+// as escaping the root directory.
+func (r *AttachmentRepo) GetScopedConnString() string {
+	connString, _ := r.scopedFileBucket()
+	return connString
+}
+
+// GetScopedPath returns the key paired with GetScopedConnString. On file
+// storage the prefix is already part of the bucket root; cloud backends retain
+// the existing prefix-in-key behaviour.
+func (r *AttachmentRepo) GetScopedPath(relativePath string) string {
+	if _, scoped := r.scopedFileBucket(); scoped {
+		return normalizePath(relativePath)
+	}
 	return r.fullPath(relativePath)
 }
 
