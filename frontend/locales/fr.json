@@ -955,12 +955,8 @@
             "set_primary_photo_sub": "Dans la version v0.10.0 d'Homebox, le champ d'image principal à été ajouté aux pièces jointes de type photo. Cette action définira en tant qu'image principale toute première image en pièce jointe déjà présente en base de donnée, si le champ n'est pas déjà défini. '<a class=\"link\" href=\"https://github.com/hay-kot/homebox/pull/576\">'Voir GitHub PR #576'</a>'",
             "wipe_inventory": "Effacer l'inventaire",
             "wipe_inventory_button": "Effacer l'inventaire",
-            "wipe_inventory_confirm": "Êtes-vous sur de vouloir supprimer l'intégralité de l'inventaire ? Cette action supprimera tous les articles et est irréversible.",
-            "wipe_inventory_locations": "Effacer également tous les emplacements",
-            "wipe_inventory_maintenance": "Effacer également toutes les tâches de maintenance",
-            "wipe_inventory_note": "Note : Seuls les propriétaires du groupes peuvent exécuter cette action.",
-            "wipe_inventory_sub": "Supprimer définitivement tous les articles de votre inventaire. Cette action est irréversible et va supprimer toutes les données ainsi que les pièces jointes et photos.",
-            "wipe_inventory_tags": "Effacer également toutes les étiquettes",
+            "wipe_inventory_confirm": "Cette option est irréversible !! Merci de confirmer pour lancer l'opération.",
+            "wipe_inventory_sub": "Supprime définitivement l'intégralité de l'inventaire : modèles, objets, emplacements, entretiens, pièces jointes et anciennes étiquettes.",
             "zero_datetimes": "Remettre à zéro les dates et heures",
             "zero_datetimes_button": "Remettre à zéro les dates et heures",
             "zero_datetimes_confirm": "Êtes-vous certain de vouloir réinitialiser toutes les valeurs de date et d'heure ? Cela peut prendre du temps et est irréversible.",
@@ -988,7 +984,7 @@
         },
         "backups_sub": "Exportez l’intégralité de la collection — objets, emplacements, pièces jointes et métadonnées — dans une archive ZIP portable. Cette archive peut être restaurée dans une collection vide, sur ce serveur ou sur une autre installation.",
         "demo_mode_error": {
-            "wipe_inventory": "L'inventaire, les étiquettes, les emplacements et les entretiens ne peuvent pas être effacés lorsque HomeBox est en mode démonstration. Veuillez vérifier que vous n'êtes pas en mode démo et réessayer."
+            "wipe_inventory": "L'inventaire complet, y compris les modèles, ne peut pas être effacé lorsque HomeBox est en mode démonstration."
         },
         "import_export": "Importer/Exporter",
         "import_export_set": {
@@ -1028,7 +1024,7 @@
             "restore_failed": "Échec de la restauration.",
             "restore_requires_empty": "La restauration nécessite une collection ne contenant aucun objet. Sélectionnez une collection vide récemment créée, puis réessayez.",
             "restore_started": "Restauration démarrée — actualisez prochainement la page pour afficher les objets importés.",
-            "wipe_inventory_success": "Inventaire effacé avec succès. {results} articles ont été effacés."
+            "wipe_inventory_success": "Inventaire intégralement effacé. {results} éléments ont été supprimés."
         }
     }
 }
