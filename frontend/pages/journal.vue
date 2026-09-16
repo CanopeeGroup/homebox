@@ -77,7 +77,6 @@
       entry.userName,
       t(`journal.${entry.action}`),
       t(`journal.resources.${entry.resource}`, entry.resource),
-      entry.count || 1,
       entry.quantity ?? "",
       operationLabel(entry),
     ]);
@@ -86,7 +85,6 @@
       t("journal.user"),
       t("journal.action"),
       t("journal.resource"),
-      t("journal.count"),
       "Quantité",
       t("journal.path"),
     ];
@@ -119,13 +117,12 @@
 
     <div class="overflow-x-auto rounded-md border bg-card">
       <div
-        class="grid min-w-[920px] grid-cols-[minmax(150px,0.8fr)_minmax(140px,0.8fr)_110px_minmax(120px,0.7fr)_70px_90px_minmax(240px,1.5fr)] gap-3 border-b bg-muted/50 px-4 py-2 text-sm font-medium"
+        class="grid min-w-[920px] grid-cols-[minmax(150px,0.8fr)_minmax(140px,0.8fr)_110px_minmax(120px,0.7fr)_90px_minmax(240px,1.5fr)] gap-3 border-b bg-muted/50 px-4 py-2 text-sm font-medium"
       >
         <span>{{ $t("journal.date") }}</span>
         <span>{{ $t("journal.user") }}</span>
         <span>{{ $t("journal.action") }}</span>
         <span>{{ $t("journal.resource") }}</span>
-        <span>{{ $t("journal.count") }}</span>
         <span>Quantité</span>
         <span>{{ $t("journal.path") }}</span>
       </div>
@@ -133,13 +130,12 @@
         <div
           v-for="entry in entries"
           :key="entry.id"
-          class="grid min-w-[920px] grid-cols-[minmax(150px,0.8fr)_minmax(140px,0.8fr)_110px_minmax(120px,0.7fr)_70px_90px_minmax(240px,1.5fr)] items-center gap-3 px-4 py-2 text-sm"
+          class="grid min-w-[920px] grid-cols-[minmax(150px,0.8fr)_minmax(140px,0.8fr)_110px_minmax(120px,0.7fr)_90px_minmax(240px,1.5fr)] items-center gap-3 px-4 py-2 text-sm"
         >
           <DateTime :date="entry.createdAt" datetime-type="time" />
           <span class="truncate" :title="entry.userName">{{ entry.userName }}</span>
           <Badge class="w-fit" :variant="actionVariant(entry.action)">{{ $t(`journal.${entry.action}`) }}</Badge>
           <span>{{ $t(`journal.resources.${entry.resource}`, entry.resource) }}</span>
-          <span>{{ entry.count || 1 }}</span>
           <span>{{ entry.quantity ?? "—" }}</span>
           <span class="truncate" :title="operationLabel(entry)">{{ operationLabel(entry) }}</span>
         </div>
