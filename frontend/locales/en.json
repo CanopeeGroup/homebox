@@ -1051,12 +1051,8 @@
             "set_primary_photo_sub": "In version v0.10.0 of Homebox, the primary image field was added to attachments of type photo. This action will set the primary image field to the first image in the attachments array in the database, if it is not already set. '<a class=\"link\" href=\"https://github.com/hay-kot/homebox/pull/576\">'See GitHub PR #576'</a>'",
             "wipe_inventory": "Wipe Inventory",
             "wipe_inventory_button": "Wipe Inventory",
-            "wipe_inventory_confirm": "Are you sure you want to wipe your entire inventory? This will delete all items and cannot be undone.",
-            "wipe_inventory_locations": "Also wipe all locations",
-            "wipe_inventory_maintenance": "Also wipe all maintenance records",
-            "wipe_inventory_note": "Note: Only group owners can perform this action.",
-            "wipe_inventory_sub": "Permanently deletes all items in your inventory. This action is irreversible and will remove all item data including attachments and photos.",
-            "wipe_inventory_tags": "Also wipe all tags",
+            "wipe_inventory_confirm": "This operation is irreversible! Please confirm to start it.",
+            "wipe_inventory_sub": "Permanently deletes the complete inventory: templates, items, locations, maintenance records, attachments and legacy tags.",
             "zero_datetimes": "Zero Item Date Times",
             "zero_datetimes_button": "Zero Item Date Times",
             "zero_datetimes_confirm": "Are you sure you want to reset all date and time values? This can take a while and cannot be undone.",
@@ -1084,7 +1080,7 @@
         },
         "backups_sub": "Export your entire collection — entities, tags, attachments, and metadata — to a portable zip archive. Restore an archive into a freshly registered, empty collection on this or another server.",
         "demo_mode_error": {
-            "wipe_inventory": "Inventory, tags, locations and maintenance records cannot be wiped whilst Homebox is in demo mode. Please ensure that you are not in demo mode and try again."
+            "wipe_inventory": "The complete inventory, including templates, cannot be wiped while Homebox is in demo mode."
         },
         "import_export": "Import/Export",
         "import_export_set": {
@@ -1124,7 +1120,7 @@
             "restore_failed": "Restore failed.",
             "restore_requires_empty": "Restore requires a collection with no items. Switch to a freshly registered collection (default locations and tags are fine) and try again.",
             "restore_started": "Restore started — refresh shortly to see imported items.",
-            "wipe_inventory_success": "Successfully wiped inventory. { results } items deleted."
+            "wipe_inventory_success": "Inventory completely wiped. { results } elements deleted."
         }
     }
 }
