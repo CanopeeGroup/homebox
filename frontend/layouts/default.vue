@@ -465,10 +465,15 @@
 
   const nuxtApp = useNuxtApp();
   const refreshDisplay = useDebounceFn(() => {
-    // Keep shared location caches current without eagerly downloading the tree.
+    // Never clear an already rendered location tree on a server event.
+    // Clearing it made /locations disappear until a full browser refresh.
+    // Refresh in place instead: the old tree remains visible until the
+    // authoritative response atomically replaces it and updates IndexedDB.
     void locationStore.refreshChildren();
     void locationStore.refreshParents();
-    locationStore.tree = null;
+    if (route.path === "/locations") {
+      void locationStore.refreshTree();
+    }
     void nuxtApp.runWithContext(() => refreshNuxtData());
   }, 250);
   onServerEvent(ServerEvent.EntityMutation, refreshDisplay);
