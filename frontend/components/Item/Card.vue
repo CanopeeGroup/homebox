@@ -14,6 +14,7 @@
           v-if="imageUrl && objectContain"
           class="absolute h-[200px] w-full object-cover blur-md"
           loading="lazy"
+          decoding="async"
           :src="imageUrl"
           alt=""
         />
@@ -22,6 +23,7 @@
           class="absolute h-[200px] w-full shadow-md"
           :class="objectContain ? 'object-contain' : 'object-cover'"
           loading="lazy"
+          decoding="async"
           :src="imageUrl"
           :alt="item.name"
         />
