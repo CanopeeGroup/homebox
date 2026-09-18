@@ -16,19 +16,46 @@
 
   const locationStore = useLocationStore();
   const tree = computed(() => locationStore.tree ?? []);
+  const initialLoading = ref(locationStore.tree === null);
 
-  onMounted(async () => {
-    if (locationStore.tree !== null) return;
-
-    const cacheKey = persistentCacheKey("location-tree");
-    const cached = await readPersistentCache<TreeItem[]>(cacheKey, 24 * 60 * 60 * 1000);
-    if (cached) {
-      locationStore.tree = cached;
-      void locationStore.refreshTree();
-    } else {
-      await locationStore.refreshTree();
+  async function loadInitialTree() {
+    if (locationStore.tree !== null) {
+      initialLoading.value = false;
+      return;
     }
-  });
+
+    initialLoading.value = true;
+    try {
+      const cacheKey = persistentCacheKey("location-tree");
+      const cached = await readPersistentCache<TreeItem[]>(cacheKey, 24 * 60 * 60 * 1000);
+
+      if (cached) {
+        locationStore.tree = cached;
+        // Keep the cached view responsive, then replace it reactively with
+        // the authoritative server result when it arrives.
+        void locationStore.refreshTree();
+        return;
+      }
+
+      // First connection / empty browser cache: wait for the API result.
+      // Assigning locationStore.tree inside refreshTree triggers the computed
+      // rootLocations immediately; no manual page reload is required.
+      await locationStore.refreshTree();
+    } finally {
+      initialLoading.value = false;
+    }
+  }
+
+  onMounted(() => void loadInitialTree());
+
+  watch(
+    () => useViewPreferences().value.collectionId,
+    async (next, previous) => {
+      if (next === previous) return;
+      locationStore.tree = null;
+      await loadInitialTree();
+    }
+  );
 
   const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
   const rootLocations = computed<TreeItem[]>(() =>
@@ -77,6 +104,9 @@
       </Card>
     </div>
 
+    <div v-else-if="initialLoading" class="py-12 text-center text-muted-foreground">
+      Chargement des emplacements…
+    </div>
     <p v-else class="py-12 text-center text-muted-foreground">
       {{ $t("locations.no_results") }}
     </p>
