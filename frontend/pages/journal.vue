@@ -130,7 +130,7 @@
         <div
           v-for="entry in entries"
           :key="entry.id"
-          class="grid min-w-[920px] grid-cols-[minmax(150px,0.8fr)_minmax(140px,0.8fr)_110px_minmax(120px,0.7fr)_90px_minmax(240px,1.5fr)] items-center gap-3 px-4 py-2 text-sm"
+          class="journal-row grid min-w-[920px] grid-cols-[minmax(150px,0.8fr)_minmax(140px,0.8fr)_110px_minmax(120px,0.7fr)_90px_minmax(240px,1.5fr)] items-center gap-3 px-4 py-2 text-sm"
         >
           <DateTime :date="entry.createdAt" datetime-type="time" />
           <span class="truncate" :title="entry.userName">{{ entry.userName }}</span>
@@ -156,3 +156,10 @@
     </div>
   </BaseContainer>
 </template>
+
+<style scoped>
+  .journal-row {
+    content-visibility: auto;
+    contain-intrinsic-size: 42px;
+  }
+</style>
