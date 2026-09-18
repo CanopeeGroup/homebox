@@ -252,6 +252,7 @@
     <div v-if="templates && templates.length > 0" class="flex flex-col gap-1">
       <TemplateCard
         v-for="tpl in paginatedTemplates"
+        class="template-row"
         :key="tpl.id"
         :template="tpl"
         compact
@@ -298,3 +299,10 @@
     </div>
   </BaseContainer>
 </template>
+
+<style scoped>
+  .template-row {
+    content-visibility: auto;
+    contain-intrinsic-size: 64px;
+  }
+</style>
