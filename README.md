@@ -28,7 +28,7 @@ privées ne sont pas mises en cache par le service worker. L’ancien cache `api
 lors de son activation. La consultation et les modifications des stocks nécessitent une connexion réseau ;
 aucune synchronisation hors ligne n’est proposée.
 
-Les changements ci-dessous sont disponibles sur la branche `feature/template-import-export`.
+Les changements ci-dessous sont publiés sur la branche `main` du fork CanopeeGroup.
 Le dépôt conserve les sources du projet officiel ; les fonctionnalités et captures officielles
 présentées plus bas ne reflètent donc pas nécessairement cette interface personnalisée.
 
@@ -148,13 +148,33 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Ces corrections ont passé le lint des fichiers frontend concernés ; leur validation fonctionnelle
   complète sur téléphone, tablette et installation Docker reste nécessaire.
 
+### Optimisations téléphone et tablette
+
+- Déduplication des requêtes d'emplacements dans le store Pinia.
+- Réutilisation de l'arbre d'emplacements déjà chargé au lieu de multiplier les appels API.
+- Chargement différé de l'arbre complet : le layout global ne le télécharge plus systématiquement.
+- Invalidation de l'arbre lors d'une modification plutôt que rechargement immédiat inutile.
+- Regroupement des rafraîchissements rapprochés afin de limiter les appels réseau et les recalculs.
+- Recherche Objets protégée contre les réponses obsolètes de requêtes précédentes.
+- Mise en cache en mémoire de la liste des modèles utilisée par la recherche globale.
+- Temporisation de la recherche adaptée aux saisies tactiles rapides.
+- Décodage asynchrone des images d'objets en complément du chargement différé.
+- Rendu différé des lignes hors écran dans Journal et Modèles avec `content-visibility`.
+- Sélections de modèles optimisées avec un `Set` pour les inventaires importants.
+- Journal conservé à 1 000 opérations par page tout en réduisant le coût de rendu hors écran.
+
+### GitHub Actions
+
+Tous les workflows GitHub Actions du fork ont été retirés. La compilation, les tests et la publication
+d'images ne sont donc plus exécutés automatiquement par GitHub. Valider le build localement lors des mises à jour.
+
 ### Déployer et mettre à jour ce fork
 
 L’image officielle `ghcr.io/sysadminsmedia/homebox` ne contient pas ces personnalisations.
 Construire l’image à partir de la branche du fork :
 
 ```bash
-git clone --branch feature/template-import-export https://github.com/leroyconstant/homebox.git
+git clone --branch main https://github.com/CanopeeGroup/homebox.git
 cd homebox
 docker compose build --no-cache
 docker compose up -d
@@ -164,8 +184,8 @@ Pour mettre à jour un clone déjà installé :
 
 ```bash
 git fetch origin
-git switch feature/template-import-export
-git pull --ff-only origin feature/template-import-export
+git switch main
+git pull --ff-only origin main
 docker compose build --no-cache
 docker compose up -d
 docker compose logs --tail=100 homebox
