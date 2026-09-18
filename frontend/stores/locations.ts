@@ -8,6 +8,8 @@ export const useLocationStore = defineStore("locations", {
     Locations: null as EntitySummary[] | null,
     tree: null as TreeItem[] | null,
     refreshLocationsPromise: null as Promise<void> | null,
+    refreshParentsPromise: null as Promise<ReturnType<ItemsApi["getLocations"]> extends Promise<infer R> ? R : never> | null,
+    refreshTreePromise: null as Promise<ReturnType<ItemsApi["getTree"]> extends Promise<infer R> ? R : never> | null,
   }),
   getters: {
     /**
@@ -50,13 +52,15 @@ export const useLocationStore = defineStore("locations", {
       await this.refreshLocationsPromise;
     },
     async refreshParents(): ReturnType<ItemsApi["getLocations"]> {
-      const result = await useUserApi().items.getLocations({ filterChildren: true });
-      if (result.error) {
+      if (this.refreshParentsPromise) return this.refreshParentsPromise;
+      this.refreshParentsPromise = useUserApi().items.getLocations({ filterChildren: true });
+      try {
+        const result = await this.refreshParentsPromise;
+        if (!result.error) this.parents = result.data;
         return result;
+      } finally {
+        this.refreshParentsPromise = null;
       }
-
-      this.parents = result.data;
-      return result;
     },
     async refreshChildren(): ReturnType<ItemsApi["getLocations"]> {
       const result = await useUserApi().items.getLocations({ filterChildren: false });
@@ -68,13 +72,15 @@ export const useLocationStore = defineStore("locations", {
       return result;
     },
     async refreshTree(): ReturnType<ItemsApi["getTree"]> {
-      const result = await useUserApi().items.getTree();
-      if (result.error) {
+      if (this.refreshTreePromise) return this.refreshTreePromise;
+      this.refreshTreePromise = useUserApi().items.getTree({ withItems: false });
+      try {
+        const result = await this.refreshTreePromise;
+        if (!result.error) this.tree = result.data;
         return result;
+      } finally {
+        this.refreshTreePromise = null;
       }
-
-      this.tree = result.data;
-      return result;
     },
   },
 });
