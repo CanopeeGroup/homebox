@@ -18,42 +18,45 @@
   const tree = computed(() => locationStore.tree ?? []);
   const initialLoading = ref(locationStore.tree === null);
 
-  async function loadInitialTree() {
-    if (locationStore.tree !== null) {
-      initialLoading.value = false;
-      return;
-    }
+  async function refreshLocationPage() {
+    const hadTree = locationStore.tree !== null;
+    initialLoading.value = !hadTree;
 
-    initialLoading.value = true;
     try {
-      const cacheKey = persistentCacheKey("location-tree");
-      const cached = await readPersistentCache<TreeItem[]>(cacheKey, 24 * 60 * 60 * 1000);
-
-      if (cached) {
-        locationStore.tree = cached;
-        // Keep the cached view responsive, then replace it reactively with
-        // the authoritative server result when it arrives.
-        void locationStore.refreshTree();
-        return;
+      // Cache is only used to make a cold start immediately useful. Every
+      // visit to /locations still performs an authoritative server refresh.
+      if (!hadTree) {
+        const cached = await readPersistentCache<TreeItem[]>(
+          persistentCacheKey("location-tree"),
+          24 * 60 * 60 * 1000
+        );
+        if (cached) locationStore.tree = cached;
       }
 
-      // First connection / empty browser cache: wait for the API result.
-      // Assigning locationStore.tree inside refreshTree triggers the computed
-      // rootLocations immediately; no manual page reload is required.
-      await locationStore.refreshTree();
+      // Always refresh all location datasets on page entry. The store writes
+      // every successful response back to the collection-scoped IndexedDB cache.
+      await Promise.all([
+        locationStore.refreshTree(),
+        locationStore.refreshChildren(),
+        locationStore.refreshParents(),
+      ]);
     } finally {
       initialLoading.value = false;
     }
   }
 
-  onMounted(() => void loadInitialTree());
+  // pages are normally mounted again when navigating back to /locations.
+  // This deliberately refreshes even when Pinia/IndexedDB already has data.
+  onMounted(() => void refreshLocationPage());
 
   watch(
     () => useViewPreferences().value.collectionId,
     async (next, previous) => {
       if (next === previous) return;
       locationStore.tree = null;
-      await loadInitialTree();
+      locationStore.Locations = null;
+      locationStore.parents = null;
+      await refreshLocationPage();
     }
   );
 
