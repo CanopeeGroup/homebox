@@ -2,7 +2,7 @@
 
 Ce dépôt est un fork personnalisé de [sysadminsmedia/homebox](https://github.com/sysadminsmedia/homebox), adapté à une gestion d’inventaire simplifiée et orientée vers les objets, les modèles et les emplacements.
 
-Les développements personnalisés sont publiés sur la branche Main
+Les développements personnalisés sont publiés sur la branche `main`.
 
 ## Fonctionnalités ajoutées
 
@@ -71,12 +71,45 @@ Les développements personnalisés sont publiés sur la branche Main
   - l’action Numériser ;
   - l’action Importer un produit.
 
+## Optimisations de performances mobiles
+
+Une passe d'optimisation a été réalisée pour améliorer la réactivité sur smartphones et tablettes sans modifier les fonctions métier.
+
+### Emplacements et chargement global
+
+- Déduplication des requêtes concurrentes `getLocations` et `getTree` dans le store Pinia.
+- Le layout global charge uniquement les listes d'emplacements nécessaires aux sélecteurs.
+- L'arbre complet n'est plus téléchargé systématiquement au démarrage.
+- La page Emplacements réutilise l'arbre présent dans le store et ne le demande que lorsqu'il est absent.
+- Lors d'une mutation, l'arbre est invalidé puis rechargé à la demande plutôt que téléchargé immédiatement.
+- Les rafraîchissements rapprochés sont regroupés pour limiter le trafic API.
+
+### Recherche et objets
+
+- Protection par génération de recherche : une ancienne réponse réseau ne remplace plus les résultats d'une recherche plus récente.
+- La liste des modèles utilisée par la recherche est conservée en cache mémoire pendant la vie de la page.
+- Temporisation des recherches successives augmentée afin de limiter les requêtes pendant une saisie rapide sur clavier tactile.
+- Images des cartes chargées avec `loading="lazy"` et décodées avec `decoding="async"`.
+
+### Modèles et journal
+
+- `content-visibility: auto` sur les lignes de modèles et du journal afin que le navigateur puisse différer le rendu des éléments hors écran.
+- Le Journal conserve sa pagination de 1 000 opérations par page.
+- Les tests d'appartenance aux modèles sélectionnés utilisent un `Set`, évitant les recherches linéaires répétées sur les grandes listes.
+
+## GitHub Actions
+
+- Tous les fichiers sous `.github/workflows/` ont été supprimés du fork.
+- Les anciens workflows Android/Capacitor ne font plus partie de la branche `main`.
+- Aucun build, test, publication Docker ou autre automatisation GitHub Actions n'est actuellement exécuté.
+- Après une modification importante, le build et les tests doivent être lancés manuellement avant déploiement.
+
 ## Installation avec Docker Compose
 
 Cloner directement la branche personnalisée :
 
 ```bash
-git clone --branch feature/template-import-export https://github.com/canopeegroup/homebox.git
+git clone --branch main https://github.com/canopeegroup/homebox.git
 cd homebox
 docker compose build --pull
 docker compose up -d
@@ -86,8 +119,8 @@ docker compose up -d
 
 ```bash
 git fetch origin
-git switch feature/template-import-export
-git pull --ff-only origin feature/template-import-export
+git switch main
+git pull --ff-only origin main
 docker compose down
 docker compose build --pull --no-cache
 docker compose up -d
