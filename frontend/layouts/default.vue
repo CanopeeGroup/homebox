@@ -258,18 +258,21 @@
   import { DialogID, type NoParamDialogIDs } from "~/components/ui/dialog-provider/utils";
   import ModalConfirm from "~/components/ModalConfirm.vue";
   import OutdatedModal from "~/components/App/OutdatedModal.vue";
-  import EntityCreateModal from "~/components/Entity/CreateModal.vue";
-  import WipeInventoryDialog from "~/components/WipeInventoryDialog.vue";
-  import ItemBarcodeModal from "~/components/Item/BarcodeModal.vue";
-  import AppQuickMenuModal from "~/components/App/QuickMenuModal.vue";
-  import AppScannerModal from "~/components/App/ScannerModal.vue";
   import AppLogo from "~/components/App/Logo.vue";
   import AppHeaderDecor from "~/components/App/HeaderDecor.vue";
   import AppHeaderText from "~/components/App/HeaderText.vue";
   import CollectionSelector from "~/components/Collection/Selector.vue";
-  import CollectionCreateModal from "~/components/Collection/CreateModal.vue";
-  import CollectionJoinModal from "~/components/Collection/JoinModal.vue";
-  import CollectionInviteCreateModal from "~/components/Collection/InviteCreateModal.vue";
+
+  // Large modal components are split into separate chunks. They remain mounted
+  // as dialog-provider listeners, but their code is fetched outside the initial bundle.
+  const EntityCreateModal = defineAsyncComponent(() => import("~/components/Entity/CreateModal.vue"));
+  const WipeInventoryDialog = defineAsyncComponent(() => import("~/components/WipeInventoryDialog.vue"));
+  const ItemBarcodeModal = defineAsyncComponent(() => import("~/components/Item/BarcodeModal.vue"));
+  const AppQuickMenuModal = defineAsyncComponent(() => import("~/components/App/QuickMenuModal.vue"));
+  const AppScannerModal = defineAsyncComponent(() => import("~/components/App/ScannerModal.vue"));
+  const CollectionCreateModal = defineAsyncComponent(() => import("~/components/Collection/CreateModal.vue"));
+  const CollectionJoinModal = defineAsyncComponent(() => import("~/components/Collection/JoinModal.vue"));
+  const CollectionInviteCreateModal = defineAsyncComponent(() => import("~/components/Collection/InviteCreateModal.vue"));
 
   const { t, locale } = useI18n();
   const authCtx = useAuthContext();
