@@ -3,6 +3,7 @@
   import MdiMapMarkerOutline from "~icons/mdi/map-marker-outline";
   import MdiStairs from "~icons/mdi/stairs";
   import type { TreeItem } from "~/lib/api/types/data-contracts";
+  import { useLocationStore } from "~~/stores/locations";
   import BaseContainer from "@/components/Base/Container.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
   import LocationCompactTree from "~/components/Location/CompactTree.vue";
@@ -13,10 +14,11 @@
   const { t } = useI18n();
   useHead({ title: computed(() => `HomeBox | ${t("menu.locations")}`) });
 
-  const api = useUserApi();
-  const { data: tree } = useAsyncData("location-grid", async () => {
-    const { data, error } = await api.items.getTree({ withItems: false });
-    return error ? [] : data;
+  const locationStore = useLocationStore();
+  const tree = computed(() => locationStore.tree ?? []);
+
+  onMounted(async () => {
+    if (locationStore.tree === null) await locationStore.refreshTree();
   });
 
   const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
