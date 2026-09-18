@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
 import type { ItemsApi } from "~~/lib/api/classes/items";
 import type { EntitySummary, TreeItem } from "~~/lib/api/types/data-contracts";
+import { persistentCacheKey, readPersistentCache, writePersistentCache } from "~~/composables/use-persistent-cache";
+
+const LOCATION_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 export const useLocationStore = defineStore("locations", {
   state: () => ({
@@ -38,16 +41,23 @@ export const useLocationStore = defineStore("locations", {
   },
   actions: {
     async ensureLocationsFetched() {
-      if (this.Locations !== null) {
-        return;
-      }
+      if (this.Locations !== null) return;
 
       if (this.refreshLocationsPromise === null) {
-        this.refreshLocationsPromise = this.refreshChildren()
-          .then(() => {})
-          .finally(() => {
-            this.refreshLocationsPromise = null;
-          });
+        this.refreshLocationsPromise = (async () => {
+          const cached = await readPersistentCache<EntitySummary[]>(
+            persistentCacheKey("locations"),
+            LOCATION_CACHE_MAX_AGE_MS
+          );
+          if (cached && this.Locations === null) this.Locations = cached;
+
+          // Stale-while-revalidate: cached data can render immediately while
+          // the authoritative server copy refreshes in the background.
+          if (cached) void this.refreshChildren();
+          else await this.refreshChildren();
+        })().finally(() => {
+          this.refreshLocationsPromise = null;
+        });
       }
       await this.refreshLocationsPromise;
     },
@@ -56,7 +66,10 @@ export const useLocationStore = defineStore("locations", {
       this.refreshParentsPromise = useUserApi().items.getLocations({ filterChildren: true });
       try {
         const result = await this.refreshParentsPromise;
-        if (!result.error) this.parents = result.data;
+        if (!result.error) {
+          this.parents = result.data;
+          void writePersistentCache(persistentCacheKey("location-parents"), result.data);
+        }
         return result;
       } finally {
         this.refreshParentsPromise = null;
@@ -69,6 +82,7 @@ export const useLocationStore = defineStore("locations", {
       }
 
       this.Locations = result.data;
+      void writePersistentCache(persistentCacheKey("locations"), result.data);
       return result;
     },
     async refreshTree(): ReturnType<ItemsApi["getTree"]> {
@@ -76,7 +90,10 @@ export const useLocationStore = defineStore("locations", {
       this.refreshTreePromise = useUserApi().items.getTree({ withItems: false });
       try {
         const result = await this.refreshTreePromise;
-        if (!result.error) this.tree = result.data;
+        if (!result.error) {
+          this.tree = result.data;
+          void writePersistentCache(persistentCacheKey("location-tree"), result.data);
+        }
         return result;
       } finally {
         this.refreshTreePromise = null;
