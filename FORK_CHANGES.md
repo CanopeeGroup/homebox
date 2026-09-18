@@ -97,6 +97,30 @@ Une passe d'optimisation a été réalisée pour améliorer la réactivité sur 
 - Le Journal conserve sa pagination de 1 000 opérations par page.
 - Les tests d'appartenance aux modèles sélectionnés utilisent un `Set`, évitant les recherches linéaires répétées sur les grandes listes.
 
+### Démarrage et bundle frontend
+
+- L'initialisation OpenTelemetry ne bloque plus le démarrage de Nuxt : la vérification du statut du backend et l'activation OTel sont effectuées après le chargement initial.
+- Les principales modales globales ont été converties en composants asynchrones afin de fractionner leur code hors du bundle JavaScript initial.
+- Le plugin i18n ne charge plus les 44 fichiers de traduction au démarrage.
+- Seuls `fr.json` et `en.json` sont chargés immédiatement ; les autres langues restent disponibles et sont importées dynamiquement lorsqu'elles sont sélectionnées.
+- Avant cette optimisation, l'ensemble des fichiers JSON de traduction représentait environ 1,46 Mo de données brutes.
+
+### Cache persistant IndexedDB
+
+- Ajout d'une couche de cache applicatif dans IndexedDB pour conserver les données coûteuses entre deux ouvertures du navigateur ou de la PWA.
+- Les clés de cache sont séparées par collection.
+- Sont actuellement persistés :
+  - la liste des emplacements ;
+  - les emplacements parents ;
+  - l'arbre d'emplacements sans objets ;
+  - la liste des modèles.
+- Les données en cache peuvent être utilisées pendant 24 heures maximum.
+- Stratégie stale-while-revalidate : le cache local permet un affichage rapide, tandis qu'une requête API actualise ensuite Pinia, l'écran et IndexedDB.
+- La page Emplacements tente d'abord de restaurer l'arbre depuis IndexedDB puis lance son rafraîchissement réseau.
+- La page Modèles restaure également la liste locale avant sa synchronisation serveur.
+- Les réponses API ne sont volontairement pas placées dans Cache Storage par le Service Worker : la règle `NetworkOnly` reste active pour `/api`.
+- Ce cache n'implémente pas un mode d'écriture hors ligne ; les mutations et l'authentification continuent de nécessiter le serveur.
+
 ## GitHub Actions
 
 - Tous les fichiers sous `.github/workflows/` ont été supprimés du fork.
@@ -151,13 +175,13 @@ Lancer `VACUUM` uniquement après l’arrêt de HomeBox et après avoir créé u
 
 ## Compatibilité avec le projet officiel
 
-L’objectif est de conserver les personnalisations sur une branche dédiée afin de pouvoir intégrer régulièrement les mises à jour de `sysadminsmedia/homebox`.
+Les personnalisations sont maintenues directement sur la branche `main` du fork. L’objectif reste de pouvoir intégrer régulièrement les mises à jour de `sysadminsmedia/homebox` en contrôlant les conflits.
 
 Lors d’une synchronisation avec le dépôt officiel :
 
 1. sauvegarder la base et le volume de données ;
 2. récupérer les nouvelles versions du dépôt officiel ;
-3. fusionner ou rebaser la branche personnalisée ;
+3. fusionner ou rebaser les changements officiels dans la branche `main` du fork ;
 4. résoudre les éventuels conflits dans le frontend, les routes API et les migrations ;
 5. reconstruire l’image Docker et tester les migrations sur une copie de la base.
 
