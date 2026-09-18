@@ -10,6 +10,7 @@
   import { useDialog } from "@/components/ui/dialog-provider";
   import LanguageSelector from "~/components/App/LanguageSelector.vue";
   import AdminAvatar from "~/components/Profile/AdminAvatar.vue";
+  import AdminAppTitle from "~/components/Profile/AdminAppTitle.vue";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
   import ItemDuplicateSettings from "~/components/Item/DuplicateSettings.vue";
   import FormPassword from "~/components/Form/Password.vue";
@@ -124,6 +125,7 @@
 
         <DetailsSection :details="details" />
         <AdminAvatar v-if="auth.user?.isSuperuser" />
+        <AdminAppTitle v-if="auth.user?.isSuperuser" />
 
         <div class="p-4">
           <div class="flex gap-2">
