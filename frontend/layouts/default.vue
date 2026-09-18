@@ -436,11 +436,11 @@
   ]);
 
   const locationStore = useLocationStore();
-  locationStore.ensureLocationsFetched();
-
   onMounted(() => {
-    locationStore.refreshParents();
-    locationStore.refreshTree();
+    // Load only the lightweight location datasets needed by global selectors.
+    // The full tree is loaded lazily by the locations page.
+    void locationStore.ensureLocationsFetched();
+    if (locationStore.parents === null) void locationStore.refreshParents();
 
     // Auto-open JoinModal when invitation token is in URL
     const token = route.query.token;
@@ -462,11 +462,12 @@
 
   const nuxtApp = useNuxtApp();
   const refreshDisplay = useDebounceFn(() => {
-    locationStore.refreshChildren();
-    locationStore.refreshParents();
-    locationStore.refreshTree();
+    // Keep shared location caches current without eagerly downloading the tree.
+    void locationStore.refreshChildren();
+    void locationStore.refreshParents();
+    locationStore.tree = null;
     void nuxtApp.runWithContext(() => refreshNuxtData());
-  }, 150);
+  }, 250);
   onServerEvent(ServerEvent.EntityMutation, refreshDisplay);
   onServerEvent(ServerEvent.ImportMutation, refreshDisplay);
   onServerEvent(ServerEvent.UserMutation, refreshDisplay);
