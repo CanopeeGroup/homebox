@@ -11,6 +11,7 @@
   import { Checkbox } from "@/components/ui/checkbox";
   import { useDialog } from "@/components/ui/dialog-provider";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
+  import type { EntityTemplateSummary } from "~~/lib/api/types/data-contracts";
   import BaseContainer from "@/components/Base/Container.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
   import TemplateCard from "~/components/Template/Card.vue";
@@ -38,13 +39,32 @@
   const { openDialog } = useDialog();
   const confirm = useConfirm();
 
-  const { data: templates, refresh } = useAsyncData("templates", async () => {
-    const { data, error } = await api.templates.getAll();
-    if (error) {
-      toast.error(t("components.template.toast.load_failed"));
-      return [];
+  const templates = ref<EntityTemplateSummary[]>([]);
+  const templatesLoading = ref(false);
+
+  const refresh = async () => {
+    if (templatesLoading.value) return;
+    templatesLoading.value = true;
+    try {
+      const { data, error } = await api.templates.getAll();
+      if (error) {
+        if (!templates.value.length) toast.error(t("components.template.toast.load_failed"));
+        return;
+      }
+      templates.value = data;
+      void writePersistentCache(persistentCacheKey("templates"), data);
+    } finally {
+      templatesLoading.value = false;
     }
-    return data;
+  };
+
+  onMounted(async () => {
+    const cached = await readPersistentCache<EntityTemplateSummary[]>(
+      persistentCacheKey("templates"),
+      24 * 60 * 60 * 1000
+    );
+    if (cached) templates.value = cached;
+    await refresh();
   });
 
   // Wrapper functions to match event signatures
