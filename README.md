@@ -139,6 +139,13 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Export CSV UTF-8 avec séparateur point-virgule, récupérant toutes les pages de la collection sélectionnée.
 - Tri stable par date et identifiant, et indexation du journal par collection et date.
 
+### Personnalisation administrateur et synchronisation multi-appareils
+
+- Dans **Profil**, un administrateur peut définir un avatar personnalisé et renommer le titre affiché dans l’en-tête de l’application.
+- L’avatar et le titre sont enregistrés dans les paramètres persistants du compte et rechargés sur ordinateur, téléphone et tablette.
+- La synchronisation des préférences d’affichage fusionne désormais ses changements avec les paramètres déjà présents côté serveur au lieu de remplacer l’objet complet. Une première connexion depuis un navigateur vierge ne doit donc plus supprimer l’avatar, le titre ou d’autres paramètres persistants.
+- Le branding partagé est chargé par un composable commun afin que le logo, l’en-tête et la page Profil utilisent la même source de données.
+
 ### Actualisation de l’affichage
 
 - Actualisation après les écritures réussies dans l’interface, en complément des événements WebSocket.
@@ -153,7 +160,7 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Déduplication des requêtes d'emplacements dans le store Pinia.
 - Réutilisation de l'arbre d'emplacements déjà chargé au lieu de multiplier les appels API.
 - Chargement différé de l'arbre complet : le layout global ne le télécharge plus systématiquement.
-- Invalidation de l'arbre lors d'une modification plutôt que rechargement immédiat inutile.
+- Rafraîchissement de l'arbre en arrière-plan lors des événements serveur sans effacer les emplacements déjà affichés.
 - Regroupement des rafraîchissements rapprochés afin de limiter les appels réseau et les recalculs.
 - Recherche Objets protégée contre les réponses obsolètes de requêtes précédentes.
 - Mise en cache en mémoire de la liste des modèles utilisée par la recherche globale.
@@ -174,7 +181,7 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Mise en cache persistante des listes d'emplacements, emplacements parents, arbre d'emplacements et modèles.
 - Stratégie **stale-while-revalidate** : les données déjà enregistrées sont affichées immédiatement, puis une copie à jour est récupérée depuis l'API en arrière-plan.
 - Durée maximale actuelle du cache persistant : 24 heures ; une réponse serveur réussie renouvelle le cache.
-- La page Emplacements peut restituer l'arbre depuis IndexedDB avant la fin de la requête réseau, ce qui réduit fortement le délai sur les inventaires volumineux et les appareils mobiles.
+- La page Emplacements peut restituer l'arbre depuis IndexedDB avant la fin de la requête réseau, puis effectue systématiquement une actualisation serveur à chaque visite et renouvelle le cache après une réponse réussie.
 - Les modèles bénéficient du même principe : affichage du cache local puis rafraîchissement serveur.
 - Le Service Worker conserve les appels API en `NetworkOnly` : le cache IndexedDB est contrôlé par l'application et ne transforme pas arbitrairement les réponses privées de l'API en ressources hors ligne.
 - Les opérations d'écriture et l'authentification restent dépendantes du serveur ; le cache vise l'accélération de l'affichage, pas un mode de modification hors ligne.
