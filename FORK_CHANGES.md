@@ -71,6 +71,14 @@ Les développements personnalisés sont publiés sur la branche `main`.
   - l’action Numériser ;
   - l’action Importer un produit.
 
+## Personnalisation administrateur et persistance
+
+- Ajout dans **Profil** d’un avatar administrateur personnalisé.
+- Ajout d’un titre d’application personnalisable depuis le profil administrateur.
+- Ces paramètres sont conservés dans les réglages persistants du compte et rechargés sur ordinateur, téléphone et tablette.
+- Le composable commun `useAdminBranding` centralise le chargement et la sauvegarde du branding.
+- La synchronisation des préférences ne remplace plus l’objet complet des paramètres utilisateur : elle récupère d’abord les valeurs serveur et fusionne uniquement les préférences concernées. Cela empêche un navigateur neuf de réinitialiser l’avatar, le titre ou d’autres paramètres persistants.
+
 ## Optimisations de performances mobiles
 
 Une passe d'optimisation a été réalisée pour améliorer la réactivité sur smartphones et tablettes sans modifier les fonctions métier.
@@ -80,8 +88,10 @@ Une passe d'optimisation a été réalisée pour améliorer la réactivité sur 
 - Déduplication des requêtes concurrentes `getLocations` et `getTree` dans le store Pinia.
 - Le layout global charge uniquement les listes d'emplacements nécessaires aux sélecteurs.
 - L'arbre complet n'est plus téléchargé systématiquement au démarrage.
-- La page Emplacements réutilise l'arbre présent dans le store et ne le demande que lorsqu'il est absent.
-- Lors d'une mutation, l'arbre est invalidé puis rechargé à la demande plutôt que téléchargé immédiatement.
+- La page Emplacements peut afficher immédiatement l’arbre déjà présent dans le store ou IndexedDB, mais déclenche désormais une actualisation serveur à chaque visite.
+- À chaque passage sur la page, `refreshTree()`, `refreshChildren()` et `refreshParents()` actualisent les données et renouvellent le cache IndexedDB après une réponse réussie.
+- Sur une première connexion sans cache navigateur, la page attend le chargement de l’arbre et met l’affichage à jour automatiquement.
+- Lors d’un événement WebSocket, l’arbre affiché n’est plus mis à `null` : les données existantes restent visibles pendant le rafraîchissement puis sont remplacées par la réponse serveur.
 - Les rafraîchissements rapprochés sont regroupés pour limiter le trafic API.
 
 ### Recherche et objets
@@ -116,7 +126,7 @@ Une passe d'optimisation a été réalisée pour améliorer la réactivité sur 
   - la liste des modèles.
 - Les données en cache peuvent être utilisées pendant 24 heures maximum.
 - Stratégie stale-while-revalidate : le cache local permet un affichage rapide, tandis qu'une requête API actualise ensuite Pinia, l'écran et IndexedDB.
-- La page Emplacements tente d'abord de restaurer l'arbre depuis IndexedDB puis lance son rafraîchissement réseau.
+- La page Emplacements restaure l’arbre depuis IndexedDB lorsqu’il existe, puis lance systématiquement un rafraîchissement réseau à chaque visite ; la réponse serveur actualise Pinia, l’écran et IndexedDB.
 - La page Modèles restaure également la liste locale avant sa synchronisation serveur.
 - Les réponses API ne sont volontairement pas placées dans Cache Storage par le Service Worker : la règle `NetworkOnly` reste active pour `/api`.
 - Ce cache n'implémente pas un mode d'écriture hors ligne ; les mutations et l'authentification continuent de nécessiter le serveur.
