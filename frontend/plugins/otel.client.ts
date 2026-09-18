@@ -40,40 +40,40 @@ async function fetchBackendTelemetryStatus(debug: boolean): Promise<boolean> {
   }
 }
 
-export default defineNuxtPlugin(async () => {
+export default defineNuxtPlugin(() => {
   const runtimeConfig = useRuntimeConfig();
   const otelDebug = String(runtimeConfig.public?.otelDebug || "false") === "true";
 
-  // Check if backend has telemetry enabled via the status endpoint
-  const backendTelemetryEnabled = await fetchBackendTelemetryStatus(otelDebug);
+  // OpenTelemetry must never block application startup. Run the backend
+  // capability check after Nuxt has mounted and initialize tracing in the
+  // background only when the backend explicitly enables it.
+  onNuxtReady(() => {
+    void fetchBackendTelemetryStatus(otelDebug).then(backendTelemetryEnabled => {
+      if (!backendTelemetryEnabled) {
+        if (otelDebug) {
+          console.log("[OTel] Telemetry disabled (backend telemetry not enabled)");
+        }
+        return;
+      }
 
-  // Only enable if backend telemetry is enabled
-  if (!backendTelemetryEnabled) {
-    if (otelDebug) {
-      console.log("[OTel] Telemetry disabled (backend telemetry not enabled)");
-    }
-    return {
-      provide: {
-        otelEnabled: false,
-      },
-    };
-  }
+      const otelConfig = {
+        enabled: true,
+        serviceName: String(runtimeConfig.public?.otelServiceName || "homebox-frontend"),
+        serviceVersion: String(runtimeConfig.public?.otelServiceVersion || "1.0.0"),
+        useBackendProxy: true,
+        sampleRate: parseFloat(String(runtimeConfig.public?.otelSampleRate || "1.0")),
+        debug: otelDebug,
+      };
 
-  const otelConfig = {
-    enabled: true,
-    serviceName: String(runtimeConfig.public?.otelServiceName || "homebox-frontend"),
-    serviceVersion: String(runtimeConfig.public?.otelServiceVersion || "1.0.0"),
-    useBackendProxy: true, // Always use backend proxy for security
-    sampleRate: parseFloat(String(runtimeConfig.public?.otelSampleRate || "1.0")),
-    debug: otelDebug,
-  };
-
-  // Initialize OpenTelemetry
-  initializeOTel(otelConfig);
+      initializeOTel(otelConfig);
+    });
+  });
 
   return {
     provide: {
-      otelEnabled: true,
+      // Telemetry initialization is intentionally asynchronous and no longer
+      // part of the critical rendering path.
+      otelEnabled: false,
     },
   };
 });
