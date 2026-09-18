@@ -40,6 +40,8 @@
   const templateResults = ref<EntityTemplateSummary[]>([]);
   const locationResults = ref<EntitySummary[]>([]);
   const total = ref(0);
+  const templateSearchCache = shallowRef<EntityTemplateSummary[] | null>(null);
+  let searchGeneration = 0;
 
   // Using useRouteQuery directly has two downsides
   // 1. It persists the default value in the query string
@@ -291,6 +293,7 @@
     await router.push({ query: push_query as LocationQueryRaw });
 
     const hasQuery = !!query.value.trim();
+    const generation = ++searchGeneration;
     const [itemsResult, locationsResult, templatesResult] = await Promise.all([
       api.items.getAll({
         q: query.value || "",
@@ -315,8 +318,16 @@
             orderBy: "name",
           })
         : Promise.resolve({ data: { items: [], page: 1, pageSize: 100, total: 0, totalPrice: 0 }, error: null }),
-      hasQuery ? api.templates.getAll() : Promise.resolve({ data: [], error: null }),
+      hasQuery
+        ? templateSearchCache.value
+          ? Promise.resolve({ data: templateSearchCache.value, error: null })
+          : api.templates.getAll()
+        : Promise.resolve({ data: [], error: null }),
     ]);
+    if (generation !== searchGeneration) return;
+    if (hasQuery && !templatesResult.error && templateSearchCache.value === null) {
+      templateSearchCache.value = templatesResult.data ?? [];
+    }
     const { data, error } = itemsResult;
     const normalizedQuery = query.value.trim().toLocaleLowerCase();
     const containsQuery = (value: unknown) =>
@@ -359,8 +370,8 @@
     initialSearch.value = false;
   }
 
-  watchDebounced([page, pageSize, query, selectedLocations], search, { debounce: 250, maxWait: 1000 });
-  onServerEvent(ServerEvent.EntityMutation, useDebounceFn(search, 200));
+  watchDebounced([page, pageSize, query, selectedLocations], search, { debounce: 400, maxWait: 1200 });
+  onServerEvent(ServerEvent.EntityMutation, useDebounceFn(search, 300));
 
   async function submit() {
     // Set URL Params
