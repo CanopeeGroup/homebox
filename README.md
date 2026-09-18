@@ -162,6 +162,22 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Rendu différé des lignes hors écran dans Journal et Modèles avec `content-visibility`.
 - Sélections de modèles optimisées avec un `Set` pour les inventaires importants.
 - Journal conservé à 1 000 opérations par page tout en réduisant le coût de rendu hors écran.
+- OpenTelemetry retiré du chemin critique de démarrage : la détection du backend et l'initialisation OTel sont lancées après que Nuxt est prêt.
+- Les principaux composants de modales globales sont séparés du bundle JavaScript initial via des composants asynchrones.
+- Internationalisation optimisée : seuls le français et l'anglais de secours sont intégrés au démarrage ; les autres traductions sont chargées dynamiquement à la demande.
+- Le chargement initial des traductions passe ainsi d'environ 1,46 Mo de fichiers JSON de langues à uniquement FR/EN avant compilation et compression.
+
+### Cache persistant des données
+
+- Ajout d'un cache applicatif persistant basé sur **IndexedDB**, distinct du cache du Service Worker.
+- Cache isolé par collection afin d'éviter tout mélange de données entre inventaires.
+- Mise en cache persistante des listes d'emplacements, emplacements parents, arbre d'emplacements et modèles.
+- Stratégie **stale-while-revalidate** : les données déjà enregistrées sont affichées immédiatement, puis une copie à jour est récupérée depuis l'API en arrière-plan.
+- Durée maximale actuelle du cache persistant : 24 heures ; une réponse serveur réussie renouvelle le cache.
+- La page Emplacements peut restituer l'arbre depuis IndexedDB avant la fin de la requête réseau, ce qui réduit fortement le délai sur les inventaires volumineux et les appareils mobiles.
+- Les modèles bénéficient du même principe : affichage du cache local puis rafraîchissement serveur.
+- Le Service Worker conserve les appels API en `NetworkOnly` : le cache IndexedDB est contrôlé par l'application et ne transforme pas arbitrairement les réponses privées de l'API en ressources hors ligne.
+- Les opérations d'écriture et l'authentification restent dépendantes du serveur ; le cache vise l'accélération de l'affichage, pas un mode de modification hors ligne.
 
 ### GitHub Actions
 
