@@ -18,7 +18,16 @@
   const tree = computed(() => locationStore.tree ?? []);
 
   onMounted(async () => {
-    if (locationStore.tree === null) await locationStore.refreshTree();
+    if (locationStore.tree !== null) return;
+
+    const cacheKey = persistentCacheKey("location-tree");
+    const cached = await readPersistentCache<TreeItem[]>(cacheKey, 24 * 60 * 60 * 1000);
+    if (cached) {
+      locationStore.tree = cached;
+      void locationStore.refreshTree();
+    } else {
+      await locationStore.refreshTree();
+    }
   });
 
   const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
