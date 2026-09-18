@@ -3,30 +3,14 @@ import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 
 const auth = useAuthContext();
-const api = useUserApi();
-const avatar = useState<string | null>("admin-profile-avatar", () => null);
+const { avatar, load, save } = useAdminBranding();
 const loading = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
-
-async function loadAvatar() {
-  if (!auth.user?.isSuperuser) return;
-  const { data, error } = await api.user.getSettings();
-  if (!error && data?.item) {
-    avatar.value = typeof data.item.adminAvatar === "string" ? data.item.adminAvatar : null;
-  }
-}
 
 async function persistAvatar(value: string | null) {
   loading.value = true;
   try {
-    const { data, error } = await api.user.getSettings();
-    if (error || !data?.item) throw new Error("settings");
-    const settings = { ...data.item } as Record<string, unknown>;
-    if (value) settings.adminAvatar = value;
-    else delete settings.adminAvatar;
-    const result = await api.user.setSettings(settings);
-    if (result.error) throw new Error("save");
-    avatar.value = value;
+    await save({ avatar: value });
     toast.success(value ? "Avatar mis à jour" : "Avatar supprimé");
   } catch {
     toast.error("Impossible d'enregistrer l'avatar");
@@ -81,7 +65,7 @@ async function selectAvatar(event: Event) {
   }
 }
 
-onMounted(loadAvatar);
+onMounted(() => void load());
 </script>
 
 <template>
