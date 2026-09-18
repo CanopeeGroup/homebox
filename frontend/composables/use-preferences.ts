@@ -86,6 +86,25 @@ function buildSyncedSettings(preferences: LocationViewPreferences): Record<strin
   return payload;
 }
 
+async function mergeViewPreferencesIntoServerSettings(
+  api: ReturnType<typeof useUserApi>,
+  preferences: LocationViewPreferences
+): Promise<boolean> {
+  // User settings also contain persistent values that are not view preferences
+  // (for example adminAvatar and appTitle). Never replace the whole settings
+  // object with browser-local defaults: read the authoritative object first,
+  // merge only view-preference keys, then write it back.
+  const { data, error } = await api.user.getSettings();
+  if (error || !data?.item) return false;
+
+  const merged = {
+    ...(data.item as Record<string, unknown>),
+    ...buildSyncedSettings(preferences),
+  };
+  const result = await api.user.setSettings(merged);
+  return !result.error;
+}
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -257,15 +276,15 @@ export function useViewPreferencesSync() {
     try {
       while (syncedRevision < localRevision && !pauseServerSaves && auth.isAuthorized()) {
         const targetRevision = localRevision;
-        let error = false;
+        let saved = false;
         try {
-          ({ error } = await api.user.setSettings(buildSyncedSettings(preferences.value)));
+          saved = await mergeViewPreferencesIntoServerSettings(api, preferences.value);
         } catch {
           scheduleRetry();
           return;
         }
 
-        if (error) {
+        if (!saved) {
           scheduleRetry();
           return;
         }
