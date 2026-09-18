@@ -68,9 +68,9 @@
   watch(totalPages, pageCount => {
     if (currentPage.value > pageCount) currentPage.value = pageCount;
   });
+  const selectedTemplateIdSet = computed(() => new Set(selectedTemplateIds.value));
   const allTemplatesSelected = computed(
-    () =>
-      !!templates.value?.length && templates.value.every(template => selectedTemplateIds.value.includes(template.id))
+    () => !!templates.value?.length && templates.value.every(template => selectedTemplateIdSet.value.has(template.id))
   );
 
   const setTemplateSelected = (id: string, selected: boolean) => {
@@ -257,7 +257,7 @@
         :template="tpl"
         compact
         selectable
-        :selected="selectedTemplateIds.includes(tpl.id)"
+        :selected="selectedTemplateIdSet.has(tpl.id)"
         @update:selected="setTemplateSelected(tpl.id, $event)"
         @deleted="handleRefresh"
         @duplicated="handleDuplicated"
