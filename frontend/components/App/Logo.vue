@@ -1,15 +1,7 @@
 <script setup lang="ts">
 const auth = useAuthContext();
-const api = useUserApi();
-const avatar = useState<string | null>("admin-profile-avatar", () => null);
-
-onMounted(async () => {
-  if (!auth.user?.isSuperuser || avatar.value) return;
-  const { data, error } = await api.user.getSettings();
-  if (!error && data?.item && typeof data.item.adminAvatar === "string") {
-    avatar.value = data.item.adminAvatar;
-  }
-});
+const { avatar, load } = useAdminBranding();
+onMounted(() => void load());
 </script>
 
 <template>
