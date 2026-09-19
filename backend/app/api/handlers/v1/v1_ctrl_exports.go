@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"os"
+	"time"
 	"errors"
 	"fmt"
 	"io"
@@ -294,3 +296,60 @@ func (ctrl *V1Controller) HandleCollectionImport() errchain.HandlerFunc {
 		return server.JSON(w, http.StatusAccepted, row)
 	}
 }
+
+// HandleInstanceBackupDownload streams a complete administrator-only instance
+// backup. It includes every collection, user membership, persistent user
+// settings (including branding), inventory table and attachment blob.
+func (ctrl *V1Controller) HandleInstanceBackupDownload() errchain.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		if ctrl.isDemo {
+			return validate.NewRequestError(errors.New("backup is not allowed in demo mode"), http.StatusForbidden)
+		}
+		allowSlowResponse(w, r)
+		w.Header().Set("Content-Type", "application/zip")
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="homebox-instance-%s.zip"`, time.Now().UTC().Format("20060102-150405")))
+		return ctrl.svc.Exports.WriteInstanceBackup(r.Context(), w)
+	}
+}
+
+// HandleInstanceBackupRestore replaces the whole persistent application state.
+// The route is superuser-only. Existing sessions are invalidated as part of the
+// restore, so the caller must sign in again with an account from the backup.
+func (ctrl *V1Controller) HandleInstanceBackupRestore() errchain.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		if ctrl.isDemo {
+			return validate.NewRequestError(errors.New("restore is not allowed in demo mode"), http.StatusForbidden)
+		}
+		if err := r.ParseMultipartForm(ctrl.maxParseMemory << 20); err != nil {
+			return multipartFormError(err)
+		}
+		if r.MultipartForm != nil {
+			defer func() { _ = r.MultipartForm.RemoveAll() }()
+		}
+		src, _, err := r.FormFile("file")
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
+		defer func() { _ = src.Close() }()
+		tmp, err := os.CreateTemp("", "homebox-instance-restore-*.zip")
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusInternalServerError)
+		}
+		name := tmp.Name()
+		defer func() { _ = tmp.Close(); _ = os.Remove(name) }()
+		size, err := io.Copy(tmp, src)
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusInternalServerError)
+		}
+		if _, err := tmp.Seek(0, io.SeekStart); err != nil {
+			return validate.NewRequestError(err, http.StatusInternalServerError)
+		}
+		if err := ctrl.svc.Exports.RestoreInstanceBackup(r.Context(), tmp, size); err != nil {
+			log.Err(err).Msg("instance restore failed")
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return nil
+	}
+}
+
