@@ -334,7 +334,8 @@
       return;
     }
     toast.success("Restauration terminée. Reconnectez-vous avec un compte présent dans la sauvegarde.");
-    // The login form is the root page; /login does not exist in this fork.\n    window.location.href = "/";
+    // The login form is the root page; /login does not exist in this fork.
+    window.location.href = "/";
   }
 
   const wipeInventory = async () => {
