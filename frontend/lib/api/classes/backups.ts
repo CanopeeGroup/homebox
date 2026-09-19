@@ -58,4 +58,18 @@ export class BackupsAPI extends BaseAPI {
       data: formData,
     });
   }
+  /** Full-instance backup download URL (superuser only). */
+  instanceDownloadURL() {
+    return route("/admin/instance-backup");
+  }
+
+  /** Restore a full-instance backup (superuser only). */
+  restoreInstance(file: File | Blob) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http.post<FormData, void>({
+      url: route("/admin/instance-restore"),
+      data: formData,
+    });
+  }
 }
