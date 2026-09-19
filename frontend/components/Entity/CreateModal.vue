@@ -25,86 +25,6 @@
       />
       <LocationSelector v-model="form.location" dialog />
 
-      <!-- Template Info Display - Collapsible banner with distinct styling -->
-      <div v-if="templateData" class="rounded-lg border-l-4 border-l-primary bg-primary/5 p-3">
-        <div class="flex items-start justify-between gap-2">
-          <div class="flex flex-1 items-start gap-2">
-            <MdiFileDocumentOutline class="mt-0.5 size-4 shrink-0 text-primary" />
-            <div class="flex-1">
-              <h4 class="text-sm font-medium text-foreground">
-                {{ $t("components.template.using_template", { name: templateData.name }) }}
-              </h4>
-              <button
-                type="button"
-                class="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                @click="showTemplateDetails = !showTemplateDetails"
-              >
-                <span v-if="!showTemplateDetails">{{ $t("components.template.show_defaults") }}</span>
-                <span v-else>{{ $t("components.template.hide_defaults") }}</span>
-                <MdiChevronDown class="size-4 transition-transform" :class="{ 'rotate-180': showTemplateDetails }" />
-              </button>
-            </div>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            class="size-7 shrink-0"
-            :aria-label="$t('components.entity.create_modal.clear_template')"
-            @click="clearTemplate"
-          >
-            <MdiClose class="size-4" />
-          </Button>
-        </div>
-
-        <!-- Collapsible details section -->
-        <div v-if="showTemplateDetails" class="mt-3 border-t border-primary/20 pt-3">
-          <div class="flex flex-col gap-2 text-xs text-muted-foreground">
-            <p v-if="templateData.description" class="text-foreground/80">{{ templateData.description }}</p>
-            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-              <div v-if="templateData.defaultName">
-                <span class="font-medium">{{ $t("global.name") }}:</span> {{ templateData.defaultName }}
-              </div>
-              <div>
-                <span class="font-medium">{{ $t("global.quantity") }}:</span> {{ templateData.defaultQuantity }}
-              </div>
-              <div>
-                <span class="font-medium">{{ $t("global.insured") }}:</span>
-                {{ templateData.defaultInsured ? $t("global.yes") : $t("global.no") }}
-              </div>
-              <div v-if="templateData.defaultManufacturer">
-                <span class="font-medium">{{ $t("components.template.form.manufacturer") }}:</span>
-                {{ templateData.defaultManufacturer }}
-              </div>
-              <div v-if="templateData.defaultModelNumber">
-                <span class="font-medium">{{ $t("components.template.form.model_number") }}:</span>
-                {{ templateData.defaultModelNumber }}
-              </div>
-              <div v-if="templateData.defaultLifetimeWarranty">
-                <span class="font-medium">{{ $t("components.template.form.lifetime_warranty") }}:</span>
-                {{ $t("global.yes") }}
-              </div>
-              <div v-if="templateData.defaultLocation">
-                <span class="font-medium">{{ $t("components.template.form.location") }}:</span>
-                {{ templateData.defaultLocation.name }}
-              </div>
-            </div>
-            <div v-if="templateData.defaultDescription" class="mt-1">
-              <p class="font-medium">{{ $t("components.template.form.item_description") }}:</p>
-              <p class="ml-2">{{ templateData.defaultDescription }}</p>
-            </div>
-            <div v-if="templateData.fields && templateData.fields.length > 0" class="mt-1">
-              <p class="font-medium">{{ $t("components.template.form.custom_fields") }}:</p>
-              <ul class="ml-4 flex list-none flex-col gap-1">
-                <li v-for="field in templateData.fields" :key="field.id">
-                  <span class="font-medium">{{ field.name }}:</span>
-                  <span> {{ field.textValue || $t("components.template.empty_value") }}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <ItemSelector
         v-if="subItemCreate"
@@ -155,9 +75,6 @@
   import { useLocationStore } from "~~/stores/locations";
   import MdiPackageVariant from "~icons/mdi/package-variant";
   import MdiPackageVariantClosed from "~icons/mdi/package-variant-closed";
-  import MdiFileDocumentOutline from "~icons/mdi/file-document-outline";
-  import MdiChevronDown from "~icons/mdi/chevron-down";
-  import MdiClose from "~icons/mdi/close";
   import { AttachmentTypes } from "~~/lib/api/types/non-generated";
   import { useDialog, useDialogHotkey } from "~/components/ui/dialog-provider";
   import ItemSelector from "~/components/Item/Selector.vue";
@@ -228,7 +145,7 @@
     location: {} as EntityOut,
     parentId: null,
     name: "",
-    quantity: 0,
+    quantity: null as number | null,
     description: "",
     color: "",
     // Populated by the barcode product-import flow; passed through on create (#1578).
@@ -243,7 +160,7 @@
       // Template was deselected, clear template data and remove from storage
       templateData.value = null;
       templateUserSelected.value = false;
-      form.quantity = 0;
+      form.quantity = null;
       localStorage.removeItem(LAST_TEMPLATE_KEY);
       return;
     }
@@ -314,7 +231,7 @@
     templateData.value = null;
     templateUserSelected.value = false;
     showTemplateDetails.value = false;
-    form.quantity = 0;
+    form.quantity = null;
     localStorage.removeItem(LAST_TEMPLATE_KEY);
   }
 
@@ -487,7 +404,7 @@
         description: form.description,
         parentId: form.location.id as string,
         tagIds: [],
-        quantity: form.quantity,
+        quantity: form.quantity ?? 0,
         entityTypeId: selectedEntityType.value?.id || "",
       };
 
@@ -499,7 +416,7 @@
       const out: EntityCreate = {
         parentId: form.parentId || (form.location.id as string),
         name: form.name,
-        quantity: form.quantity,
+        quantity: form.quantity ?? 0,
         description: form.description,
         manufacturer: form.manufacturer,
         modelNumber: form.modelNumber,
@@ -548,7 +465,7 @@
     }
 
     form.name = "";
-    form.quantity = 0;
+    form.quantity = null;
     form.description = "";
     form.color = "";
     form.manufacturer = "";
