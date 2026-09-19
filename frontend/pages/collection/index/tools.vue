@@ -51,6 +51,29 @@
           </BaseSectionHeader>
         </template>
         <div class="divide-y border-t px-6 pb-3">
+          <DetailAction v-if="auth.user?.isSuperuser">
+            <template #title>Sauvegarde complète de l'application</template>
+            Sauvegarde toutes les collections, les utilisateurs et leurs paramètres, le nom et l'avatar de l'application, les modèles, emplacements, objets, journaux de maintenance et pièces jointes.
+            <template #button>
+              <a
+                :href="api.backups.instanceDownloadURL()"
+                class="rounded bg-primary px-3 py-1 text-primary-foreground"
+                download
+              >
+                Télécharger la sauvegarde complète
+              </a>
+            </template>
+          </DetailAction>
+          <DetailAction v-if="auth.user?.isSuperuser">
+            <template #title>Restaurer l'application complète</template>
+            Remplace l'ensemble des données persistantes de l'application par le contenu de la sauvegarde. Les sessions sont invalidées après restauration.
+            <template #button>
+              <input ref="instanceRestoreInput" type="file" accept=".zip" class="hidden" @change="onInstanceRestoreFile" />
+              <button class="rounded bg-destructive px-3 py-1 text-destructive-foreground" @click="instanceRestoreInput?.click()">
+                Restaurer la sauvegarde complète
+              </button>
+            </template>
+          </DetailAction>
           <DetailAction @action="startBackup">
             <template #title>{{ $t("tools.backups_set.create") }}</template>
             {{ $t("tools.backups_set.create_sub") }}
@@ -163,6 +186,7 @@
 
   const { t } = useI18n();
   const prefs = useViewPreferences();
+  const auth = useAuthContext();
 
   definePageMeta({
     middleware: ["auth"],
@@ -214,6 +238,7 @@
 
   const backups = ref<CollectionExport[]>([]);
   const restoreInput = ref<HTMLInputElement | null>(null);
+  const instanceRestoreInput = ref<HTMLInputElement | null>(null);
 
   async function refreshBackups() {
     const { data, error } = await api.backups.list();
@@ -290,6 +315,26 @@
       return;
     }
     toast.success(t("tools.toast.restore_started"));
+  }
+
+  async function onInstanceRestoreFile(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+
+    const { isCanceled } = await confirm.open(
+      "Cette restauration remplace toutes les collections, utilisateurs, paramètres et données de l'application. Continuer ?"
+    );
+    if (isCanceled) return;
+
+    const { error } = await api.backups.restoreInstance(file);
+    if (error) {
+      toast.error("La restauration complète a échoué.");
+      return;
+    }
+    toast.success("Restauration terminée. Reconnectez-vous avec un compte présent dans la sauvegarde.");
+    window.location.href = "/login";
   }
 
   const wipeInventory = async () => {
