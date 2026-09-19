@@ -270,7 +270,15 @@
       form.location = {} as EntityOut;
       initializing.value = true;
       try {
-        await entityTypeStore.refresh();
+        // Always refresh locations when the create dialog opens. The location
+        // selector must reflect locations created since the last page load,
+        // without requiring a browser refresh.
+        await Promise.all([
+          entityTypeStore.refresh(),
+          locationsStore.refreshChildren(),
+          locationsStore.refreshParents(),
+          locationsStore.refreshTree(),
+        ]);
       } catch {
         toast.error(t("components.entity.create_modal.toast.create_failed", { type: entityTypeName.value }));
         return;
