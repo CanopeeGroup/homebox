@@ -186,6 +186,10 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.Delete("/group/exports/{id}", chain.ToHandlerFunc(v1Ctrl.HandleExportDelete(), userMW...))
 		r.Post("/group/import", chain.ToHandlerFunc(v1Ctrl.HandleCollectionImport(), userMW...))
 
+		// Full-instance backup/restore: administrator only, not collection-scoped.
+		r.Get("/admin/instance-backup", chain.ToHandlerFunc(v1Ctrl.HandleInstanceBackupDownload(), adminMW...))
+		r.Post("/admin/instance-restore", chain.ToHandlerFunc(v1Ctrl.HandleInstanceBackupRestore(), adminMW...))
+
 		r.Get("/groups/statistics", chain.ToHandlerFunc(v1Ctrl.HandleGroupStatistics(), userMW...))
 		r.Get("/groups/statistics/purchase-price", chain.ToHandlerFunc(v1Ctrl.HandleGroupStatisticsPriceOverTime(), userMW...))
 		r.Get("/groups/statistics/locations", chain.ToHandlerFunc(v1Ctrl.HandleGroupStatisticsLocations(), userMW...))
