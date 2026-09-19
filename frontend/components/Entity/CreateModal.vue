@@ -49,7 +49,7 @@
       />
       <FormTextField
         v-if="!isLocationCreation"
-        v-model.number="form.quantity"
+        v-model="form.quantity"
         :label="$t('components.item.create_modal.item_quantity')"
         type="number"
         step="any"
@@ -145,7 +145,7 @@
     location: {} as EntityOut,
     parentId: null,
     name: "",
-    quantity: null as number | null,
+    quantity: "" as number | "",
     description: "",
     color: "",
     // Populated by the barcode product-import flow; passed through on create (#1578).
@@ -160,7 +160,7 @@
       // Template was deselected, clear template data and remove from storage
       templateData.value = null;
       templateUserSelected.value = false;
-      form.quantity = null;
+      form.quantity = "";
       localStorage.removeItem(LAST_TEMPLATE_KEY);
       return;
     }
@@ -178,7 +178,6 @@
     templateData.value = data;
 
     // Pre-fill form with template defaults
-    form.quantity = data.defaultQuantity;
     form.name = data.defaultName || data.name;
     if (data.defaultDescription) {
       form.description = data.defaultDescription;
@@ -212,7 +211,6 @@
     selectedTemplate.value = { id: data.id, name: data.name, description: data.description } as EntityTemplateSummary;
     templateData.value = data;
     templateUserSelected.value = true;
-    form.quantity = data.defaultQuantity;
     form.name = data.defaultName || data.name;
     if (data.defaultDescription) {
       form.description = data.defaultDescription;
@@ -231,7 +229,7 @@
     templateData.value = null;
     templateUserSelected.value = false;
     showTemplateDetails.value = false;
-    form.quantity = null;
+    form.quantity = "";
     localStorage.removeItem(LAST_TEMPLATE_KEY);
   }
 
@@ -404,7 +402,7 @@
         description: form.description,
         parentId: form.location.id as string,
         tagIds: [],
-        quantity: form.quantity ?? 0,
+        quantity: form.quantity === "" ? 0 : Number(form.quantity),
         entityTypeId: selectedEntityType.value?.id || "",
       };
 
@@ -416,7 +414,7 @@
       const out: EntityCreate = {
         parentId: form.parentId || (form.location.id as string),
         name: form.name,
-        quantity: form.quantity ?? 0,
+        quantity: form.quantity === "" ? 0 : Number(form.quantity),
         description: form.description,
         manufacturer: form.manufacturer,
         modelNumber: form.modelNumber,
@@ -465,7 +463,7 @@
     }
 
     form.name = "";
-    form.quantity = null;
+    form.quantity = "";
     form.description = "";
     form.color = "";
     form.manufacturer = "";
