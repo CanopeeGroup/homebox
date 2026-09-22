@@ -2,7 +2,6 @@
   import { useI18n } from "vue-i18n";
   import MdiAccount from "~icons/mdi/account";
   import MdiAccountGroup from "~icons/mdi/account-group";
-  import MdiWrench from "~icons/mdi/wrench";
   import MdiAccountMultiple from "~icons/mdi/account-multiple";
   import BaseContainer from "@/components/Base/Container.vue";
   import BaseSectionHeader from "@/components/Base/SectionHeader.vue";
@@ -15,12 +14,6 @@
   useHead({ title: computed(() => `HomeBox | ${t("menu.settings")}`) });
 
   const sections = computed(() => [
-    {
-      to: "/maintenance",
-      label: t("menu.maintenance"),
-      description: t("settings.sections.maintenance"),
-      icon: MdiWrench,
-    },
     {
       to: "/profile",
       label: t("menu.profile"),
