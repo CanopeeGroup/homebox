@@ -3,6 +3,7 @@
   import MdiChevronRight from "~icons/mdi/chevron-right";
   import MdiMapMarker from "~icons/mdi/map-marker";
   import MdiTag from "~icons/mdi/tag";
+  import MdiStairs from "~icons/mdi/stairs";
   import type { TreeItem } from "~/lib/api/types/data-contracts";
 
   defineOptions({ name: "LocationCompactTree" });
@@ -11,6 +12,15 @@
   // The API tree is already ordered by name. Avoid recursively cloning and
   // sorting every branch when a large root location is expanded on mobile.
   const sortedLocations = computed(() => props.locations.filter(item => item.type === "location"));
+  const expandedLocations = ref(new Set<string>());
+  const hasLocationChildren = (location: TreeItem) => location.children?.some(child => child.type === "location") ?? false;
+  const isExpanded = (id: string) => expandedLocations.value.has(id);
+  const toggleLocation = (id: string) => {
+    const next = new Set(expandedLocations.value);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    expandedLocations.value = next;
+  };
 </script>
 
 <template>
@@ -32,7 +42,22 @@
         </span>
         <MdiChevronRight class="size-4 shrink-0 text-muted-foreground" />
       </NuxtLink>
-      <LocationCompactTree v-if="location.children?.length" :locations="location.children" class="ml-4" />
+      <button
+        v-if="hasLocationChildren(location)"
+        type="button"
+        class="ml-6 mb-1 flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+        :aria-expanded="isExpanded(location.id)"
+        :title="$t(isExpanded(location.id) ? 'locations.collapse_tree' : 'locations.expand_tree')"
+        @click="toggleLocation(location.id)"
+      >
+        <MdiStairs class="size-4" :class="isExpanded(location.id) && 'text-primary'" />
+        <span>{{ isExpanded(location.id) ? 'Masquer' : 'Sous-emplacements' }}</span>
+      </button>
+      <LocationCompactTree
+        v-if="hasLocationChildren(location) && isExpanded(location.id)"
+        :locations="location.children"
+        class="ml-4"
+      />
     </li>
   </ul>
   <p v-else class="px-3 py-2 text-xs text-muted-foreground">{{ $t("locations.no_sub_locations") }}</p>
