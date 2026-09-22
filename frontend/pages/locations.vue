@@ -2,6 +2,7 @@
   import { useI18n } from "vue-i18n";
   import MdiMapMarkerOutline from "~icons/mdi/map-marker-outline";
   import MdiStairs from "~icons/mdi/stairs";
+  import MdiRefresh from "~icons/mdi/refresh";
   import type { TreeItem } from "~/lib/api/types/data-contracts";
   import { useLocationStore } from "~~/stores/locations";
   import BaseContainer from "@/components/Base/Container.vue";
@@ -17,14 +18,15 @@
   const locationStore = useLocationStore();
   const tree = computed(() => locationStore.tree ?? []);
   const initialLoading = ref(locationStore.tree === null);
+  const manualRefreshing = ref(false);
 
   async function refreshLocationPage() {
     const hadTree = locationStore.tree !== null;
     initialLoading.value = !hadTree;
 
     try {
-      // Cache is only used to make a cold start immediately useful. Every
-      // visit to /locations still performs an authoritative server refresh.
+      // Render the browser cache immediately when available, then refresh once
+      // for this page mount (typically the post-login landing page).
       if (!hadTree) {
         const cached = await readPersistentCache<TreeItem[]>(
           persistentCacheKey("location-tree"),
@@ -42,9 +44,17 @@
     }
   }
 
-  // pages are normally mounted again when navigating back to /locations.
-  // This deliberately refreshes even when Pinia/IndexedDB already has data.
   onMounted(() => void refreshLocationPage());
+
+  async function manualRefreshLocations() {
+    if (manualRefreshing.value) return;
+    manualRefreshing.value = true;
+    try {
+      await locationStore.refreshTree();
+    } finally {
+      manualRefreshing.value = false;
+    }
+  }
 
   watch(
     () => useViewPreferences().value.collectionId,
@@ -75,7 +85,19 @@
 
 <template>
   <BaseContainer>
-    <BaseSectionHeader class="mb-4">{{ $t("menu.locations") }}</BaseSectionHeader>
+    <div class="mb-4 flex items-center justify-between gap-2">
+      <BaseSectionHeader class="mb-0">{{ $t("menu.locations") }}</BaseSectionHeader>
+      <Button
+        size="icon"
+        variant="ghost"
+        :disabled="manualRefreshing"
+        title="Actualiser les emplacements"
+        aria-label="Actualiser les emplacements"
+        @click="manualRefreshLocations"
+      >
+        <MdiRefresh class="size-5" :class="manualRefreshing && 'animate-spin'" />
+      </Button>
+    </div>
 
 
     <div v-if="rootLocations.length" class="location-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
