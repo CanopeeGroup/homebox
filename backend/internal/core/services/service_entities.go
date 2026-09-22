@@ -356,11 +356,12 @@ func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.
 		// Pre-Create Locations as necessary
 		locationID, err := svc.csvImportRowLocation(rowCtx, gid, row, locationMap)
 		if err != nil {
-			recordServiceSpanError(rowSpan, err)
+			wrapped := fmt.Errorf("CSV row %d, location %q: %w", i+2, strings.Join(row.Location, " / "), err)
+			recordServiceSpanError(rowSpan, wrapped)
 			rowSpan.End()
-			recordServiceSpanError(importSpan, err)
-			recordServiceSpanError(span, err)
-			return 0, err
+			recordServiceSpanError(importSpan, wrapped)
+			recordServiceSpanError(span, wrapped)
+			return 0, wrapped
 		}
 
 		if row.LocationOnly {
