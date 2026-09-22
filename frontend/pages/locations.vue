@@ -82,7 +82,7 @@
 
 
     <div v-if="rootLocations.length" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <Card v-for="location in rootLocations" :key="location.id" class="overflow-hidden">
+      <Card v-for="location in rootLocations" :key="location.id" class="self-start overflow-hidden">
         <div class="flex items-center border-b bg-muted/40">
           <NuxtLink
             :to="`/location/${location.id}`"
