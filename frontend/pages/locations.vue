@@ -33,13 +33,10 @@
         if (cached) locationStore.tree = cached;
       }
 
-      // Always refresh all location datasets on page entry. The store writes
-      // every successful response back to the collection-scoped IndexedDB cache.
-      await Promise.all([
-        locationStore.refreshTree(),
-        locationStore.refreshChildren(),
-        locationStore.refreshParents(),
-      ]);
+      // This page only renders the tree. Fetching the two flat location lists
+      // here duplicated large API responses on phones/tablets without improving
+      // the initial render. Other screens load those datasets on demand.
+      await locationStore.refreshTree();
     } finally {
       initialLoading.value = false;
     }
@@ -81,7 +78,7 @@
     <BaseSectionHeader class="mb-4">{{ $t("menu.locations") }}</BaseSectionHeader>
 
 
-    <div v-if="rootLocations.length" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div v-if="rootLocations.length" class="location-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <Card v-for="location in rootLocations" :key="location.id" class="self-start overflow-hidden">
         <div class="flex items-center border-b bg-muted/40">
           <NuxtLink
@@ -115,3 +112,12 @@
     </p>
   </BaseContainer>
 </template>
+
+<style scoped>
+  /* Skip layout/paint work for off-screen cards on long mobile location lists.
+     The intrinsic size keeps scrolling stable until the browser renders a card. */
+  .location-grid > :deep(*) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 42px;
+  }
+</style>
