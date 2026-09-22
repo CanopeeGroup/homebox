@@ -266,6 +266,15 @@ func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.
 		locsSpan.End()
 	}
 
+	// Resolve the location entity type once. Large compact CSV imports can create
+	// thousands of locations; resolving it inside every CreateContainer call was
+	// one of the main sources of database pressure.
+	locationEntityTypeID, err := svc.repo.Entities.ResolveLocationEntityTypeID(ctx, gid)
+	if err != nil {
+		recordServiceSpanError(span, err)
+		return 0, err
+	}
+
 	// ========================================
 	// Import entities
 
@@ -354,7 +363,7 @@ func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.
 
 		// ========================================
 		// Pre-Create Locations as necessary
-		locationID, err := svc.csvImportRowLocation(rowCtx, gid, row, locationMap)
+		locationID, err := svc.csvImportRowLocation(rowCtx, gid, row, locationMap, locationEntityTypeID)
 		if err != nil {
 			wrapped := fmt.Errorf("CSV row %d, location %q: %w", i+2, strings.Join(row.Location, " / "), err)
 			recordServiceSpanError(rowSpan, wrapped)
@@ -501,7 +510,7 @@ func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.
 // any missing locations in the row's location path as it goes. locationMap acts
 // as a cache of already-known location paths and is updated in place with any
 // locations that are created. It returns the ID of the row's leaf location.
-func (svc *EntityService) csvImportRowLocation(ctx context.Context, gid uuid.UUID, row reporting.ExportCSVRow, locationMap map[string]uuid.UUID) (uuid.UUID, error) {
+func (svc *EntityService) csvImportRowLocation(ctx context.Context, gid uuid.UUID, row reporting.ExportCSVRow, locationMap map[string]uuid.UUID, locationEntityTypeID uuid.UUID) (uuid.UUID, error) {
 	if len(row.Location) == 0 { return uuid.Nil, nil }
 	path := serializeLocation(row.Location)
 
@@ -529,9 +538,10 @@ func (svc *EntityService) csvImportRowLocation(ctx context.Context, gid uuid.UUI
 				parentID = locationMap[parentPath]
 			}
 
-			newLocation, err := svc.repo.Entities.CreateContainer(locsCtx, gid, repo.EntityCreate{
-				ParentID: parentID,
-				Name:     pathElement,
+			newLocation, err := svc.repo.Entities.CreateContainerForImport(locsCtx, gid, repo.EntityCreate{
+				ParentID:     parentID,
+				Name:         pathElement,
+				EntityTypeID: locationEntityTypeID,
 			})
 			if err != nil {
 				recordServiceSpanError(locsSpan, err)
