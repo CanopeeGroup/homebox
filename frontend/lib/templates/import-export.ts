@@ -179,7 +179,9 @@ const normalizeHeader = (header: string) =>
     .toLocaleLowerCase();
 
 export function parseTemplateCsv(csv: string): PortableTemplate[] {
-  const rows = parseCsvRows(csv);
+  // Accept the exact file emitted by createTemplateCsv (UTF-8 BOM, CRLF and
+  // semicolon separator) as well as the same file after being saved by Excel.
+  const rows = parseCsvRows(csv.replace(/^\uFEFF/, ""));
   const headers = rows.shift()?.map(normalizeHeader) ?? [];
   const nameIndex = headers.findIndex(
     header => header === "entryname" || header === "name" || header === "defaultname"
