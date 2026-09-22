@@ -2626,6 +2626,41 @@ func (r *EntityRepository) CreateContainer(ctx context.Context, gid uuid.UUID, d
 	return mapEntityOut(result), nil
 }
 
+// ResolveLocationEntityTypeID resolves the default location entity type once for
+// bulk import callers. Keeping this outside the per-location create path avoids
+// repeating the same lookup thousands of times during large CSV imports.
+func (r *EntityRepository) ResolveLocationEntityTypeID(ctx context.Context, gid uuid.UUID) (uuid.UUID, error) {
+	return r.resolveDefaultEntityType(ctx, gid, true)
+}
+
+// CreateContainerForImport creates a location using a pre-resolved location
+// entity type. The CSV import service only supplies parent IDs from its verified
+// in-memory location map, so we can avoid the normal per-row parent/type queries.
+// Mutation events are deliberately suppressed here; the client refreshes after
+// the import completes instead of receiving thousands of websocket events.
+func (r *EntityRepository) CreateContainerForImport(ctx context.Context, gid uuid.UUID, data EntityCreate) (EntityOut, error) {
+	if data.EntityTypeID == uuid.Nil {
+		return EntityOut{}, errors.New("entity type is required for bulk location import")
+	}
+
+	q := r.db.Entity.Create().
+		SetName(data.Name).
+		SetDescription(data.Description).
+		SetGroupID(gid).
+		SetEntityTypeID(data.EntityTypeID)
+
+	if data.ParentID != uuid.Nil {
+		q.SetParentID(data.ParentID)
+	}
+
+	result, err := q.Save(ctx)
+	if err != nil {
+		return EntityOut{}, err
+	}
+	result.Edges.Group = &ent.Group{ID: gid}
+	return mapEntityOut(result), nil
+}
+
 // UpdateContainer updates a container entity.
 func (r *EntityRepository) UpdateContainer(ctx context.Context, gid, id uuid.UUID, data EntityUpdate) (EntityOut, error) {
 	ctx, span := entityTracer().Start(ctx, "repo.EntityRepository.UpdateContainer",
