@@ -218,6 +218,13 @@ func (s *IOSheet) Read(data io.Reader) error {
 			for len(rowData.FolderPath) > 0 && rowData.FolderPath[len(rowData.FolderPath)-1] == "" {
 				rowData.FolderPath = rowData.FolderPath[:len(rowData.FolderPath)-1]
 			}
+			// Some inventory exports represent a root location in level 2
+			// (",Root") instead of level 1 ("Root,"). Accept that common shape
+			// by shifting leading empty levels away. Empty gaps inside a real
+			// hierarchy are still rejected.
+			for len(rowData.FolderPath) > 0 && rowData.FolderPath[0] == "" {
+				rowData.FolderPath = rowData.FolderPath[1:]
+			}
 			for _, name := range rowData.FolderPath {
 				if name == "" || len(name) > 255 { return fmt.Errorf("row %d: invalid location name or missing parent", i+2) }
 			}
