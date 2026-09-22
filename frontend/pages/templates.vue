@@ -166,24 +166,52 @@
     }
   };
 
-  const createImportedTemplates = async (portableTemplates: PortableTemplate[]) => {
-    const [locationsResult, tagsResult] = await Promise.all([api.items.getLocations(), api.tags.getAll()]);
-    if (locationsResult.error || tagsResult.error) throw new Error("Could not load collection references");
+  const createImportedTemplates = async (portableTemplates: PortableTemplate[], format: "json" | "csv") => {
+    // CSV is deliberately self-contained (EntryName + Article). Do not make
+    // unrelated location/tag API calls before importing it: an exported CSV
+    // must always be directly re-importable.
+    let locations: Awaited<ReturnType<typeof api.items.getLocations>>["data"] = [];
+    let tags: Awaited<ReturnType<typeof api.tags.getAll>>["data"] = [];
+
+    if (format === "json") {
+      const [locationsResult, tagsResult] = await Promise.all([api.items.getLocations(), api.tags.getAll()]);
+      if (locationsResult.error || tagsResult.error) throw new Error("Could not load collection references");
+      locations = locationsResult.data;
+      tags = tagsResult.data;
+    }
 
     const existingNames = new Set((templates.value ?? []).map(template => template.name.trim().toLocaleLowerCase()));
     let imported = 0;
     let skipped = 0;
+    const failures: string[] = [];
+
+    // Import sequentially to avoid flooding the API with large catalogs
+    // (the exported catalog can contain well over a thousand templates).
     for (const template of portableTemplates) {
-      if (existingNames.has(template.name.trim().toLocaleLowerCase())) {
+      const normalized = template.name.trim().toLocaleLowerCase();
+      if (!normalized || existingNames.has(normalized)) {
         skipped++;
         continue;
       }
-      const result = await api.templates.create(toTemplateCreate(template, locationsResult.data, tagsResult.data));
-      if (result.error) throw new Error(`Could not import template ${template.name}`);
-      existingNames.add(template.name.trim().toLocaleLowerCase());
+
+      const result = await api.templates.create(toTemplateCreate(template, locations, tags));
+      if (result.error) {
+        failures.push(template.name);
+        console.error("Template CSV/JSON import failed", template.name, result.error);
+        continue;
+      }
+
+      existingNames.add(normalized);
       imported++;
     }
+
     await refresh();
+
+    if (failures.length) {
+      throw new Error(
+        `Imported ${imported}, skipped ${skipped}, failed ${failures.length}: ${failures.slice(0, 5).join(", ")}`
+      );
+    }
     toast.success(t("components.template.toast.imported", { imported, skipped }));
   };
 
@@ -198,7 +226,7 @@
       const contents = await file.text();
       const portableTemplates =
         format === "json" ? parseTemplateExport(JSON.parse(contents)).templates : parseTemplateCsv(contents);
-      await createImportedTemplates(portableTemplates);
+      await createImportedTemplates(portableTemplates, format);
     } catch {
       toast.error(t("components.template.toast.import_failed"));
     } finally {
