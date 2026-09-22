@@ -440,10 +440,9 @@
 
   const locationStore = useLocationStore();
   onMounted(() => {
-    // Load only the lightweight location datasets needed by global selectors.
-    // The full tree is loaded lazily by the locations page.
-    void locationStore.ensureLocationsFetched();
-    if (locationStore.parents === null) void locationStore.refreshParents();
+    // Do not preload/refresh locations from the global layout. Opening or
+    // expanding the sidebar must stay network-free for location data. The
+    // locations page and selectors load their own datasets when required.
 
     // Auto-open JoinModal when invitation token is in URL
     const token = route.query.token;
@@ -465,12 +464,9 @@
 
   const nuxtApp = useNuxtApp();
   const refreshDisplay = useDebounceFn(() => {
-    // Never clear an already rendered location tree on a server event.
-    // Clearing it made /locations disappear until a full browser refresh.
-    // Refresh in place instead: the old tree remains visible until the
-    // authoritative response atomically replaces it and updates IndexedDB.
-    void locationStore.refreshChildren();
-    void locationStore.refreshParents();
+    // Keep global mutation handling lightweight. Location data is refreshed
+    // only while the locations page is visible; simply opening the sidebar
+    // never triggers a locations request.
     if (route.path === "/locations") {
       void locationStore.refreshTree();
     }
