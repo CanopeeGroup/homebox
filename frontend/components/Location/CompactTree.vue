@@ -8,15 +8,14 @@
   defineOptions({ name: "LocationCompactTree" });
 
   const props = defineProps<{ locations: TreeItem[] }>();
-  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
-  const sortedLocations = computed(() =>
-    props.locations.filter(item => item.type === "location").sort((a, b) => collator.compare(a.name, b.name))
-  );
+  // The API tree is already ordered by name. Avoid recursively cloning and
+  // sorting every branch when a large root location is expanded on mobile.
+  const sortedLocations = computed(() => props.locations.filter(item => item.type === "location"));
 </script>
 
 <template>
   <ul v-if="sortedLocations.length" class="divide-y px-2 py-1">
-    <li v-for="location in sortedLocations" :key="location.id">
+    <li v-for="location in sortedLocations" :key="location.id" class="location-tree-row">
       <NuxtLink
         :to="`/location/${location.id}`"
         class="flex items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors hover:bg-accent"
@@ -38,3 +37,10 @@
   </ul>
   <p v-else class="px-3 py-2 text-xs text-muted-foreground">{{ $t("locations.no_sub_locations") }}</p>
 </template>
+
+<style scoped>
+  .location-tree-row {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 34px;
+  }
+</style>
