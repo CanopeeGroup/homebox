@@ -26,33 +26,34 @@
 <template>
   <ul v-if="sortedLocations.length" class="divide-y px-2 py-1">
     <li v-for="location in sortedLocations" :key="location.id" class="location-tree-row">
-      <NuxtLink
-        :to="`/location/${location.id}`"
-        class="flex items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors hover:bg-accent"
-      >
-        <MdiMapMarker class="size-4 shrink-0 text-muted-foreground" />
-        <span class="min-w-0 flex-1 truncate">{{ location.name }}</span>
-        <span
-          v-if="location.itemCount > 0"
-          class="flex shrink-0 items-center text-primary"
-          :title="`${location.itemCount} article(s) présent(s)`"
-          :aria-label="`${location.itemCount} article(s) présent(s)`"
+      <div class="flex items-center">
+        <NuxtLink
+          :to="`/location/${location.id}`"
+          class="flex min-w-0 flex-1 items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors hover:bg-accent"
         >
-          <MdiTag class="size-4" />
-        </span>
-        <MdiChevronRight class="size-4 shrink-0 text-muted-foreground" />
-      </NuxtLink>
-      <button
-        v-if="hasLocationChildren(location)"
-        type="button"
-        class="ml-6 mb-1 flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-        :aria-expanded="isExpanded(location.id)"
-        :title="$t(isExpanded(location.id) ? 'locations.collapse_tree' : 'locations.expand_tree')"
-        @click="toggleLocation(location.id)"
-      >
-        <MdiStairs class="size-4" :class="isExpanded(location.id) && 'text-primary'" />
-        <span>{{ isExpanded(location.id) ? 'Masquer' : 'Sous-emplacements' }}</span>
-      </button>
+          <MdiMapMarker class="size-4 shrink-0 text-muted-foreground" />
+          <span class="min-w-0 flex-1 truncate">{{ location.name }}</span>
+          <span
+            v-if="location.itemCount > 0"
+            class="flex shrink-0 items-center text-primary"
+            :title="`${location.itemCount} article(s) présent(s)`"
+            :aria-label="`${location.itemCount} article(s) présent(s)`"
+          >
+            <MdiTag class="size-4" />
+          </span>
+          <MdiChevronRight class="size-4 shrink-0 text-muted-foreground" />
+        </NuxtLink>
+        <button
+          v-if="hasLocationChildren(location)"
+          type="button"
+          class="mr-1 flex size-8 shrink-0 items-center justify-center rounded-md hover:bg-accent"
+          :aria-expanded="isExpanded(location.id)"
+          :title="$t(isExpanded(location.id) ? 'locations.collapse_tree' : 'locations.expand_tree')"
+          @click="toggleLocation(location.id)"
+        >
+          <MdiStairs class="size-4" :class="isExpanded(location.id) && 'text-primary'" />
+        </button>
+      </div>
       <LocationCompactTree
         v-if="hasLocationChildren(location) && isExpanded(location.id)"
         :locations="location.children"
