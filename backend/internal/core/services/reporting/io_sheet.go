@@ -230,6 +230,15 @@ func (s *IOSheet) Read(data io.Reader) error {
 			}
 			rowData.Location = rowData.FolderPath
 			rowData.LocationOnly = rowData.IsLocation || strings.TrimSpace(rowData.Name) == ""
+			// In the compact five-column format, an empty HB.name means this row
+			// exists only to ensure the location path exists. Ignore object-only
+			// columns on such rows so stray spreadsheet values cannot turn a
+			// location row into an invalid object import.
+			if rowData.LocationOnly {
+				rowData.Name = ""
+				rowData.ModelNumber = ""
+				rowData.Quantity = 0
+			}
 		} else if rowData.IsLocation {
 			rowData.Location = append(rowData.Location, rowData.Name)
 			rowData.LocationOnly = true
