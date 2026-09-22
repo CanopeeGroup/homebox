@@ -461,10 +461,11 @@ func (s *IOSheet) CSV() ([][]string, error) {
 	return memcsv, nil
 }
 
-// CompactCSV is the five-column collection exchange format. Location rows have
-// no object fields, so importing them cannot accidentally create objects.
+// CompactCSV is the six-column collection exchange format. It supports three
+// location levels. Location rows have no object fields, so importing them cannot
+// accidentally create objects.
 func (s *IOSheet) CompactCSV() ([][]string, error) {
-	rows := [][]string{{"Subfolder-level1", "Subfolder-level2", "HB.name", "HB.model_number", "HB.quantity"}}
+	rows := [][]string{{"Subfolder-level1", "Subfolder-level2", "Subfolder-level3", "HB.name", "HB.model_number", "HB.quantity"}}
 	key := func(path LocationString) string {
 		names := make([]string, len(path))
 		for i, name := range path {
@@ -477,8 +478,8 @@ func (s *IOSheet) CompactCSV() ([][]string, error) {
 	// in its path. Emit a standalone location only when no other row covers it.
 	covered := make(map[string]bool)
 	for _, row := range s.Rows {
-		if len(row.FolderPath) > 2 {
-			return nil, fmt.Errorf("five-column CSV supports only two location levels; use a full ZIP backup for deeper hierarchies")
+		if len(row.FolderPath) > 3 {
+			return nil, fmt.Errorf("compact CSV supports only three location levels; use a full ZIP backup for deeper hierarchies")
 		}
 		depth := len(row.FolderPath)
 		if row.IsLocation {
@@ -497,12 +498,12 @@ func (s *IOSheet) CompactCSV() ([][]string, error) {
 			}
 			emittedLocations[pathKey] = true
 		}
-		values := make([]string, 5)
+		values := make([]string, 6)
 		copy(values, row.FolderPath)
 		if !row.IsLocation {
-			values[2] = row.Name
-			values[3] = row.ModelNumber
-			values[4] = strconv.FormatFloat(row.Quantity, 'f', -1, 64)
+			values[3] = row.Name
+			values[4] = row.ModelNumber
+			values[5] = strconv.FormatFloat(row.Quantity, 'f', -1, 64)
 		}
 		rows = append(rows, values)
 	}
