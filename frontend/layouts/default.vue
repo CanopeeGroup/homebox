@@ -383,7 +383,6 @@
       active: computed(
         () =>
           route.path === "/settings" ||
-          route.path === "/maintenance" ||
           route.path === "/profile" ||
           route.path === "/settings/users" ||
           route.path.includes("/collection")
@@ -391,12 +390,6 @@
       name: computed(() => t("menu.settings")),
       to: "/settings",
       collapsible: [
-        {
-          id: 71,
-          active: computed(() => route.path === "/maintenance"),
-          name: computed(() => t("menu.maintenance")),
-          to: "/maintenance",
-        },
         {
           id: 72,
           active: computed(() => route.path === "/profile"),
