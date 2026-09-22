@@ -284,23 +284,39 @@
       form.name = "";
       form.modelNumber = "";
       form.location = {} as EntityOut;
+
+      // When "New object" is opened from a location page, resolve that location
+      // immediately from the already loaded tree. Do not make the user wait for
+      // three large location API requests before the form can show its location.
+      const routeLocationId = locationId.value
+        ? (Array.isArray(locationId.value) ? locationId.value[0] : locationId.value)
+        : null;
+      if (routeLocationId) {
+        const cachedLocation = findLocation(routeLocationId);
+        if (cachedLocation) form.location = cachedLocation;
+      }
+
       initializing.value = true;
       try {
-        // Always refresh locations when the create dialog opens. The location
-        // selector must reflect locations created since the last page load,
-        // without requiring a browser refresh.
-        await Promise.all([
-          entityTypeStore.refresh(),
-          locationsStore.refreshChildren(),
-          locationsStore.refreshParents(),
-          locationsStore.refreshTree(),
-        ]);
+        // Entity types are required before creation. Location data is already
+        // maintained by the locations page/cache; only fetch the tree if this
+        // session has no tree at all. This keeps opening the create form fast.
+        const requiredLoads: Promise<unknown>[] = [entityTypeStore.refresh()];
+        if (locationsStore.tree === null) requiredLoads.push(locationsStore.refreshTree());
+        await Promise.all(requiredLoads);
       } catch {
         toast.error(t("components.entity.create_modal.toast.create_failed", { type: entityTypeName.value }));
         return;
       } finally {
         initializing.value = false;
       }
+
+      // If this was a cold start, the tree may only have become available above.
+      if (routeLocationId && !form.location?.id) {
+        const loadedLocation = findLocation(routeLocationId);
+        if (loadedLocation) form.location = loadedLocation;
+      }
+
       subItemCreate.value = false;
       let parentItemLocationId = null;
       parent.value = {};
