@@ -101,6 +101,22 @@
   const locationsStore = useLocationStore();
   const locations = computed(() => locationsStore.allLocations);
 
+  function findLocationInTree(id: string): EntityOut | null {
+    const visit = (nodes: typeof locationsStore.tree): EntityOut | null => {
+      for (const node of nodes ?? []) {
+        if (node.id === id) return node as unknown as EntityOut;
+        const found = visit(node.children);
+        if (found) return found;
+      }
+      return null;
+    };
+    return visit(locationsStore.tree);
+  }
+
+  function findLocation(id: string): EntityOut | null {
+    return (locations.value.find(location => location.id === id) as unknown as EntityOut | undefined) ?? findLocationInTree(id);
+  }
+
   const route = useRoute();
 
   const parent = ref();
@@ -184,7 +200,7 @@
     }
     // Pre-fill location if template has one and current form doesn't
     if (data.defaultLocation && !form.location?.id) {
-      const found = locations.value.find(l => l.id === data.defaultLocation!.id);
+      const found = findLocation(data.defaultLocation.id);
       if (found) {
         form.location = found;
       }
@@ -217,7 +233,7 @@
     }
     // Pre-fill location if template has one
     if (data.defaultLocation) {
-      const found = locations.value.find(l => l.id === data.defaultLocation!.id);
+      const found = findLocation(data.defaultLocation.id);
       if (found) {
         form.location = found;
       }
@@ -345,7 +361,8 @@
       const locId = locationId.value ? locationId.value : parentItemLocationId;
 
       if (locId) {
-        const found = locations.value.find(l => l.id === locId);
+        const id = Array.isArray(locId) ? locId[0] : locId;
+        const found = id ? findLocation(id) : null;
         if (found) {
           form.location = found;
         }
