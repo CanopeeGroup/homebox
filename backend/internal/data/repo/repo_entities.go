@@ -2640,7 +2640,7 @@ func (r *EntityRepository) ResolveLocationEntityTypeID(ctx context.Context, gid 
 // the import completes instead of receiving thousands of websocket events.
 func (r *EntityRepository) CreateContainerForImport(ctx context.Context, gid uuid.UUID, data EntityCreate) (EntityOut, error) {
 	if data.EntityTypeID == uuid.Nil {
-		return EntityOut{}, errors.New("entity type is required for bulk location import")
+		return EntityOut{}, fmt.Errorf("entity type is required for bulk location import")
 	}
 
 	q := r.db.Entity.Create().
