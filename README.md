@@ -38,6 +38,8 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 - Sélection individuelle ou de tous les modèles et suppression groupée.
 - Import et export JSON et CSV avec séparateur point-virgule.
 - Les modèles sont inclus dans les résultats de recherche.
+- Les résultats d’objets utilisent désormais une pagination visible même dans la vue compacte : au-delà de 12 résultats, l’utilisateur peut naviguer entre les pages.
+- Chaque résultat d’objet affiche son emplacement sous le nom, avec le chemin hiérarchique lorsqu’il est disponible ; la légende est cliquable pour ouvrir directement l’emplacement et distinguer les objets portant le même nom.
 - Quantité `0` autorisée et utilisée par défaut pour les objets et les modèles.
 
 ### Création et fiches des objets
@@ -57,7 +59,7 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Import/export CSV dans Collection → Outils
 
-Le CSV compact exporté contient désormais six colonnes (UTF-8, séparateur point-virgule) et prend en charge trois niveaux d’emplacements :
+Le CSV compact exporté contient désormais six colonnes (UTF-8 avec BOM, séparateur point-virgule) et prend en charge trois niveaux d’emplacements :
 
 ```csv
 Subfolder-level1;Subfolder-level2;Subfolder-level3;HB.name;HB.model_number;HB.quantity
@@ -78,7 +80,8 @@ Sans HB.import_ref dans ce format réduit, réimporter des lignes d’objets cr�
 Le format compact prend en charge jusqu’à trois niveaux d’emplacements. Une hiérarchie plus profonde
 est refusée explicitement afin de ne pas perdre ni modifier les relations : utiliser la sauvegarde ZIP complète.
 L’import accepte les fichiers UTF-8, UTF-8 avec BOM et Windows-1252/ANSI ; les fichiers Windows-1252
-sont convertis automatiquement en UTF-8 avant l’analyse.
+sont convertis automatiquement en UTF-8 avant l’analyse. L’export écrit explicitement un BOM UTF-8 et annonce
+`text/csv; charset=utf-8`, afin d’éviter les interprétations erronées de caractères comme `°` (`NÂ°`) dans Excel et les outils Windows.
 Le CSV réduit n’est pas une sauvegarde complète (photos, métadonnées et relations entre objets non incluses).
 Les données absentes du CSV ne sont pas supprimées de la base par l’export.
 
