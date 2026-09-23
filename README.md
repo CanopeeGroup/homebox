@@ -60,9 +60,10 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 Le CSV compact exporté contient désormais six colonnes (UTF-8, séparateur point-virgule) et prend en charge trois niveaux d’emplacements :
 
 ```csv
-Subfolder-level1;Subfolder-level2;HB.name;HB.model_number;HB.quantity
-A;A0110;;;
-A;A0110;Objet exemple;REF-001;2
+Subfolder-level1;Subfolder-level2;Subfolder-level3;HB.name;HB.model_number;HB.quantity
+A;A0110;;;;
+A;A0110;A0110-1;;;
+A;A0110;A0110-1;Objet exemple;REF-001;2
 ```
 
 Une ligne sans nom d’objet importe uniquement les emplacements ; une ligne avec HB.name
@@ -74,8 +75,10 @@ Seuls les emplacements vides non représentés par un chemin descendant ont une 
 Les objets distincts restent tous exportés, même s’ils ont des noms identiques. Les anciens CSV Homebox restent acceptés.
 Sans HB.import_ref dans ce format réduit, réimporter des lignes d’objets crée de nouveaux objets.
 
-Le format à cinq colonnes est prévu pour deux niveaux d’emplacements. Si une hiérarchie est plus profonde,
-l’export est refusé explicitement pour ne pas perdre ni modifier les relations : utiliser la sauvegarde ZIP complète.
+Le format compact prend en charge jusqu’à trois niveaux d’emplacements. Une hiérarchie plus profonde
+est refusée explicitement afin de ne pas perdre ni modifier les relations : utiliser la sauvegarde ZIP complète.
+L’import accepte les fichiers UTF-8, UTF-8 avec BOM et Windows-1252/ANSI ; les fichiers Windows-1252
+sont convertis automatiquement en UTF-8 avant l’analyse.
 Le CSV réduit n’est pas une sauvegarde complète (photos, métadonnées et relations entre objets non incluses).
 Les données absentes du CSV ne sont pas supprimées de la base par l’export.
 
