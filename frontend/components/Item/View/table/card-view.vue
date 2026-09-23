@@ -4,6 +4,7 @@
   import type { Table as TableType } from "@tanstack/vue-table";
   import MdiSelectSearch from "~icons/mdi/select-search";
   import MdiPencil from "~icons/mdi/pencil";
+  import MdiMapMarker from "~icons/mdi/map-marker";
   import { Checkbox } from "@/components/ui/checkbox";
   import { Button } from "@/components/ui/button";
   import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -57,6 +58,11 @@
   }
 
   const selectedCount = computed(() => props.table.getSelectedRowModel().rows.length);
+
+  function locationLabel(item: EntitySummary) {
+    if (!item.parent) return "";
+    return props.locationFlatTree?.find(location => location.id === item.parent?.id)?.treeString || item.parent.name || "";
+  }
 </script>
 
 <template>
@@ -141,6 +147,15 @@
       <div class="flex min-w-0 flex-1 flex-col gap-2 self-stretch">
         <NuxtLink :to="`/item/${row.original.id}`" class="break-words text-base font-medium leading-snug hover:underline">
           {{ row.original.name }}
+        </NuxtLink>
+        <NuxtLink
+          v-if="row.original.parent"
+          :to="`/location/${row.original.parent.id}`"
+          class="flex min-w-0 items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:underline"
+          :title="locationLabel(row.original)"
+        >
+          <MdiMapMarker class="size-4 shrink-0" />
+          <span class="truncate">{{ locationLabel(row.original) }}</span>
         </NuxtLink>
         <div class="mt-auto flex flex-wrap items-center gap-2">
           <span class="text-sm text-muted-foreground">
