@@ -59,7 +59,7 @@
         }}
       </div>
     </div>
-    <div v-if="!compactControls" class="order-1 flex w-full justify-center md:order-2 md:w-auto">
+    <div class="order-1 flex w-full justify-center md:order-2 md:w-auto">
       <Pagination
         v-slot="{ page }"
         :items-per-page="externalPagination ? externalPagination.pageSize : table.getState().pagination.pageSize"
@@ -69,7 +69,7 @@
         @update:page="val => setPage(val)"
       >
         <PaginationList v-slot="{ items: pageItems }" class="flex items-center gap-1">
-          <PaginationFirst v-if="!compactControls" @click="() => setPage(1)" />
+          <PaginationFirst @click="() => setPage(1)" />
           <template v-for="(item, index) in pageItems">
             <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
               <Button
@@ -83,7 +83,6 @@
             <PaginationEllipsis v-else :key="item.type" :index="index" />
           </template>
           <PaginationLast
-            v-if="!compactControls"
             @click="
               () =>
                 setPage(
