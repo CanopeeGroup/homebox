@@ -569,12 +569,21 @@ func (ctrl *V1Controller) HandleEntitiesExport() errchain.HandlerFunc {
 		timestamp := time.Now().Format("2006-01-02_15-04-05")
 		filename := fmt.Sprintf("homebox-entities_%s.csv", timestamp)
 
-		w.Header().Set("Content-Type", "text/csv")
+		// Always export CSV as UTF-8 with an explicit charset and BOM. The import
+		// path accepts UTF-8 (with or without BOM) and Windows-1252; emitting a BOM
+		// here makes Excel and other Windows tools reliably detect UTF-8 instead of
+		// interpreting characters such as "°" as "Â°".
+		w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%s", filename))
 
 		_, writeSpan := startEntityCtrlSpan(spanCtx, "controller.V1.HandleEntitiesExport.write",
 			attribute.Int("csv.rows.count", len(csvData)))
 		defer writeSpan.End()
+		if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
+			recordCtrlSpanError(writeSpan, err)
+			log.Err(err).Msg("failed to write UTF-8 BOM for CSV export")
+			return nil
+		}
 		writer := csv.NewWriter(w)
 		writer.Comma = ';'
 		if err := writer.WriteAll(csvData); err != nil {
