@@ -6,8 +6,11 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/samber/lo"
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/transform"
 )
 
 // Required column headers in CSV/TSV imports. Exported so tests and other
@@ -49,34 +52,36 @@ func determineSeparator(data []byte) (rune, error) {
 	return best, nil
 }
 
-// separatorDetectionBufferSize is the buffer size for reading CSV headers
-// to detect the separator (comma vs tab)
-const separatorDetectionBufferSize = 4096
-
 // readRawCsv reads a CSV file and returns the raw data as a 2D string array
 // It determines the separator used in the CSV file and returns an error if
 // it could not be determined
 func readRawCsv(r io.Reader) ([][]string, error) {
-	// Buffer for reading the first line to detect separator
-	// We read up to 4KB which should be more than enough for any header row
-	firstLineBuffer := make([]byte, separatorDetectionBufferSize)
-	n, err := io.ReadFull(r, firstLineBuffer)
-	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
-		return nil, err
-	}
-	firstLineBuffer = firstLineBuffer[:n]
-
-	// Determine separator from first line
-	sep, err := determineSeparator(firstLineBuffer)
+	// Read once so encoding detection applies to the whole file, not only the
+	// header. Excel exports in French environments are frequently Windows-1252.
+	raw, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a multi-reader combining what we already read and the rest
-	combinedReader := io.MultiReader(bytes.NewReader(firstLineBuffer), r)
-	reader := csv.NewReader(combinedReader)
-	reader.Comma = sep
+	data := raw
+	if !utf8.Valid(data) {
+		decoded, _, decodeErr := transform.Bytes(charmap.Windows1252.NewDecoder(), data)
+		if decodeErr != nil {
+			return nil, fmt.Errorf("could not decode CSV as UTF-8 or Windows-1252: %w", decodeErr)
+		}
+		data = decoded
+	}
 
+	// Strip an optional UTF-8 BOM before separator/header parsing.
+	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
+
+	sep, err := determineSeparator(data)
+	if err != nil {
+		return nil, err
+	}
+
+	reader := csv.NewReader(bytes.NewReader(data))
+	reader.Comma = sep
 	return reader.ReadAll()
 }
 
