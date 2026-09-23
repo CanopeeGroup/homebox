@@ -2879,20 +2879,24 @@ func (r *EntityRepository) Tree(ctx context.Context, gid uuid.UUID, tq TreeQuery
 			ON     c.entity_children = p.id
 			WHERE  level < 10 -- prevent infinite loop & excessive recursion
 			AND    ct.is_location = true
-		){{ WITH_ITEMS }}
+		){{ WITH_ITEMS }},
+		direct_item_counts(parent_id, item_count) AS
+		(
+			SELECT child.entity_children, COUNT(*)
+			FROM entities child
+			JOIN entity_types child_type ON child_type.id = child.entity_type_entities
+			WHERE child.group_entities = $1
+			AND child.entity_children IS NOT NULL
+			AND child_type.is_location = false
+			GROUP BY child.entity_children
+		)
 
-		SELECT   id,
-				 NAME,
-				 level,
-				 parent_id,
-				 node_type,
-				 CASE WHEN node_type = 'location' THEN (
-					SELECT COUNT(*)
-					FROM entities direct_child
-					JOIN entity_types direct_child_type ON direct_child_type.id = direct_child.entity_type_entities
-					WHERE direct_child.entity_children = tree.id
-					AND direct_child_type.is_location = false
-				 ) ELSE 0 END AS item_count
+		SELECT   tree.id,
+				 tree.NAME,
+				 tree.level,
+				 tree.parent_id,
+				 tree.node_type,
+				 CASE WHEN tree.node_type = 'location' THEN COALESCE(direct_counts.item_count, 0) ELSE 0 END AS item_count
 		FROM    (
 					SELECT  *
 					FROM    entity_tree
@@ -2900,9 +2904,10 @@ func (r *EntityRepository) Tree(ctx context.Context, gid uuid.UUID, tq TreeQuery
 					{{ WITH_ITEMS_FROM }}
 
 				) tree
-		ORDER BY node_type DESC, -- sort locations before items
-				 level,
-				 lower(NAME)`
+		LEFT JOIN direct_item_counts direct_counts ON direct_counts.parent_id = tree.id
+		ORDER BY tree.node_type DESC, -- sort locations before items
+				 tree.level,
+				 lower(tree.NAME)`
 
 	if tq.WithItems {
 		itemQuery := `, item_tree(id, NAME, parent_id, level, node_type) AS
