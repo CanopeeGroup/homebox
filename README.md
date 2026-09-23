@@ -57,7 +57,7 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Import/export CSV dans Collection → Outils
 
-Le CSV exporté contient uniquement cinq colonnes (UTF-8, séparateur point-virgule) :
+Le CSV compact exporté contient désormais six colonnes (UTF-8, séparateur point-virgule) et prend en charge trois niveaux d’emplacements :
 
 ```csv
 Subfolder-level1;Subfolder-level2;HB.name;HB.model_number;HB.quantity
@@ -102,7 +102,7 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Aucun emplacement de démonstration créé automatiquement pour les nouveaux comptes, y compris OIDC.
   Les emplacements déjà présents ne sont pas supprimés.
 - La page Emplacements remplace l’accueil après connexion ; les anciennes adresses d’accueil sont redirigées.
-- Menu **Réglages** regroupant Entretien, Profil, Collection et, pour les administrateurs, Utilisateurs.
+- Menu **Réglages** simplifié : Profil, Collection et, pour les administrateurs, Utilisateurs. La rubrique Entretien a été retirée des Réglages.
 - Descriptions distinctes pour chaque module de Réglages.
 - Retrait des menus Balises, Clés API et Types d’entités ; création d’objets disponible par défaut.
   Ces retraits d’interface ne constituent pas une suppression de toutes les API correspondantes.
@@ -128,7 +128,7 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Paramètres et Outils visibles uniquement pour le propriétaire de la collection.
   Le renommage reste protégé côté serveur par le droit de propriété de la collection.
 - Les droits d’administration globale et de propriété d’une collection sont distincts.
-- Devise EUR par défaut pour les nouvelles collections ; migration des collections existantes vers EUR.
+- Devise EUR par défaut pour les nouvelles collections ; migration des collections existantes vers EUR. Le sélecteur de format de devise a été retiré de Collection → Paramètres ; la valeur existante est conservée côté API.
 
 ### Journal d’activité
 
@@ -155,9 +155,9 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Ces corrections ont passé le lint des fichiers frontend concernés ; leur validation fonctionnelle
   complète sur téléphone, tablette et installation Docker reste nécessaire.
 
-### Optimisations téléphone et tablette
+### Sauvegarde complète de l’instance\n\n- Ajout d’une sauvegarde/restauration ZIP réservée aux administrateurs couvrant les utilisateurs, collections, appartenances, paramètres persistants, inventaire, modèles, emplacements, pièces jointes, invitations et clés API.\n- L’avatar administrateur et le titre personnalisé sont inclus via les paramètres utilisateur.\n- Les jetons de session et de réinitialisation ne sont pas restaurés ; une reconnexion est demandée après restauration.\n- La restauration redirige vers la racine de l’application, qui porte l’écran de connexion dans ce fork.\n\n### Optimisations téléphone et tablette
 
-- Déduplication des requêtes d'emplacements dans le store Pinia.
+- Déduplication des requêtes d'emplacements dans le store Pinia.\n- Premier chargement de l’arbre accéléré côté serveur : les compteurs d’objets par emplacement sont agrégés en une seule requête SQL au lieu d’une sous-requête répétée pour chaque emplacement.\n- Le formulaire Créer un objet / Nouvel objet résout immédiatement l’emplacement courant depuis l’arbre déjà chargé et évite les rechargements bloquants des listes d’emplacements.\n- Les hiérarchies à trois niveaux sont affichées et navigables avec le bouton escalier sur les sous-emplacements.\n- Bouton Actualiser sur la page Emplacements pour forcer uniquement la synchronisation de l’arbre sans réintroduire de chargement depuis la barre latérale.
 - Réutilisation de l'arbre d'emplacements déjà chargé au lieu de multiplier les appels API.
 - Chargement différé de l'arbre complet : le layout global ne le télécharge plus systématiquement.
 - Rafraîchissement de l'arbre en arrière-plan lors des événements serveur sans effacer les emplacements déjà affichés.
