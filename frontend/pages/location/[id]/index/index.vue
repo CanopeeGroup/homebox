@@ -78,8 +78,12 @@
   // request. This survives long mobile/tablet idle periods where the browser
   // may discard the JavaScript heap while keeping IndexedDB intact.
   await hydrateLocationPageCache(locationId.value);
+  const hadCachedLocationPage =
+    !!locationDetailCache.value[locationId.value] ||
+    !!childLocationCache.value[locationId.value] ||
+    !!locationItemCache.value[locationId.value];
 
-  const { data: location } = useAsyncData(
+  const { data: location, refresh: refreshLocation } = useAsyncData(
     () => `location_${locationId.value}`,
     async () => {
       const id = locationId.value;
@@ -218,7 +222,7 @@
     return a.attachments.length > 0 || a.warranty.length > 0 || a.manuals.length > 0 || a.receipts.length > 0;
   });
 
-  const { data: childLocations } = useAsyncData(
+  const { data: childLocations, refresh: refreshChildLocations } = useAsyncData(
     () => locationId.value + "_child_locations",
     async () => {
       const id = locationId.value;
@@ -280,6 +284,15 @@
     if (locationDetailCache.value[id]) location.value = locationDetailCache.value[id];
     if (childLocationCache.value[id]) childLocations.value = childLocationCache.value[id];
     if (locationItemCache.value[id]) items.value = locationItemCache.value[id];
+  });
+
+  onMounted(() => {
+    if (!hadCachedLocationPage) return;
+
+    // IndexedDB is display-first, not authoritative. Revalidate silently in
+    // the background so a long-idle tab feels instant but still converges on
+    // the latest server state.
+    void Promise.all([refreshLocation(), refreshChildLocations(), refreshItemList()]);
   });
 </script>
 
