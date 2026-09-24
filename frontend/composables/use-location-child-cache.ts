@@ -13,6 +13,24 @@ export function useLocationChildCache() {
     }
   }
 
+  function removeLocations(locationIds: string[]) {
+    const ids = new Set(locationIds);
+
+    for (const [parentLocationId, locations] of Object.entries(cache.value)) {
+      if (ids.has(parentLocationId)) {
+        delete cache.value[parentLocationId];
+        void deletePersistentCache(persistentCacheKey(`location-children:${parentLocationId}`));
+        continue;
+      }
+
+      const filtered = locations.filter(location => !ids.has(location.id));
+      if (filtered.length !== locations.length) {
+        cache.value[parentLocationId] = filtered;
+        void writePersistentCache(persistentCacheKey(`location-children:${parentLocationId}`), filtered);
+      }
+    }
+  }
+
   function invalidate(parentLocationId?: string) {
     if (parentLocationId) {
       delete cache.value[parentLocationId];
@@ -29,6 +47,7 @@ export function useLocationChildCache() {
   return {
     cache,
     adjustItemCount,
+    removeLocations,
     invalidate,
   };
 }
