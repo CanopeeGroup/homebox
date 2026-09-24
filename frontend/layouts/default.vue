@@ -201,7 +201,7 @@
                 </Button>
               </div>
               <Button
-                class="hidden h-9 shrink-0 px-3 text-xs lg:hidden min-[420px]:inline-flex sm:text-sm"
+                class="h-9 shrink-0 px-2 text-[10px] lg:hidden sm:px-3 sm:text-sm"
                 variant="outline"
                 @click="openDialog(DialogID.CreateEntity, { params: { baseType: 'location' } })"
               >
@@ -209,7 +209,7 @@
                 Nouvel Emplacement
               </Button>
               <Button
-                class="hidden h-9 shrink-0 px-3 text-xs lg:hidden min-[420px]:inline-flex sm:text-sm"
+                class="h-9 shrink-0 px-2 text-[10px] lg:hidden sm:px-3 sm:text-sm"
                 @click="openDialog(DialogID.CreateEntity, { params: { baseType: 'item' } })"
               >
                 <MdiPlus class="mr-1 size-4" />
