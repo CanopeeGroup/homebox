@@ -42,16 +42,32 @@
 
   const locationId = computed<string>(() => route.params.id as string);
 
-  const { data: location } = useAsyncData(locationId.value, async () => {
-    const { data, error } = await api.items.getLocation(locationId.value);
-    if (error) {
-      toast.error(t("locations.toast.failed_load_location"));
-      navigateTo("/locations");
-      return;
-    }
+  // Keep a small in-memory cache while navigating between nested locations.
+  // Mobile/tablet users often move parent -> child -> sibling -> back; serving
+  // previously visited locations immediately avoids a blank/loading pause while
+  // the API refreshes the authoritative copy in the background.
+  const locationDetailCache = useState<Record<string, any>>("location-detail-cache", () => ({}));
+  const childLocationCache = useState<Record<string, any[]>>("location-child-cache", () => ({}));
+  const locationItemCache = useState<Record<string, any[]>>("location-item-cache", () => ({}));
 
-    return data;
-  });
+  const { data: location } = useAsyncData(
+    () => `location_${locationId.value}`,
+    async () => {
+      const { data, error } = await api.items.getLocation(locationId.value);
+      if (error) {
+        toast.error(t("locations.toast.failed_load_location"));
+        navigateTo("/locations");
+        return;
+      }
+
+      if (data) locationDetailCache.value[locationId.value] = data;
+      return data;
+    },
+    {
+      watch: [locationId],
+      getCachedData: () => locationDetailCache.value[locationId.value],
+    }
+  );
 
   const confirm = useConfirm();
 
@@ -189,6 +205,11 @@
     },
     {
       watch: [locationId],
+      getCachedData: () => childLocationCache.value[locationId.value],
+      transform: data => {
+        childLocationCache.value[locationId.value] = data;
+        return data;
+      },
     }
   );
 
@@ -212,6 +233,11 @@
     },
     {
       watch: [locationId],
+      getCachedData: () => locationItemCache.value[locationId.value],
+      transform: data => {
+        locationItemCache.value[locationId.value] = data;
+        return data;
+      },
     }
   );
 </script>
