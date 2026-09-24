@@ -46,21 +46,56 @@
   // Mobile/tablet users often move parent -> child -> sibling -> back; serving
   // previously visited locations immediately avoids a blank/loading pause while
   // the API refreshes the authoritative copy in the background.
+  const LOCATION_PAGE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
   const locationDetailCache = useState<Record<string, any>>("location-detail-cache", () => ({}));
   const { cache: childLocationCache } = useLocationChildCache();
   const { cache: locationItemCache } = useLocationItemCache();
 
+  async function hydrateLocationPageCache(id: string) {
+    if (!id) return;
+
+    const [cachedDetail, cachedChildren, cachedItems] = await Promise.all([
+      readPersistentCache<any>(
+        persistentCacheKey(`location-detail:${id}`),
+        LOCATION_PAGE_CACHE_MAX_AGE_MS
+      ),
+      readPersistentCache<any[]>(
+        persistentCacheKey(`location-children:${id}`),
+        LOCATION_PAGE_CACHE_MAX_AGE_MS
+      ),
+      readPersistentCache<any[]>(
+        persistentCacheKey(`location-items:${id}`),
+        LOCATION_PAGE_CACHE_MAX_AGE_MS
+      ),
+    ]);
+
+    if (cachedDetail && !locationDetailCache.value[id]) locationDetailCache.value[id] = cachedDetail;
+    if (cachedChildren && !childLocationCache.value[id]) childLocationCache.value[id] = cachedChildren;
+    if (cachedItems && !locationItemCache.value[id]) locationItemCache.value[id] = cachedItems;
+  }
+
+  // Restore the current location page from IndexedDB before the first API
+  // request. This survives long mobile/tablet idle periods where the browser
+  // may discard the JavaScript heap while keeping IndexedDB intact.
+  await hydrateLocationPageCache(locationId.value);
+
   const { data: location } = useAsyncData(
     () => `location_${locationId.value}`,
     async () => {
-      const { data, error } = await api.items.getLocation(locationId.value);
+      const id = locationId.value;
+      const { data, error } = await api.items.getLocation(id);
       if (error) {
-        toast.error(t("locations.toast.failed_load_location"));
-        navigateTo("/locations");
-        return;
+        if (!locationDetailCache.value[id]) {
+          toast.error(t("locations.toast.failed_load_location"));
+          navigateTo("/locations");
+        }
+        return locationDetailCache.value[id];
       }
 
-      if (data) locationDetailCache.value[locationId.value] = data;
+      if (data) {
+        locationDetailCache.value[id] = data;
+        void writePersistentCache(persistentCacheKey(`location-detail:${id}`), data);
+      }
       return data;
     },
     {
@@ -186,60 +221,66 @@
   const { data: childLocations } = useAsyncData(
     () => locationId.value + "_child_locations",
     async () => {
-      if (!locationId.value) {
-        return [];
-      }
+      const id = locationId.value;
+      if (!id) return [];
 
       const resp = await api.items.getAll({
-        parentIds: [locationId.value],
+        parentIds: [id],
         isLocation: true,
         orderBy: "name",
       });
 
       if (resp.error) {
-        toast.error(t("locations.toast.failed_load_location"));
-        return [];
+        if (!childLocationCache.value[id]) toast.error(t("locations.toast.failed_load_location"));
+        return childLocationCache.value[id] ?? [];
       }
 
-      return resp.data.items ?? [];
+      const data = resp.data.items ?? [];
+      childLocationCache.value[id] = data;
+      void writePersistentCache(persistentCacheKey(`location-children:${id}`), data);
+      return data;
     },
     {
       watch: [locationId],
       getCachedData: () => childLocationCache.value[locationId.value],
-      transform: data => {
-        childLocationCache.value[locationId.value] = data;
-        return data;
-      },
     }
   );
 
   const { data: items, refresh: refreshItemList } = useAsyncData(
     () => locationId.value + "_item_list",
     async () => {
-      if (!locationId.value) {
-        return [];
-      }
+      const id = locationId.value;
+      if (!id) return [];
 
       const resp = await api.items.getAll({
-        parentIds: [locationId.value],
+        parentIds: [id],
       });
 
       if (resp.error) {
-        toast.error(t("items.toast.failed_load_items"));
-        return [];
+        if (!locationItemCache.value[id]) toast.error(t("items.toast.failed_load_items"));
+        return locationItemCache.value[id] ?? [];
       }
 
-      return resp.data.items;
+      const data = resp.data.items;
+      locationItemCache.value[id] = data;
+      void writePersistentCache(persistentCacheKey(`location-items:${id}`), data);
+      return data;
     },
     {
       watch: [locationId],
       getCachedData: () => locationItemCache.value[locationId.value],
-      transform: data => {
-        locationItemCache.value[locationId.value] = data;
-        return data;
-      },
     }
   );
+
+  watch(locationId, async id => {
+    await hydrateLocationPageCache(id);
+
+    // Make the persistent copy visible immediately on route changes. The
+    // useAsyncData requests still run and replace it with fresh server data.
+    if (locationDetailCache.value[id]) location.value = locationDetailCache.value[id];
+    if (childLocationCache.value[id]) childLocations.value = childLocationCache.value[id];
+    if (locationItemCache.value[id]) items.value = locationItemCache.value[id];
+  });
 </script>
 
 <template>
