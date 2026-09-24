@@ -100,6 +100,7 @@
 
   const locationsStore = useLocationStore();
   const { invalidate: invalidateLocationItemCache } = useLocationItemCache();
+  const { adjustItemCount: adjustCachedChildLocationItemCount } = useLocationChildCache();
   const locations = computed(() => locationsStore.allLocations);
 
   function findLocationInTree(id: string): EntityOut | null {
@@ -495,6 +496,11 @@
       // appears immediately, even if the WebSocket mutation event is delayed.
       const createdLocationId = form.parentId ? null : form.location?.id || null;
       if (createdLocationId) {
+        // Update every in-memory representation immediately. The location tree
+        // and parent-page child cards keep their own cached itemCount values,
+        // so refreshing only the item list is not enough.
+        locationsStore.adjustItemCount(createdLocationId, 1);
+        adjustCachedChildLocationItemCount(createdLocationId, 1);
         invalidateLocationItemCache(createdLocationId);
 
         const routeLocationId = locationId.value
@@ -508,8 +514,8 @@
           clearNuxtData(itemListKey);
         }
 
-        // Keep the item counters shown in the locations tree consistent too,
-        // but do not block navigation on this secondary refresh.
+        // Reconcile the optimistic counter with the authoritative server
+        // value in the background without delaying the creation flow.
         void locationsStore.refreshTree();
       }
 
