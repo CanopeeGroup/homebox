@@ -47,9 +47,34 @@
   // previously visited locations immediately avoids a blank/loading pause while
   // the API refreshes the authoritative copy in the background.
   const LOCATION_PAGE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+  const locationStore = useLocationStore();
   const locationDetailCache = useState<Record<string, any>>("location-detail-cache", () => ({}));
-  const { cache: childLocationCache } = useLocationChildCache();
-  const { cache: locationItemCache } = useLocationItemCache();
+  const { cache: childLocationCache, removeLocations: removeChildLocationCaches } = useLocationChildCache();
+  const { cache: locationItemCache, removeLocations: removeLocationItemCaches } = useLocationItemCache();
+  const deletingLocation = ref(false);
+
+  function collectLocationSubtreeIds(id: string) {
+    const ids: string[] = [];
+
+    const collect = (node: any) => {
+      if (node.type === "location") ids.push(node.id);
+      for (const child of node.children ?? []) collect(child);
+    };
+
+    const find = (nodes: any[]): boolean => {
+      for (const node of nodes ?? []) {
+        if (node.id === id) {
+          collect(node);
+          return true;
+        }
+        if (find(node.children ?? [])) return true;
+      }
+      return false;
+    };
+
+    find(locationStore.tree ?? []);
+    return ids.length > 0 ? ids : [id];
+  }
 
   async function hydrateLocationPageCache(id: string) {
     if (!id) return;
@@ -89,6 +114,8 @@
       const id = locationId.value;
       const { data, error } = await api.items.getLocation(id);
       if (error) {
+        if (deletingLocation.value) return;
+
         if (!locationDetailCache.value[id]) {
           toast.error(t("locations.toast.failed_load_location"));
           navigateTo("/locations");
@@ -112,18 +139,38 @@
 
   async function confirmDelete() {
     const { isCanceled } = await confirm.open(t("locations.location_items_delete_confirm"));
-    if (isCanceled) {
-      return;
-    }
+    if (isCanceled) return;
+
+    const deletedIds = collectLocationSubtreeIds(locationId.value);
+    deletingLocation.value = true;
 
     const { error } = await api.items.deleteLocation(locationId.value);
     if (error) {
+      deletingLocation.value = false;
       toast.error(t("locations.toast.failed_delete_location"));
       return;
     }
 
+    // Remove the deleted subtree from every cache before navigating away.
+    // Otherwise IndexedDB/memory can keep rendering a deleted location until
+    // a later server refresh returns the new tree.
+    locationStore.removeLocations(deletedIds);
+    removeChildLocationCaches(deletedIds);
+    removeLocationItemCaches(deletedIds);
+
+    for (const id of deletedIds) {
+      delete locationDetailCache.value[id];
+      void deletePersistentCache(persistentCacheKey(`location-detail:${id}`));
+      clearNuxtData(`location_${id}`);
+      clearNuxtData(`${id}_child_locations`);
+      clearNuxtData(`${id}_item_list`);
+    }
+
     toast.success(t("locations.toast.location_deleted"));
-    navigateTo("/locations");
+    await navigateTo("/locations");
+
+    // Reconcile the locally-pruned tree with the server after navigation.
+    void locationStore.refreshTree();
   }
 
   function openCreateItem() {
