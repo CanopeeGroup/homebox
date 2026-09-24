@@ -5,7 +5,7 @@
 <h1 align="center" style="margin-top: -10px;"> HomeBox </h1>
 
 > [!IMPORTANT]
-> Ceci est le fork personnalisé de HomeBox maintenu par **Canopee**
+> Ceci est le fork personnalisé de HomeBox maintenu par **CanopeeGroup**.
 > Les différences avec le projet officiel, les instructions Docker et la stratégie de mise à jour sont détaillées dans [FORK_CHANGES.md](FORK_CHANGES.md).
 
 ## Personnalisations du fork
@@ -113,6 +113,15 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Retrait des menus Balises, Clés API et Types d’entités ; création d’objets disponible par défaut.
   Ces retraits d’interface ne constituent pas une suppression de toutes les API correspondantes.
 
+### Création rapide sur mobile et tablette
+
+- Deux boutons sont affichés dans l’en-tête mobile/tablette, à côté de la recherche : **Nouvel Emplacement** et **Nouvel Objet**.
+- Ces boutons réutilisent les formulaires de création existants ; aucun formulaire parallèle n’est maintenu.
+- Après une création, le formulaire se ferme et l’utilisateur reste sur la page courante : il n’y a plus de redirection automatique vers la fiche de l’objet ou de l’emplacement créé.
+- La création d’un emplacement actualise immédiatement les listes d’emplacements, les emplacements parents et l’arbre, puis renouvelle les caches associés.
+- La création d’un objet actualise immédiatement la liste de l’emplacement concerné et synchronise son compteur d’objets dans l’arbre global et dans les cartes de sous-emplacements.
+- Les mises à jour ne dépendent pas uniquement des événements WebSocket, afin d’éviter un affichage obsolète derrière certains reverse proxies.
+
 ### Utilisateurs et collections
 
 - Connexion avec session prolongée activée par défaut (28 jours) ; retrait de Se souvenir de moi
@@ -155,15 +164,30 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 ### Actualisation de l’affichage
 
 - Actualisation après les écritures réussies dans l’interface, en complément des événements WebSocket.
-- Rafraîchissement des données des pages, des arbres d’emplacement et des résultats de recherche.
+- Rafraîchissement ciblé des listes d’objets, des arbres d’emplacement et des résultats de recherche.
+- Les changements de quantité sont appliqués immédiatement à la fiche, aux cartes compactes et au cache des objets par emplacement.
+- Une modification complète d’un objet invalide le cache de liste concerné afin d’éviter de réafficher une ancienne quantité ou un ancien emplacement.
 - Regroupement des rafraîchissements rapprochés et traitement du dernier événement WebSocket d’une série.
 - Correction du client mis en cache dans le magasin d’emplacements pour utiliser la collection courante.
-- Ces corrections ont passé le lint des fichiers frontend concernés ; leur validation fonctionnelle
-  complète sur téléphone, tablette et installation Docker reste nécessaire.
+- Le fork ne dispose plus de CI GitHub Actions : reconstruire l’image et valider fonctionnellement les changements après déploiement.
 
-### Sauvegarde complète de l’instance\n\n- Ajout d’une sauvegarde/restauration ZIP réservée aux administrateurs couvrant les utilisateurs, collections, appartenances, paramètres persistants, inventaire, modèles, emplacements, pièces jointes, invitations et clés API.\n- L’avatar administrateur et le titre personnalisé sont inclus via les paramètres utilisateur.\n- Les jetons de session et de réinitialisation ne sont pas restaurés ; une reconnexion est demandée après restauration.\n- La restauration redirige vers la racine de l’application, qui porte l’écran de connexion dans ce fork.\n\n### Optimisations téléphone et tablette
+### Sauvegarde complète de l’instance
 
-- Déduplication des requêtes d'emplacements dans le store Pinia.\n- Premier chargement de l’arbre accéléré côté serveur : les compteurs d’objets par emplacement sont agrégés en une seule requête SQL au lieu d’une sous-requête répétée pour chaque emplacement.\n- Le formulaire Créer un objet / Nouvel objet résout immédiatement l’emplacement courant depuis l’arbre déjà chargé et évite les rechargements bloquants des listes d’emplacements.\n- Les hiérarchies à trois niveaux sont affichées et navigables avec le bouton escalier sur les sous-emplacements.\n- Bouton Actualiser sur la page Emplacements pour forcer uniquement la synchronisation de l’arbre sans réintroduire de chargement depuis la barre latérale.
+- Ajout d’une sauvegarde/restauration ZIP réservée aux administrateurs couvrant les utilisateurs, collections, appartenances, paramètres persistants, inventaire, modèles, emplacements, pièces jointes, invitations et clés API.
+- L’avatar administrateur et le titre personnalisé sont inclus via les paramètres utilisateur.
+- Les jetons de session et de réinitialisation ne sont pas restaurés ; une reconnexion est demandée après restauration.
+- La restauration redirige vers la racine de l’application, qui porte l’écran de connexion dans ce fork.
+
+### Optimisations téléphone et tablette
+
+- Déduplication des requêtes d'emplacements dans le store Pinia.
+- Premier chargement de l’arbre accéléré côté serveur : les compteurs d’objets par emplacement sont agrégés en une seule requête SQL au lieu d’une sous-requête répétée pour chaque emplacement.
+- Le formulaire Créer un objet / Nouvel objet résout immédiatement l’emplacement courant depuis l’arbre déjà chargé et évite les rechargements bloquants des listes d’emplacements.
+- Les hiérarchies à trois niveaux sont affichées et navigables avec le bouton escalier sur les sous-emplacements.
+- Bouton Actualiser sur la page Emplacements pour forcer uniquement la synchronisation de l’arbre sans réintroduire de chargement depuis la barre latérale.
+- Cache mémoire des fiches d’emplacements, de leurs sous-emplacements et de leurs objets pendant la navigation, afin d’accélérer les parcours parent → enfant → sous-enfant → retour sur mobile et tablette.
+- Synchronisation immédiate des compteurs d’objets après création dans un sous-emplacement, puis réconciliation serveur en arrière-plan.
+- Synchronisation du cache des quantités après modification directe d’un objet afin qu’un retour vers l’emplacement n’affiche pas une valeur obsolète.
 - Réutilisation de l'arbre d'emplacements déjà chargé au lieu de multiplier les appels API.
 - Chargement différé de l'arbre complet : le layout global ne le télécharge plus systématiquement.
 - Rafraîchissement de l'arbre en arrière-plan lors des événements serveur sans effacer les emplacements déjà affichés.
