@@ -27,6 +27,7 @@
   }>();
 
   const api = useUserApi();
+  const { updateQuantity: updateCachedLocationQuantity } = useLocationItemCache();
   const quantityDialogOpen = ref(false);
   const quantityItem = ref<EntitySummary | null>(null);
   const editedQuantity = ref(0);
@@ -42,15 +43,19 @@
     if (!quantityItem.value || !Number.isFinite(editedQuantity.value) || editedQuantity.value < 0) return;
 
     savingQuantity.value = true;
-    const { error } = await api.items.patch(quantityItem.value.id, {
+    const response = await api.items.patch(quantityItem.value.id, {
       quantity: editedQuantity.value,
     });
     savingQuantity.value = false;
 
-    if (error) {
+    if (response.error) {
       toast.error("Impossible de modifier la quantité.");
       return;
     }
+
+    const newQuantity = response.data?.quantity ?? editedQuantity.value;
+    quantityItem.value.quantity = newQuantity;
+    updateCachedLocationQuantity(quantityItem.value.id, newQuantity);
 
     quantityDialogOpen.value = false;
     toast.success("Quantité modifiée.");
