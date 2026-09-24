@@ -48,7 +48,7 @@
   // the API refreshes the authoritative copy in the background.
   const locationDetailCache = useState<Record<string, any>>("location-detail-cache", () => ({}));
   const childLocationCache = useState<Record<string, any[]>>("location-child-cache", () => ({}));
-  const locationItemCache = useState<Record<string, any[]>>("location-item-cache", () => ({}));
+  const { cache: locationItemCache } = useLocationItemCache();
 
   const { data: location } = useAsyncData(
     () => `location_${locationId.value}`,
