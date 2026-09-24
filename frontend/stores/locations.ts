@@ -111,6 +111,26 @@ export const useLocationStore = defineStore("locations", {
       if (this.Locations) void writePersistentCache(persistentCacheKey("locations"), this.Locations);
       if (this.tree) void writePersistentCache(persistentCacheKey("location-tree"), this.tree);
     },
+    removeLocations(locationIds: string[]) {
+      const ids = new Set(locationIds);
+      if (this.parents) this.parents = this.parents.filter(location => !ids.has(location.id));
+      if (this.Locations) this.Locations = this.Locations.filter(location => !ids.has(location.id));
+
+      const pruneTree = (nodes: TreeItem[] | null): TreeItem[] | null => {
+        if (!nodes) return nodes;
+        return nodes
+          .filter(node => !ids.has(node.id))
+          .map(node => ({
+            ...node,
+            children: pruneTree(node.children) ?? [],
+          }));
+      };
+      this.tree = pruneTree(this.tree);
+
+      if (this.parents) void writePersistentCache(persistentCacheKey("location-parents"), this.parents);
+      if (this.Locations) void writePersistentCache(persistentCacheKey("locations"), this.Locations);
+      if (this.tree) void writePersistentCache(persistentCacheKey("location-tree"), this.tree);
+    },
     async refreshTree(): ReturnType<ItemsApi["getTree"]> {
       if (this.refreshTreePromise) return this.refreshTreePromise;
       this.refreshTreePromise = useUserApi().items.getTree({ withItems: false });
