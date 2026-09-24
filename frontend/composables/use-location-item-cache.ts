@@ -13,6 +13,13 @@ export function useLocationItemCache() {
     }
   }
 
+  function removeLocations(locationIds: string[]) {
+    for (const locationId of locationIds) {
+      delete cache.value[locationId];
+      void deletePersistentCache(persistentCacheKey(`location-items:${locationId}`));
+    }
+  }
+
   function invalidate(locationId?: string) {
     if (locationId) {
       delete cache.value[locationId];
@@ -29,6 +36,7 @@ export function useLocationItemCache() {
   return {
     cache,
     updateQuantity,
+    removeLocations,
     invalidate,
   };
 }
