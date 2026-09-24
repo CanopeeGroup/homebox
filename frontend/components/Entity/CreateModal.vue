@@ -563,12 +563,10 @@
     loading.value = false;
 
     if (close) {
+      // Keep the user on the current page after creating an item or location.
+      // The relevant lists/caches are refreshed above, so navigation is not
+      // required to reveal the newly created entity.
       closeDialog(DialogID.CreateEntity);
-      if (selectedEntityType.value?.isLocation) {
-        navigateTo(`/location/${data.id}`);
-      } else {
-        navigateTo(`/item/${data.id}`);
-      }
     } else if (!selectedEntityType.value?.isLocation) {
       // "Create and Add Another" keeps the dialog open, so the open-dialog
       // callback (which normally restores the persisted template) never
