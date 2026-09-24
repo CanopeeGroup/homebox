@@ -47,7 +47,7 @@
   // previously visited locations immediately avoids a blank/loading pause while
   // the API refreshes the authoritative copy in the background.
   const locationDetailCache = useState<Record<string, any>>("location-detail-cache", () => ({}));
-  const childLocationCache = useState<Record<string, any[]>>("location-child-cache", () => ({}));
+  const { cache: childLocationCache } = useLocationChildCache();
   const { cache: locationItemCache } = useLocationItemCache();
 
   const { data: location } = useAsyncData(
