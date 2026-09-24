@@ -53,6 +53,7 @@
 
   const route = useRoute();
   const api = useUserApi();
+  const { updateQuantity: updateCachedLocationQuantity } = useLocationItemCache();
 
   const itemId = computed<string>(() => route.params.id as string);
   const preferences = useViewPreferences();
@@ -123,7 +124,11 @@
       return;
     }
 
+    const newQuantity = response.data?.quantity ?? editedQuantity.value;
     if (response.data) item.value = response.data;
+    else item.value.quantity = newQuantity;
+    updateCachedLocationQuantity(item.value.id, newQuantity);
+
     quantityDialogOpen.value = false;
     toast.success("Quantité modifiée.");
   }
@@ -149,9 +154,13 @@
       return;
     }
 
+    const updatedQuantity = resp.data?.quantity ?? newQuantity;
     if (resp.data) {
       item.value = resp.data;
+    } else {
+      item.value.quantity = updatedQuantity;
     }
+    updateCachedLocationQuantity(item.value.id, updatedQuantity);
   }
 
   type Photo = {
