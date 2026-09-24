@@ -1,8 +1,21 @@
-## Changements récents (23 septembre 2026)\n\n- **Performances Emplacements** : calcul des compteurs d’objets agrégé en une requête SQL, cache IndexedDB conservé et rafraîchissement manuel dédié. Le layout global n’actualise plus les emplacements lors de l’ouverture de la barre latérale.\n- **Création d’objets** : pré-sélection immédiate de l’emplacement courant depuis l’arbre en mémoire/cache, y compris pour les emplacements profondément imbriqués.\n- **Hiérarchie CSV** : format compact étendu à `Subfolder-level3` ; affichage des niveaux imbriqués avec bouton escalier.\n- **Compatibilité CSV** : import automatique des fichiers UTF-8, UTF-8 avec BOM et Windows-1252/ANSI (notamment les exports Excel français contenant `°`). L’export inventaire est maintenant produit en UTF-8 avec BOM et `charset=utf-8` pour éviter les caractères mal interprétés tels que `NÂ°`.\n- **Recherche** : pagination désormais visible dans la vue compacte au-delà de 12 objets ; chaque résultat affiche aussi son emplacement hiérarchique sous le nom, avec accès direct à la fiche de l’emplacement pour distinguer les objets homonymes.\n- **Import volumineux** : chemin rapide côté backend pour créer les emplacements avec moins de requêtes SQL et sans tempête d’événements WebSocket. Les erreurs d’import indiquent la ligne CSV et le chemin concernés.\n- **Sauvegarde complète** : sauvegarde/restauration ZIP de l’instance pour les administrateurs, incluant utilisateurs, collections, appartenances, paramètres persistants/branding, inventaire, modèles, emplacements, pièces jointes, invitations et clés API.\n- **Réglages** : retrait de la rubrique Entretien ; retrait du sélecteur de format de devise dans Collection → Paramètres.\n- **Branding administrateur** : titre de l’application et avatar persistants et synchronisés entre appareils.\n- **Modèles** : cache persistant et import/export CSV rendu directement réimportable, avec normalisation du BOM.\n\n# Fork HomeBox de Canopee
+# Fork HomeBox de CanopeeGroup
 
 Ce dépôt est un fork personnalisé de [sysadminsmedia/homebox](https://github.com/sysadminsmedia/homebox), adapté à une gestion d’inventaire simplifiée et orientée vers les objets, les modèles et les emplacements.
 
-Les développements personnalisés sont publiés sur la branche `main`.
+Les développements personnalisés sont publiés exclusivement sur la branche `main`.
+
+## Changements récents — 24 septembre 2026
+
+- **Création rapide mobile/tablette** : ajout dans l’en-tête de deux boutons visibles avec leur libellé, **Nouvel Emplacement** et **Nouvel Objet**, réutilisant les formulaires existants.
+- **Navigation après création** : suppression de la redirection automatique vers la fiche créée ; après création d’un objet ou d’un emplacement, l’utilisateur reste sur la page courante.
+- **Actualisation des emplacements** : un nouvel emplacement actualise immédiatement les listes, les parents, l’arbre et les caches associés sans dépendre uniquement du WebSocket.
+- **Actualisation des objets** : un nouvel objet apparaît immédiatement dans l’emplacement courant ; le cache de la liste concernée est invalidé ou rafraîchi de façon ciblée.
+- **Compteurs de sous-emplacements** : le compteur d’objets est mis à jour immédiatement dans l’arbre global et dans les cartes de sous-emplacements, puis réconcilié avec le serveur en arrière-plan.
+- **Quantités** : les changements de quantité sont répercutés immédiatement dans la fiche, les cartes compactes et les caches des listes d’emplacements.
+- **Navigation imbriquée** : cache mémoire des fiches d’emplacements, sous-emplacements et objets afin d’accélérer les parcours parent → enfant → sous-enfant → retour sur mobile et tablette.
+- **Recherche** : pagination visible dans la vue compacte au-delà de 12 objets et affichage de l’emplacement sous chaque résultat.
+- **CSV** : import UTF-8, UTF-8 avec BOM et Windows-1252/ANSI ; export inventaire en UTF-8 avec BOM et `charset=utf-8`.
+- **Sauvegarde complète** : sauvegarde/restauration ZIP de l’instance pour les administrateurs, incluant utilisateurs, collections, paramètres persistants, inventaire, modèles, emplacements et pièces jointes.
 
 ## Fonctionnalités ajoutées
 
@@ -17,12 +30,14 @@ Les développements personnalisés sont publiés sur la branche `main`.
 - Compatibilité avec les colonnes du format métier utilisé pour les modèles.
 - Inclusion des modèles dans les résultats de recherche.
 
-### Sélecteurs mobiles
+### Interface mobile et tablette
 
 - Sélecteur de modèles adapté aux téléphones et tablettes.
 - Sélecteur d’emplacement parent utilisant le même affichage tactile.
 - Panneau de recherche plein écran qui reste visible avec le clavier virtuel.
 - Résultats scrollables et actions de fermeture ou d’effacement de la sélection.
+- Boutons **Nouvel Emplacement** et **Nouvel Objet** directement dans l’en-tête, à côté de la recherche.
+- Après création, fermeture du formulaire sans changement de page, avec actualisation ciblée des données concernées.
 
 ### Quantités
 
@@ -54,10 +69,11 @@ Les développements personnalisés sont publiés sur la branche `main`.
 - La page Emplacements devient la page affichée après la connexion.
 - Les anciennes adresses `/home` sont redirigées vers `/locations`.
 - La PWA démarre directement sur `/locations`.
-- Ajout d’un menu **Réglages** regroupant :
-  - Entretien ;
+- Menu **Réglages** simplifié :
   - Profil ;
-  - Collection.
+  - Collection ;
+  - Utilisateurs pour les administrateurs.
+- La rubrique Entretien a été retirée des Réglages.
 
 ### Simplification de l’interface
 
@@ -81,41 +97,44 @@ Les développements personnalisés sont publiés sur la branche `main`.
 
 ## Optimisations de performances mobiles
 
-Une passe d'optimisation a été réalisée pour améliorer la réactivité sur smartphones et tablettes sans modifier les fonctions métier.
+Une passe d’optimisation a été réalisée pour améliorer la réactivité sur smartphones et tablettes sans modifier les fonctions métier.
 
 ### Emplacements et chargement global
 
 - Déduplication des requêtes concurrentes `getLocations` et `getTree` dans le store Pinia.
-- Le layout global charge uniquement les listes d'emplacements nécessaires aux sélecteurs.
-- L'arbre complet n'est plus téléchargé systématiquement au démarrage.
-- La page Emplacements peut afficher immédiatement l’arbre déjà présent dans le store ou IndexedDB, mais déclenche désormais une actualisation serveur à chaque visite.
-- À chaque passage sur la page, `refreshTree()`, `refreshChildren()` et `refreshParents()` actualisent les données et renouvellent le cache IndexedDB après une réponse réussie.
-- Sur une première connexion sans cache navigateur, la page attend le chargement de l’arbre et met l’affichage à jour automatiquement.
-- Lors d’un événement WebSocket, l’arbre affiché n’est plus mis à `null` : les données existantes restent visibles pendant le rafraîchissement puis sont remplacées par la réponse serveur.
-- Les rafraîchissements rapprochés sont regroupés pour limiter le trafic API.
+- Le layout global ne recharge plus les emplacements lors de l’ouverture ou du déploiement de la barre latérale.
+- L’arbre complet n’est plus téléchargé systématiquement depuis le layout global.
+- La page Emplacements peut restituer immédiatement l’arbre présent dans Pinia ou IndexedDB, puis déclencher sa synchronisation serveur.
+- Un bouton **Actualiser** permet de forcer uniquement le rafraîchissement de l’arbre des emplacements.
+- Les fiches d’emplacements, leurs sous-emplacements et leurs objets disposent d’un cache mémoire de navigation pour accélérer les parcours répétés sur mobile et tablette.
+- Lors d’un événement WebSocket, l’arbre affiché n’est plus remis à `null` : les données existantes restent visibles pendant le rafraîchissement.
+- Après création d’un objet, les compteurs de l’arbre global et des cartes de sous-emplacements sont mis à jour immédiatement, puis vérifiés avec le serveur.
+- Les rafraîchissements rapprochés sont regroupés afin de limiter le trafic API et les recalculs.
 
 ### Recherche et objets
 
-- Protection par génération de recherche : une ancienne réponse réseau ne remplace plus les résultats d'une recherche plus récente.
+- Protection par génération de recherche : une ancienne réponse réseau ne remplace plus les résultats d’une recherche plus récente.
 - La liste des modèles utilisée par la recherche est conservée en cache mémoire pendant la vie de la page.
 - Temporisation des recherches successives augmentée afin de limiter les requêtes pendant une saisie rapide sur clavier tactile.
 - Images des cartes chargées avec `loading="lazy"` et décodées avec `decoding="async"`.
-- Pagination de la recherche d’objets rendue disponible dans la vue compacte, avec navigation première page, pages intermédiaires et dernière page.
-- Affichage sous chaque résultat de l’emplacement de l’objet, en utilisant le chemin hiérarchique de l’arbre lorsqu’il est disponible ; ce lien ouvre directement l’emplacement concerné.
+- Pagination de la recherche d’objets disponible dans la vue compacte, avec navigation entre les pages.
+- Affichage sous chaque résultat de l’emplacement de l’objet, en utilisant le chemin hiérarchique lorsqu’il est disponible.
+- Modification de quantité répercutée immédiatement dans l’affichage et dans le cache de l’emplacement concerné.
+- Une modification complète d’un objet invalide le cache de liste afin d’éviter de réafficher des données obsolètes.
 
 ### Modèles et journal
 
 - `content-visibility: auto` sur les lignes de modèles et du journal afin que le navigateur puisse différer le rendu des éléments hors écran.
 - Le Journal conserve sa pagination de 1 000 opérations par page.
-- Les tests d'appartenance aux modèles sélectionnés utilisent un `Set`, évitant les recherches linéaires répétées sur les grandes listes.
+- Les tests d’appartenance aux modèles sélectionnés utilisent un `Set`, évitant les recherches linéaires répétées sur les grandes listes.
 
 ### Démarrage et bundle frontend
 
-- L'initialisation OpenTelemetry ne bloque plus le démarrage de Nuxt : la vérification du statut du backend et l'activation OTel sont effectuées après le chargement initial.
+- L’initialisation OpenTelemetry ne bloque plus le démarrage de Nuxt : la vérification du statut du backend et l’activation OTel sont effectuées après le chargement initial.
 - Les principales modales globales ont été converties en composants asynchrones afin de fractionner leur code hors du bundle JavaScript initial.
 - Le plugin i18n ne charge plus les 44 fichiers de traduction au démarrage.
 - Seuls `fr.json` et `en.json` sont chargés immédiatement ; les autres langues restent disponibles et sont importées dynamiquement lorsqu'elles sont sélectionnées.
-- Avant cette optimisation, l'ensemble des fichiers JSON de traduction représentait environ 1,46 Mo de données brutes.
+- Avant cette optimisation, l’ensemble des fichiers JSON de traduction représentait environ 1,46 Mo de données brutes.
 
 ### Cache persistant IndexedDB
 
@@ -124,20 +143,20 @@ Une passe d'optimisation a été réalisée pour améliorer la réactivité sur 
 - Sont actuellement persistés :
   - la liste des emplacements ;
   - les emplacements parents ;
-  - l'arbre d'emplacements sans objets ;
+  - l'arbre d’emplacements sans objets ;
   - la liste des modèles.
 - Les données en cache peuvent être utilisées pendant 24 heures maximum.
 - Stratégie stale-while-revalidate : le cache local permet un affichage rapide, tandis qu'une requête API actualise ensuite Pinia, l'écran et IndexedDB.
 - La page Emplacements restaure l’arbre depuis IndexedDB lorsqu’il existe, puis lance systématiquement un rafraîchissement réseau à chaque visite ; la réponse serveur actualise Pinia, l’écran et IndexedDB.
 - La page Modèles restaure également la liste locale avant sa synchronisation serveur.
 - Les réponses API ne sont volontairement pas placées dans Cache Storage par le Service Worker : la règle `NetworkOnly` reste active pour `/api`.
-- Ce cache n'implémente pas un mode d'écriture hors ligne ; les mutations et l'authentification continuent de nécessiter le serveur.
+- Ce cache n’implémente pas un mode d'écriture hors ligne ; les mutations et l'authentification continuent de nécessiter le serveur.
 
 ## GitHub Actions
 
 - Tous les fichiers sous `.github/workflows/` ont été supprimés du fork.
 - Les anciens workflows Android/Capacitor ne font plus partie de la branche `main`.
-- Aucun build, test, publication Docker ou autre automatisation GitHub Actions n'est actuellement exécuté.
+- Aucun build, test, publication Docker ou autre automatisation GitHub Actions n’est actuellement exécuté.
 - Après une modification importante, le build et les tests doivent être lancés manuellement avant déploiement.
 
 ## Installation avec Docker Compose
