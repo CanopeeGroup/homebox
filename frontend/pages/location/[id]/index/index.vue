@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { useI18n } from "vue-i18n";
   import { toast } from "@/components/ui/sonner";
-  import type { ItemAttachment } from "~~/lib/api/types/data-contracts";
+  import type { ItemAttachment, TreeItem } from "~~/lib/api/types/data-contracts";
   import MdiArrowLeft from "~icons/mdi/arrow-left";
   import MdiPlus from "~icons/mdi/plus";
   import MdiPencil from "~icons/mdi/pencil";
@@ -54,26 +54,38 @@
   const deletingLocation = ref(false);
 
   function collectLocationSubtreeIds(id: string) {
-    const ids: string[] = [];
+    const ids = new Set<string>([id]);
 
-    const collect = (node: any) => {
-      if (node.type === "location") ids.push(node.id);
-      for (const child of node.children ?? []) collect(child);
+    const collectTree = (node: TreeItem) => {
+      if (node.type === "location") ids.add(node.id);
+      for (const child of node.children ?? []) collectTree(child);
     };
 
-    const find = (nodes: any[]): boolean => {
-      for (const node of nodes ?? []) {
+    const findTreeNode = (nodes: TreeItem[]): boolean => {
+      for (const node of nodes) {
         if (node.id === id) {
-          collect(node);
+          collectTree(node);
           return true;
         }
-        if (find(node.children ?? [])) return true;
+        if (findTreeNode(node.children ?? [])) return true;
       }
       return false;
     };
 
-    find(locationStore.tree ?? []);
-    return ids.length > 0 ? ids : [id];
+    findTreeNode(locationStore.tree ?? []);
+
+    // The global tree may not be resident after a long-idle mobile session.
+    // Recover any descendants known by the per-page child caches as well.
+    const collectCachedChildren = (parentId: string) => {
+      for (const child of childLocationCache.value[parentId] ?? []) {
+        if (ids.has(child.id)) continue;
+        ids.add(child.id);
+        collectCachedChildren(child.id);
+      }
+    };
+    collectCachedChildren(id);
+
+    return [...ids];
   }
 
   async function hydrateLocationPageCache(id: string) {
