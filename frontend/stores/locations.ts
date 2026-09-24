@@ -85,6 +85,32 @@ export const useLocationStore = defineStore("locations", {
       void writePersistentCache(persistentCacheKey("locations"), result.data);
       return result;
     },
+    adjustItemCount(locationId: string, delta: number) {
+      const adjustSummary = (location: EntitySummary) => {
+        if (location.id === locationId) {
+          location.itemCount = Math.max(0, (location.itemCount ?? 0) + delta);
+        }
+      };
+
+      this.parents?.forEach(adjustSummary);
+      this.Locations?.forEach(adjustSummary);
+
+      const visitTree = (nodes: TreeItem[] | null) => {
+        for (const node of nodes ?? []) {
+          if (node.id === locationId) {
+            node.itemCount = Math.max(0, (node.itemCount ?? 0) + delta);
+            return true;
+          }
+          if (visitTree(node.children)) return true;
+        }
+        return false;
+      };
+      visitTree(this.tree);
+
+      if (this.parents) void writePersistentCache(persistentCacheKey("location-parents"), this.parents);
+      if (this.Locations) void writePersistentCache(persistentCacheKey("locations"), this.Locations);
+      if (this.tree) void writePersistentCache(persistentCacheKey("location-tree"), this.tree);
+    },
     async refreshTree(): ReturnType<ItemsApi["getTree"]> {
       if (this.refreshTreePromise) return this.refreshTreePromise;
       this.refreshTreePromise = useUserApi().items.getTree({ withItems: false });
