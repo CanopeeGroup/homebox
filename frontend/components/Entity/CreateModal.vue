@@ -478,7 +478,17 @@
       return;
     }
 
-    if (!selectedEntityType.value?.isLocation) {
+    if (selectedEntityType.value?.isLocation) {
+      // A newly created location must immediately become available everywhere:
+      // locations page, parent-location selector and subsequent item creation.
+      // Do not rely solely on the WebSocket mutation event because it can arrive
+      // after navigation (or be unavailable behind some reverse proxies).
+      await Promise.all([
+        locationsStore.refreshChildren(),
+        locationsStore.refreshParents(),
+        locationsStore.refreshTree(),
+      ]);
+    } else {
       toast.success(
         t("components.entity.create_modal.toast.create_success", {
           type: entityTypeName.value,
