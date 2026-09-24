@@ -99,6 +99,7 @@
   const api = useUserApi();
 
   const locationsStore = useLocationStore();
+  const { invalidate: invalidateLocationItemCache } = useLocationItemCache();
   const locations = computed(() => locationsStore.allLocations);
 
   function findLocationInTree(id: string): EntityOut | null {
@@ -489,6 +490,29 @@
         locationsStore.refreshTree(),
       ]);
     } else {
+      // Item lists on location pages are cached for fast mobile navigation.
+      // Refresh the current location explicitly after creation so the new item
+      // appears immediately, even if the WebSocket mutation event is delayed.
+      const createdLocationId = form.parentId ? null : form.location?.id || null;
+      if (createdLocationId) {
+        invalidateLocationItemCache(createdLocationId);
+
+        const routeLocationId = locationId.value
+          ? (Array.isArray(locationId.value) ? locationId.value[0] : locationId.value)
+          : null;
+        const itemListKey = `${createdLocationId}_item_list`;
+
+        if (routeLocationId === createdLocationId) {
+          await refreshNuxtData(itemListKey);
+        } else {
+          clearNuxtData(itemListKey);
+        }
+
+        // Keep the item counters shown in the locations tree consistent too,
+        // but do not block navigation on this secondary refresh.
+        void locationsStore.refreshTree();
+      }
+
       toast.success(
         t("components.entity.create_modal.toast.create_success", {
           type: entityTypeName.value,
