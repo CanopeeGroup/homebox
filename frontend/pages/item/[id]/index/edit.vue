@@ -40,6 +40,7 @@
 
   const route = useRoute();
   const api = useUserApi();
+  const { invalidate: invalidateLocationItemCache } = useLocationItemCache();
   const preferences = useViewPreferences();
 
   const itemId = computed<string>(() => route.params.id as string);
@@ -138,6 +139,11 @@
       toast.error(t("items.toast.failed_save"));
       return;
     }
+
+    // The full edit form can change quantity, parent location or other
+    // fields represented in cached location item lists. Drop those list caches
+    // so the next location view is fetched from the authoritative API.
+    invalidateLocationItemCache();
 
     toast.success(t("items.toast.item_saved"));
     if (isConvertingToLocation) {
