@@ -10,7 +10,11 @@ export function useLocationItemCache() {
     }
   }
 
-  function invalidate() {
+  function invalidate(locationId?: string) {
+    if (locationId) {
+      delete cache.value[locationId];
+      return;
+    }
     cache.value = {};
   }
 
