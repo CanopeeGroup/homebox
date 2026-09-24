@@ -282,6 +282,7 @@
       });
 
       if (resp.error) {
+        if (deletingLocation.value) return childLocationCache.value[id] ?? [];
         if (!childLocationCache.value[id]) toast.error(t("locations.toast.failed_load_location"));
         return childLocationCache.value[id] ?? [];
       }
@@ -308,6 +309,7 @@
       });
 
       if (resp.error) {
+        if (deletingLocation.value) return locationItemCache.value[id] ?? [];
         if (!locationItemCache.value[id]) toast.error(t("items.toast.failed_load_items"));
         return locationItemCache.value[id] ?? [];
       }
