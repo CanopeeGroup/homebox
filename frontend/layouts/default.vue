@@ -190,7 +190,7 @@
             <div class="flex h-1/2 grow items-center justify-end gap-2 sm:h-auto">
               <Input
                 v-model:model-value="search"
-                class="h-9 grow sm:max-w-sm"
+                class="h-9 min-w-0 grow sm:max-w-sm"
                 :placeholder="$t('global.search')"
                 type="search"
                 @keyup.enter="triggerSearch"
@@ -200,6 +200,21 @@
                   <MdiMagnify />
                 </Button>
               </div>
+              <Button
+                class="hidden h-9 shrink-0 px-3 text-xs lg:hidden min-[420px]:inline-flex sm:text-sm"
+                variant="outline"
+                @click="openDialog(DialogID.CreateEntity, { params: { baseType: 'location' } })"
+              >
+                <MdiMapMarkerPlus class="mr-1 size-4" />
+                Nouvel Emplacement
+              </Button>
+              <Button
+                class="hidden h-9 shrink-0 px-3 text-xs lg:hidden min-[420px]:inline-flex sm:text-sm"
+                @click="openDialog(DialogID.CreateEntity, { params: { baseType: 'item' } })"
+              >
+                <MdiPlus class="mr-1 size-4" />
+                Nouvel Objet
+              </Button>
               <div></div>
             </div>
           </div>
@@ -218,6 +233,7 @@
 
   import MdiFileTree from "~icons/mdi/file-tree";
   import MdiMagnify from "~icons/mdi/magnify";
+  import MdiMapMarkerPlus from "~icons/mdi/map-marker-plus";
   import MdiQrcodeScan from "~icons/mdi/qrcode-scan";
   import MdiCog from "~icons/mdi/cog";
   import MdiPlus from "~icons/mdi/plus";
