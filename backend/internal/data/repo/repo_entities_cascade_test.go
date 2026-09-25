@@ -39,6 +39,31 @@ func TestDeleteLocationIncludesAllDescendants(t *testing.T) {
 		_, err := tRepos.Entities.GetOneByGroup(ctx, tGroup.ID, e.ID)
 		require.Error(t, err)
 	}
+
+	// A fresh tree query must not resurrect the deleted location from server
+	// state; only the unrelated location should remain.
+	tree, err := tRepos.Entities.Tree(ctx, tGroup.ID, TreeQuery{WithItems: false})
+	require.NoError(t, err)
+	require.NotContains(t, collectTreeIDs(tree), root.ID)
+	require.Contains(t, collectTreeIDs(tree), unrelated.ID)
+
 	_, err = tRepos.Entities.GetOneByGroup(ctx, tGroup.ID, unrelated.ID)
 	require.NoError(t, err)
+}
+
+func collectTreeIDs(tree []TreeItem) []uuid.UUID {
+	ids := make([]uuid.UUID, 0)
+	var walk func([]TreeItem)
+	walk = func(nodes []TreeItem) {
+		for _, node := range nodes {
+			ids = append(ids, node.ID)
+			children := make([]TreeItem, 0, len(node.Children))
+			for _, child := range node.Children {
+				children = append(children, *child)
+			}
+			walk(children)
+		}
+	}
+	walk(tree)
+	return ids
 }
