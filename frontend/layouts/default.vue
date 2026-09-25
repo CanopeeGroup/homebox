@@ -448,6 +448,21 @@
   ]);
 
   const locationStore = useLocationStore();
+  let lastResumeTreeRefreshAt = 0;
+
+  const refreshLocationTreeAfterResume = () => {
+    if (document.visibilityState !== "visible" || locationStore.tree === null) return;
+
+    const now = Date.now();
+    if (now - lastResumeTreeRefreshAt < 1500) return;
+    lastResumeTreeRefreshAt = now;
+
+    // Mobile browsers/PWAs can suspend the page and drop WebSocket events while
+    // keeping Pinia/IndexedDB alive. Revalidate the resident tree whenever the
+    // app becomes active again so deletions made elsewhere cannot linger.
+    void locationStore.refreshTree(true);
+  };
+
   onMounted(() => {
     // Do not preload/refresh locations from the global layout. Opening or
     // expanding the sidebar must stay network-free for location data. The
@@ -469,6 +484,16 @@
         params: { inviteCode: token },
       });
     }
+
+    document.addEventListener("visibilitychange", refreshLocationTreeAfterResume);
+    window.addEventListener("pageshow", refreshLocationTreeAfterResume);
+    window.addEventListener("focus", refreshLocationTreeAfterResume);
+  });
+
+  onUnmounted(() => {
+    document.removeEventListener("visibilitychange", refreshLocationTreeAfterResume);
+    window.removeEventListener("pageshow", refreshLocationTreeAfterResume);
+    window.removeEventListener("focus", refreshLocationTreeAfterResume);
   });
 
   const nuxtApp = useNuxtApp();
