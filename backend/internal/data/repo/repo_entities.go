@@ -1371,6 +1371,22 @@ func (r *EntityRepository) DeleteByGroup(ctx context.Context, gid, id uuid.UUID)
 			return fmt.Errorf("could not delete descendant %s: %w", order[index], err)
 		}
 	}
+
+	// A successful DELETE response must mean the complete subtree is physically
+	// absent from the database, not merely hidden by a frontend cache.
+	remaining, err := r.db.Entity.Query().
+		Where(
+			entity.IDIn(order...),
+			entity.HasGroupWith(group.ID(gid)),
+		).
+		Count(ctx)
+	if err != nil {
+		return fmt.Errorf("could not verify location subtree deletion: %w", err)
+	}
+	if remaining != 0 {
+		return fmt.Errorf("location subtree deletion incomplete: %d entities remain", remaining)
+	}
+
 	return nil
 }
 
