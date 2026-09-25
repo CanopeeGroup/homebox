@@ -92,6 +92,16 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 	)
 
 	r.Route(prefix+"/v1", func(r chi.Router) {
+		// API responses are dynamic and must never be reused by an intermediary
+		// cache. The frontend keeps its own Pinia/IndexedDB cache and explicitly
+		// revalidates it against these authoritative responses.
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Cache-Control", "no-store, private")
+				next.ServeHTTP(w, req)
+			})
+		})
+
 		r.Get("/status", chain.ToHandlerFunc(v1Ctrl.HandleBase(func() bool { return true }, v1.Build{
 			Version:   version,
 			Commit:    commit,
