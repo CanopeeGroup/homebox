@@ -502,7 +502,7 @@
     // Entity mutations are uncommon compared with navigation. Refresh the
     // authoritative tree on every connected client so a deleted location is
     // removed from Pinia/IndexedDB even when that client is on another page.
-    void locationStore.refreshTree();
+    void locationStore.refreshTree(true);
     void nuxtApp.runWithContext(() => refreshNuxtData());
   }, 250);
 
