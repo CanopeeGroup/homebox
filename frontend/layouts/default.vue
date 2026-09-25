@@ -472,17 +472,21 @@
   });
 
   const nuxtApp = useNuxtApp();
-  const refreshDisplay = useDebounceFn(() => {
-    // Keep global mutation handling lightweight. Location data is refreshed
-    // only while the locations page is visible; simply opening the sidebar
-    // never triggers a locations request.
-    if (route.path === "/locations") {
-      void locationStore.refreshTree();
-    }
+
+  const refreshEntityDisplay = useDebounceFn(() => {
+    // Entity mutations are uncommon compared with navigation. Refresh the
+    // authoritative tree on every connected client so a deleted location is
+    // removed from Pinia/IndexedDB even when that client is on another page.
+    void locationStore.refreshTree();
     void nuxtApp.runWithContext(() => refreshNuxtData());
   }, 250);
-  onServerEvent(ServerEvent.EntityMutation, refreshDisplay);
-  onServerEvent(ServerEvent.ImportMutation, refreshDisplay);
+
+  const refreshDisplay = useDebounceFn(() => {
+    void nuxtApp.runWithContext(() => refreshNuxtData());
+  }, 250);
+
+  onServerEvent(ServerEvent.EntityMutation, refreshEntityDisplay);
+  onServerEvent(ServerEvent.ImportMutation, refreshEntityDisplay);
   onServerEvent(ServerEvent.UserMutation, refreshDisplay);
   onServerEvent(ServerEvent.ExportMutation, refreshDisplay);
 
