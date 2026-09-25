@@ -73,6 +73,10 @@ export class Requests {
   private async do<T>(method: Method, rargs: RequestArgs<unknown>): Promise<TResponse<T>> {
     const payload: RequestInit = {
       method,
+      // API freshness is handled explicitly by the app-level caches (Pinia /
+      // IndexedDB). Do not let the browser HTTP cache serve stale API responses
+      // after mutations such as location deletion.
+      cache: method === Method.GET ? "no-store" : undefined,
       headers: {
         ...rargs.headers,
         ...this.headers,
