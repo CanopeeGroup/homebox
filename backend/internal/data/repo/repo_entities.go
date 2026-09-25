@@ -1367,7 +1367,7 @@ func (r *EntityRepository) DeleteByGroup(ctx context.Context, gid, id uuid.UUID)
 		}
 	}
 	for index := len(order) - 1; index >= 0; index-- {
-		if err := r.deleteOneByGroup(ctx, gid, order[index]); err != nil {
+		if err := r.deleteOneByGroupInternal(ctx, gid, order[index], false); err != nil {
 			return fmt.Errorf("could not delete descendant %s: %w", order[index], err)
 		}
 	}
@@ -1387,11 +1387,19 @@ func (r *EntityRepository) DeleteByGroup(ctx context.Context, gid, id uuid.UUID)
 		return fmt.Errorf("location subtree deletion incomplete: %d entities remain", remaining)
 	}
 
+	// Publish only once, after the whole subtree has been deleted and verified.
+	// Publishing per descendant lets clients refresh the tree while a cascade is
+	// still in progress, which can persist a stale parent location on mobile/PWA.
+	r.publishMutationEvent(gid)
 	return nil
 }
 
 // deleteOneByGroup also cleans attachments and emits the mutation event.
 func (r *EntityRepository) deleteOneByGroup(ctx context.Context, gid, id uuid.UUID) error {
+	return r.deleteOneByGroupInternal(ctx, gid, id, true)
+}
+
+func (r *EntityRepository) deleteOneByGroupInternal(ctx context.Context, gid, id uuid.UUID, publish bool) error {
 	ctx, span := entityTracer().Start(ctx, "repo.EntityRepository.DeleteByGroup",
 		trace.WithAttributes(
 			attribute.String("group.id", gid.String()),
@@ -1445,7 +1453,9 @@ func (r *EntityRepository) deleteOneByGroup(ctx context.Context, gid, id uuid.UU
 	}
 	deleteSpan.End()
 
-	r.publishMutationEvent(gid)
+	if publish {
+		r.publishMutationEvent(gid)
+	}
 	return nil
 }
 
