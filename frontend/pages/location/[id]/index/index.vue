@@ -182,7 +182,9 @@
     await navigateTo("/locations");
 
     // Reconcile the locally-pruned tree with the server after navigation.
-    void locationStore.refreshTree();
+    // Force a new request in case a mutation event started a tree refresh while
+    // the cascade delete was still running.
+    void locationStore.refreshTree(true);
   }
 
   function openCreateItem() {
