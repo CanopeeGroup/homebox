@@ -10,6 +10,7 @@ export const useLocationStore = defineStore("locations", {
     parents: null as EntitySummary[] | null,
     Locations: null as EntitySummary[] | null,
     tree: null as TreeItem[] | null,
+    treeRevision: 0,
     refreshLocationsPromise: null as Promise<void> | null,
     refreshParentsPromise: null as Promise<ReturnType<ItemsApi["getLocations"]> extends Promise<infer R> ? R : never> | null,
     refreshTreePromise: null as Promise<ReturnType<ItemsApi["getTree"]> extends Promise<infer R> ? R : never> | null,
@@ -112,6 +113,9 @@ export const useLocationStore = defineStore("locations", {
       if (this.tree) void writePersistentCache(persistentCacheKey("location-tree"), this.tree);
     },
     removeLocations(locationIds: string[]) {
+      // Invalidate any tree request that started before this local mutation.
+      // A late response from that request must not resurrect deleted locations.
+      this.treeRevision += 1;
       const ids = new Set(locationIds);
       if (this.parents) this.parents = this.parents.filter(location => !ids.has(location.id));
       if (this.Locations) this.Locations = this.Locations.filter(location => !ids.has(location.id));
@@ -131,12 +135,23 @@ export const useLocationStore = defineStore("locations", {
       if (this.Locations) void writePersistentCache(persistentCacheKey("locations"), this.Locations);
       if (this.tree) void writePersistentCache(persistentCacheKey("location-tree"), this.tree);
     },
-    async refreshTree(): ReturnType<ItemsApi["getTree"]> {
+    async refreshTree(force = false): ReturnType<ItemsApi["getTree"]> {
+      if (this.refreshTreePromise) {
+        if (!force) return this.refreshTreePromise;
+        try {
+          await this.refreshTreePromise;
+        } catch {
+          // A forced refresh below will retry against the authoritative API.
+        }
+      }
+
       if (this.refreshTreePromise) return this.refreshTreePromise;
+
+      const revision = this.treeRevision;
       this.refreshTreePromise = useUserApi().items.getTree({ withItems: false });
       try {
         const result = await this.refreshTreePromise;
-        if (!result.error) {
+        if (!result.error && revision === this.treeRevision) {
           this.tree = result.data;
           void writePersistentCache(persistentCacheKey("location-tree"), result.data);
         }
