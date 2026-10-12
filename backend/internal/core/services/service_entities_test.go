@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/repo"
 )
 
 // TestEntityService_CsvImport_AssetIDIdempotent verifies that re-importing the
@@ -73,4 +74,49 @@ func TestEntityService_CsvImport_AssetIDAutoIncrement(t *testing.T) {
 	require.False(t, a.AssetID.Nil())
 	require.False(t, b.AssetID.Nil())
 	require.NotEqual(t, a.AssetID, b.AssetID, "distinct new items must get distinct asset IDs")
+}
+
+
+func TestEntityService_CsvImport_FourthLevelObject(t *testing.T) {
+	ctx := context.Background()
+
+	grp, err := tRepos.Groups.GroupCreate(ctx, "csv-level4-"+fk.Str(4), uuid.Nil)
+	require.NoError(t, err)
+
+	csv := "Subfolder-level1;Subfolder-level2;Subfolder-level3;Subfolder-level4;HB.name;HB.model_number;HB.quantity\n" +
+		"A;B;C;D;Object L4;REF-L4;3\n"
+
+	n, err := tSvc.Entities.CsvImport(ctx, grp.ID, strings.NewReader(csv))
+	require.NoError(t, err)
+	require.Equal(t, 1, n)
+
+	entities, err := tRepos.Entities.GetAll(ctx, grp.ID)
+	require.NoError(t, err)
+
+	byName := make(map[string]repo.EntityOut, len(entities))
+	for _, entity := range entities {
+		byName[entity.Name] = entity
+	}
+
+	item, ok := byName["Object L4"]
+	require.True(t, ok, "level-4 object was not created")
+	require.NotNil(t, item.Parent)
+	require.Equal(t, "D", item.Parent.Name)
+	require.Equal(t, float64(3), item.Quantity)
+	require.Equal(t, "REF-L4", item.ModelNumber)
+
+	level4, ok := byName["D"]
+	require.True(t, ok, "level-4 location was not created")
+	require.NotNil(t, level4.Parent)
+	require.Equal(t, "C", level4.Parent.Name)
+
+	level3, ok := byName["C"]
+	require.True(t, ok)
+	require.NotNil(t, level3.Parent)
+	require.Equal(t, "B", level3.Parent.Name)
+
+	level2, ok := byName["B"]
+	require.True(t, ok)
+	require.NotNil(t, level2.Parent)
+	require.Equal(t, "A", level2.Parent.Name)
 }
