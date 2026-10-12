@@ -5,13 +5,23 @@
   import MdiTag from "~icons/mdi/tag";
   import MdiStairs from "~icons/mdi/stairs";
   import type { TreeItem } from "~/lib/api/types/data-contracts";
+  import { sortLocations, type LocationSortMode } from "~~/composables/use-location-sort";
 
   defineOptions({ name: "LocationCompactTree" });
 
-  const props = defineProps<{ locations: TreeItem[] }>();
-  // The API tree is already ordered by name. Avoid recursively cloning and
-  // sorting every branch when a large root location is expanded on mobile.
-  const sortedLocations = computed(() => props.locations.filter(item => item.type === "location"));
+  const props = defineProps<{
+    locations: TreeItem[];
+    sortMode: LocationSortMode;
+  }>();
+
+  // Sort only the siblings currently being rendered. Recursive child branches
+  // reuse the same mode, so every location level follows the user's choice.
+  const sortedLocations = computed(() =>
+    sortLocations(
+      props.locations.filter(item => item.type === "location"),
+      props.sortMode
+    )
+  );
   const expandedLocations = ref(new Set<string>());
   const hasLocationChildren = (location: TreeItem) => location.children?.some(child => child.type === "location") ?? false;
   const isExpanded = (id: string) => expandedLocations.value.has(id);
@@ -57,6 +67,7 @@
       <LocationCompactTree
         v-if="hasLocationChildren(location) && isExpanded(location.id)"
         :locations="location.children"
+        :sort-mode="sortMode"
         class="ml-2 sm:ml-4"
       />
     </li>
