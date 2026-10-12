@@ -64,3 +64,27 @@ export async function deletePersistentCache(key: string): Promise<void> {
     tx.onabort = () => resolve();
   });
 }
+
+export async function deletePersistentCachePrefix(prefix: string): Promise<void> {
+  const db = await openCache();
+  if (!db) return;
+
+  await new Promise<void>(resolve => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.openCursor();
+
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) return;
+
+      const entry = cursor.value as CacheEntry<unknown>;
+      if (entry.key.startsWith(prefix)) cursor.delete();
+      cursor.continue();
+    };
+
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+    tx.onabort = () => resolve();
+  });
+}
