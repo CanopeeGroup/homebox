@@ -59,13 +59,14 @@ présentées plus bas ne reflètent donc pas nécessairement cette interface per
 
 ### Import/export CSV dans Collection → Outils
 
-Le CSV compact exporté contient désormais six colonnes (UTF-8 avec BOM, séparateur point-virgule) et prend en charge trois niveaux d’emplacements :
+Le CSV compact exporté contient désormais sept colonnes (UTF-8 avec BOM, séparateur point-virgule) et prend en charge quatre niveaux d’emplacements :
 
 ```csv
-Subfolder-level1;Subfolder-level2;Subfolder-level3;HB.name;HB.model_number;HB.quantity
-A;A0110;;;;
-A;A0110;A0110-1;;;
-A;A0110;A0110-1;Objet exemple;REF-001;2
+Subfolder-level1;Subfolder-level2;Subfolder-level3;Subfolder-level4;HB.name;HB.model_number;HB.quantity
+A;A0110;;;;;
+A;A0110;A0110-1;;;;
+A;A0110;A0110-1;A0110-1-A;;;
+A;A0110;A0110-1;A0110-1-A;Objet exemple;REF-001;2
 ```
 
 Une ligne sans nom d’objet importe uniquement les emplacements ; une ligne avec HB.name
@@ -77,8 +78,10 @@ Seuls les emplacements vides non représentés par un chemin descendant ont une 
 Les objets distincts restent tous exportés, même s’ils ont des noms identiques. Les anciens CSV Homebox restent acceptés.
 Sans HB.import_ref dans ce format réduit, réimporter des lignes d’objets crée de nouveaux objets.
 
-Le format compact prend en charge jusqu’à trois niveaux d’emplacements. Une hiérarchie plus profonde
+Le format compact prend en charge jusqu’à quatre niveaux d’emplacements. Une hiérarchie plus profonde
 est refusée explicitement afin de ne pas perdre ni modifier les relations : utiliser la sauvegarde ZIP complète.
+Un objet peut être créé ou importé directement dans un emplacement de niveau 4 ; cet emplacement utilise
+les mêmes fonctions que les autres niveaux (navigation, création d’objet, modification, suppression et compteurs).
 L’import accepte les fichiers UTF-8, UTF-8 avec BOM et Windows-1252/ANSI ; les fichiers Windows-1252
 sont convertis automatiquement en UTF-8 avant l’analyse. L’export écrit explicitement un BOM UTF-8 et annonce
 `text/csv; charset=utf-8`, afin d’éviter les interprétations erronées de caractères comme `°` (`NÂ°`) dans Excel et les outils Windows.
@@ -103,6 +106,7 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Objets d’un emplacement en petites tuiles sans photo, avec nom et quantité, sans choix Carte/Tableau ;
   pagination et sélection groupée conservées.
 - Emplacements de premier niveau en petites tuiles ; sous-emplacements en liste hiérarchique.
+- Navigation récursive jusqu’au quatrième niveau dans l’arbre et les sélecteurs d’emplacement ; un objet peut être ajouté directement dans un emplacement de niveau 4.
 - Bouton escalier pour afficher ou masquer les sous-emplacements, repliés par défaut.
 - Retrait des blocs Détails/Notes des pages d’emplacement et simplification des formulaires Description/Photo.
 - Aucun emplacement de démonstration créé automatiquement pour les nouveaux comptes, y compris OIDC.
