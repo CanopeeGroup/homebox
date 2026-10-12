@@ -126,7 +126,10 @@
                 @select="selectLocation(location as unknown as EntitySummary)"
               >
                 <Check :class="cn('mr-2 h-4 w-4', value?.id === location.id ? 'opacity-100' : 'opacity-0')" />
-                <div class="min-w-0">
+                <div
+                  class="min-w-0"
+                  :style="{ paddingLeft: search.trim() ? undefined : `${Math.min(location.depth, 4) * 0.65}rem` }"
+                >
                   <div class="truncate">{{ location.name }}</div>
                   <div v-if="location.name !== location.treeString" class="mt-1 truncate text-xs text-muted-foreground">
                     {{ location.treeString }}
@@ -191,8 +194,11 @@
                 @select="selectLocation(location as unknown as EntitySummary)"
               >
                 <Check :class="cn('mr-2 h-4 w-4', value?.id === location.id ? 'opacity-100' : 'opacity-0')" />
-                <div>
-                  <div class="flex w-full">
+                <div
+                  class="min-w-0"
+                  :style="{ paddingLeft: search.trim() ? undefined : `${Math.min(location.depth, 4) * 0.5}rem` }"
+                >
+                  <div class="flex w-full truncate">
                     {{ location.name }}
                   </div>
                   <div v-if="location.name !== location.treeString" class="mt-1 text-xs text-muted-foreground">
@@ -219,7 +225,7 @@
   import { DialogRoot } from "reka-ui";
   import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
   import { cn } from "~/lib/utils";
-  import type { EntitySummary } from "~~/lib/api/types/data-contracts";
+  import type { EntitySummary, TreeItem } from "~~/lib/api/types/data-contracts";
   import { useFlatLocations } from "~~/composables/use-location-helpers";
 
   type Props = {
@@ -285,6 +291,21 @@
     expandedLocationIds.value = next;
   }
 
+  function expandPathToLocation(id: string) {
+    const visit = (nodes: TreeItem[], ancestors: string[]): boolean => {
+      for (const node of nodes) {
+        if (node.id === id) {
+          expandedLocationIds.value = new Set([...expandedLocationIds.value, ...ancestors]);
+          return true;
+        }
+        if (visit(node.children ?? [], [...ancestors, node.id])) return true;
+      }
+      return false;
+    };
+
+    visit(locationStore.tree ?? [], []);
+  }
+
   function handleDialogLocation(location: DialogLocation) {
     if (location.hasChildren && !search.value.trim()) {
       toggleLocation(location.id);
@@ -309,10 +330,23 @@
   }
 
   const filteredLocations = computed(() => {
-    const keys = ["name", "treeString"];
-    const filtered = fuzzysort.go(search.value, locations.value, { keys, all: true }).map(i => i.obj);
+    const query = search.value.trim();
+    if (!query) return locations.value;
 
-    return filtered;
+    const keys = ["name", "treeString"];
+    return fuzzysort.go(query, locations.value, { keys, all: true }).map(i => i.obj);
+  });
+
+  // On mobile/tablet the selected location may be several levels deep. Expand
+  // its ancestor path when the picker opens so a level-4 location is visible
+  // immediately without three manual expand operations.
+  watch(open, isOpen => {
+    if (!isOpen) {
+      search.value = "";
+      return;
+    }
+
+    if (value.value?.id) expandPathToLocation(value.value.id);
   });
 
   // Reset search when value is cleared
