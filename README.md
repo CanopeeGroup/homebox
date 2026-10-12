@@ -124,6 +124,9 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Après une création, le formulaire se ferme et l’utilisateur reste sur la page courante : il n’y a plus de redirection automatique vers la fiche de l’objet ou de l’emplacement créé.
 - La création d’un emplacement actualise immédiatement les listes d’emplacements, les emplacements parents et l’arbre, puis renouvelle les caches associés.
 - La création d’un objet actualise immédiatement la liste de l’emplacement concerné et synchronise son compteur d’objets dans l’arbre global et dans les cartes de sous-emplacements.
+- Depuis une fiche **Subfolder-level4**, **Nouvel Objet** conserve automatiquement cet emplacement comme destination, y compris après une longue mise en veille de la PWA.
+- Le sélecteur tactile affiche le chemin complet, indente les niveaux profonds et rouvre automatiquement la branche contenant l’emplacement déjà sélectionné.
+- Les recherches dans le sélecteur n’utilisent plus le moteur fuzzy tant que le champ de recherche est vide, afin de réduire le travail sur les gros arbres d’emplacements.
 - Les mises à jour ne dépendent pas uniquement des événements WebSocket, afin d’éviter un affichage obsolète derrière certains reverse proxies.
 
 ### Utilisateurs et collections
