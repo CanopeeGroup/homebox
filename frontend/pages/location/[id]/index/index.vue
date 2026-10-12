@@ -483,7 +483,7 @@
       <!-- Child locations -->
       <section v-if="childLocations && childLocations.length > 0" class="mt-6">
         <BaseSectionHeader class="mb-5"> {{ $t("locations.child_locations") }} </BaseSectionHeader>
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           <LocationCard v-for="child in childLocations" :key="child.id" :location="child" />
         </div>
       </section>
