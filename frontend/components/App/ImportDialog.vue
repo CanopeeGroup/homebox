@@ -71,6 +71,7 @@
   const dialog = useVModel(props, "modelValue", emit);
 
   const api = useUserApi();
+  const { refreshInventoryData } = useInventoryRefresh();
 
   const importCsv = ref<File | undefined>(undefined);
   const importLoading = ref(false);
@@ -107,6 +108,12 @@
       importLoading.value = false;
       return;
     }
+
+    // The import request only returns after the database changes are complete.
+    // Refresh every inventory representation immediately on this client instead
+    // of waiting for WebSocket delivery, which may be delayed or suspended on
+    // mobile/tablet PWAs.
+    await refreshInventoryData();
 
     // Reset
     dialog.value = false;
