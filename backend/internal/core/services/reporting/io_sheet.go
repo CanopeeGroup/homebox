@@ -125,24 +125,25 @@ func (s *IOSheet) Read(data io.Reader) error {
 	}
 	_, level1 := s.GetColumn("Subfolder-level1")
 	_, level2 := s.GetColumn("Subfolder-level2")
-	if level1 != level2 {
-		return fmt.Errorf("Subfolder-level1 and Subfolder-level2 must be provided together")
-	}
 
 	// Subfolder columns must form one continuous hierarchy. This makes level 4
-	// safe to import while preventing a spreadsheet such as level1, level2,
-	// level4 from silently dropping the last level.
-	if level1 {
-		highestLevel := 2
-		for _, header := range s.headers {
-			const prefix = "Subfolder-level"
-			if !strings.HasPrefix(header, prefix) {
-				continue
-			}
-			level, err := strconv.Atoi(strings.TrimPrefix(header, prefix))
-			if err == nil && level > highestLevel {
-				highestLevel = level
-			}
+	// safe to import while preventing spreadsheets such as level1, level2,
+	// level4 (or level4 on its own) from silently dropping part of the path.
+	highestLevel := 0
+	for _, header := range s.headers {
+		const prefix = "Subfolder-level"
+		if !strings.HasPrefix(header, prefix) {
+			continue
+		}
+		level, err := strconv.Atoi(strings.TrimPrefix(header, prefix))
+		if err == nil && level > highestLevel {
+			highestLevel = level
+		}
+	}
+
+	if highestLevel > 0 {
+		if !level1 || !level2 {
+			return fmt.Errorf("Subfolder-level1 and Subfolder-level2 must be provided together")
 		}
 		for level := 1; level <= highestLevel; level++ {
 			if _, ok := s.GetColumn(fmt.Sprintf("Subfolder-level%d", level)); !ok {
