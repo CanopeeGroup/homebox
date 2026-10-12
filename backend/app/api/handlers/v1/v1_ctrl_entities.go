@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 	"github.com/sysadminsmedia/homebox/backend/internal/core/services"
+	"github.com/sysadminsmedia/homebox/backend/internal/core/services/reporting/eventbus"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/repo"
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/validate"
 	"github.com/sysadminsmedia/homebox/backend/internal/web/adapters"
@@ -508,6 +509,12 @@ func (ctrl *V1Controller) HandleEntitiesImport() errchain.HandlerFunc {
 			return validate.NewRequestError(err, http.StatusInternalServerError)
 		}
 		span.SetAttributes(attribute.Int("rows.imported.count", count))
+
+		// Individual entity mutations can occur throughout a long import. Emit
+		// one final import event only after the whole CSV has committed so every
+		// connected desktop/mobile client performs an authoritative refresh from
+		// the completed database state.
+		ctrl.bus.Publish(eventbus.EventImportMutation, eventbus.GroupMutationEvent{GID: auth.GID})
 
 		w.WriteHeader(http.StatusNoContent)
 		return nil
