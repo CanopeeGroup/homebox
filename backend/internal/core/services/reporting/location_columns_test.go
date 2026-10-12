@@ -33,3 +33,33 @@ func TestLocationColumnsAcceptRootInSecondLevel(t *testing.T) {
 		t.Fatalf("normal nested location changed: %+v", sheet.Rows[1])
 	}
 }
+
+
+func TestLocationColumnsAcceptFourthLevel(t *testing.T) {
+	var sheet IOSheet
+	if err := sheet.Read(strings.NewReader(
+		"Subfolder-level1;Subfolder-level2;Subfolder-level3;Subfolder-level4;HB.name;HB.model_number;HB.quantity\n" +
+			"A;B;C;D;Object L4;REF-L4;1\n",
+	)); err != nil {
+		t.Fatal(err)
+	}
+
+	row := sheet.Rows[0]
+	if len(row.Location) != 4 || row.Location[0] != "A" || row.Location[1] != "B" || row.Location[2] != "C" || row.Location[3] != "D" {
+		t.Fatalf("fourth-level path not parsed: %+v", row)
+	}
+	if row.Name != "Object L4" || row.ModelNumber != "REF-L4" {
+		t.Fatalf("fourth-level object columns not parsed: %+v", row)
+	}
+}
+
+func TestLocationColumnsRejectHierarchyGap(t *testing.T) {
+	var sheet IOSheet
+	err := sheet.Read(strings.NewReader(
+		"Subfolder-level1;Subfolder-level2;Subfolder-level4;HB.name;HB.model_number;HB.quantity\n" +
+			"A;B;D;Object;REF;1\n",
+	))
+	if err == nil {
+		t.Fatal("missing Subfolder-level3 was accepted")
+	}
+}
