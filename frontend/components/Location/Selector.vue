@@ -15,7 +15,7 @@
         @click="open = true"
       >
         <span class="min-w-0 flex-auto truncate text-left">
-          {{ value && value.name ? value.name : $t("components.location.selector.select_location") }}
+          {{ selectedLocationLabel || $t("components.location.selector.select_location") }}
         </span>
         <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
       </Button>
@@ -91,7 +91,7 @@
         @click="open = true"
       >
         <span class="min-w-0 flex-auto truncate text-left">
-          {{ value && value.name ? value.name : $t("components.location.selector.select_location") }}
+          {{ selectedLocationLabel || $t("components.location.selector.select_location") }}
         </span>
         <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
       </Button>
@@ -159,7 +159,7 @@
           class="w-full justify-between"
         >
           <span class="min-w-0 flex-auto truncate text-left">
-            {{ value && value.name ? value.name : $t("components.location.selector.select_location") }}
+            {{ selectedLocationLabel || $t("components.location.selector.select_location") }}
           </span>
 
           <span class="ml-2 flex items-center">
@@ -246,6 +246,10 @@
   const locationStore = useLocationStore();
   const value = useVModel(props, "modelValue", emit);
   const expandedLocationIds = ref(new Set<string>());
+  const selectedLocationLabel = computed(() => {
+    if (!value.value?.id) return "";
+    return locations.value.find(location => location.id === value.value?.id)?.treeString ?? value.value.name ?? "";
+  });
 
   type DialogLocation = {
     id: string;
