@@ -16,6 +16,8 @@
     BreadcrumbSeparator,
   } from "@/components/ui/breadcrumb";
   import { Button } from "@/components/ui/button";
+  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+  import { sortLocations, useLocationSort } from "~~/composables/use-location-sort";
   import { Badge } from "@/components/ui/badge";
   import { Separator } from "@/components/ui/separator";
   import { DialogID } from "~/components/ui/dialog-provider/utils";
@@ -48,6 +50,7 @@
   // the API refreshes the authoritative copy in the background.
   const LOCATION_PAGE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
   const locationStore = useLocationStore();
+  const { mode: locationSortMode, options: locationSortOptions } = useLocationSort();
   const locationDetailCache = useState<Record<string, any>>("location-detail-cache", () => ({}));
   const { cache: childLocationCache, removeLocations: removeChildLocationCaches } = useLocationChildCache();
   const { cache: locationItemCache, removeLocations: removeLocationItemCaches } = useLocationItemCache();
@@ -312,6 +315,10 @@
     }
   );
 
+  const sortedChildLocations = computed(() =>
+    sortLocations(childLocations.value ?? [], locationSortMode.value)
+  );
+
   const { data: items, refresh: refreshItemList } = useAsyncData(
     () => locationId.value + "_item_list",
     async () => {
@@ -482,9 +489,21 @@
 
       <!-- Child locations -->
       <section v-if="childLocations && childLocations.length > 0" class="mt-6">
-        <BaseSectionHeader class="mb-5"> {{ $t("locations.child_locations") }} </BaseSectionHeader>
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-2">
+          <BaseSectionHeader class="mb-0"> {{ $t("locations.child_locations") }} </BaseSectionHeader>
+          <Select v-model:model-value="locationSortMode">
+            <SelectTrigger class="h-9 w-[13.5rem] max-w-[75vw]" aria-label="Trier les sous-emplacements">
+              <SelectValue placeholder="Trier les sous-emplacements" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="option in locationSortOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <LocationCard v-for="child in childLocations" :key="child.id" :location="child" />
+          <LocationCard v-for="child in sortedChildLocations" :key="child.id" :location="child" />
         </div>
       </section>
 
