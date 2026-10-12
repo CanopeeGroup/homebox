@@ -5,6 +5,7 @@ export interface FlatTreeItem {
   id: string;
   name: string;
   treeString: string;
+  depth: number;
 }
 
 function flatTree(tree: TreeItem[]): FlatTreeItem[] {
@@ -13,7 +14,7 @@ function flatTree(tree: TreeItem[]): FlatTreeItem[] {
   // turns the nested items into a flat items array where
   // the display is a string of the tree hierarchy separated by breadcrumbs
 
-  function flatten(items: TreeItem[], display: string) {
+  function flatten(items: TreeItem[], display: string, depth: number) {
     if (!items) {
       return;
     }
@@ -23,14 +24,15 @@ function flatTree(tree: TreeItem[]): FlatTreeItem[] {
         id: item.id,
         name: item.name,
         treeString: display + item.name,
+        depth,
       });
       if (item.children) {
-        flatten(item.children, display + item.name + " > ");
+        flatten(item.children, display + item.name + " > ", depth + 1);
       }
     }
   }
 
-  flatten(tree, "");
+  flatten(tree, "", 0);
 
   return v;
 }
