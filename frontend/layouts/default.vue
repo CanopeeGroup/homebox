@@ -448,7 +448,7 @@
   ]);
 
   const locationStore = useLocationStore();
-  const { refreshInventoryData } = useInventoryRefresh();
+  const { refreshEntityData, refreshInventoryData } = useInventoryRefresh();
   let lastResumeTreeRefreshAt = 0;
   let backgroundedAt: number | null = null;
 
@@ -459,8 +459,9 @@
     if (now - lastResumeTreeRefreshAt < 1500) return;
     lastResumeTreeRefreshAt = now;
 
-    // A short focus change only needs the lightweight tree refresh.
-    void locationStore.refreshTree(true);
+    // Revalidate the authoritative tree and purge per-location caches only if
+    // the location structure changed while this client was inactive.
+    void refreshEntityData();
   };
 
   const handleVisibilityChange = () => {
@@ -527,11 +528,10 @@
   const nuxtApp = useNuxtApp();
 
   const refreshEntityDisplay = useDebounceFn(() => {
-    // Entity mutations are uncommon compared with navigation. Refresh the
-    // authoritative tree on every connected client so a deleted location is
-    // removed from Pinia/IndexedDB even when that client is on another page.
-    void locationStore.refreshTree(true);
-    void nuxtApp.runWithContext(() => refreshNuxtData());
+    // Compare the refreshed tree with the resident one. Location structural
+    // changes clear stale per-location IndexedDB caches; pure item mutations
+    // keep the fast navigation caches intact.
+    void refreshEntityData();
   }, 250);
 
   const refreshImportDisplay = useDebounceFn(() => {
