@@ -288,8 +288,8 @@
       form.location = {} as EntityOut;
 
       // When "New object" is opened from a location page, resolve that location
-      // immediately from the already loaded tree. Do not make the user wait for
-      // three large location API requests before the form can show its location.
+      // immediately from the recursive tree. This works at every hierarchy
+      // depth, including Subfolder-level4, without loading the flat location lists.
       const routeLocationId = locationId.value
         ? (Array.isArray(locationId.value) ? locationId.value[0] : locationId.value)
         : null;
@@ -300,11 +300,16 @@
 
       initializing.value = true;
       try {
-        // Entity types are required before creation. Location data is already
-        // maintained by the locations page/cache; only fetch the tree if this
-        // session has no tree at all. This keeps opening the create form fast.
+        // Entity types are always required. On a cold start load the tree once;
+        // when a mobile/PWA cache has a tree but not the currently opened deep
+        // location, force one authoritative refresh before falling back to a
+        // direct location fetch below.
         const requiredLoads: Promise<unknown>[] = [entityTypeStore.refresh()];
-        if (locationsStore.tree === null) requiredLoads.push(locationsStore.refreshTree());
+        if (locationsStore.tree === null) {
+          requiredLoads.push(locationsStore.refreshTree());
+        } else if (routeLocationId && !form.location?.id) {
+          requiredLoads.push(locationsStore.refreshTree(true));
+        }
         await Promise.all(requiredLoads);
       } catch {
         toast.error(t("components.entity.create_modal.toast.create_failed", { type: entityTypeName.value }));
@@ -313,10 +318,18 @@
         initializing.value = false;
       }
 
-      // If this was a cold start, the tree may only have become available above.
+      // If the tree was cold/stale, it may only have become available above.
+      // As a final fallback fetch the route location itself. This guarantees
+      // that "Nouvel Objet" from a level-4 location keeps that exact location
+      // selected even after a long mobile/tablet idle period.
       if (routeLocationId && !form.location?.id) {
         const loadedLocation = findLocation(routeLocationId);
-        if (loadedLocation) form.location = loadedLocation;
+        if (loadedLocation) {
+          form.location = loadedLocation;
+        } else {
+          const { data: routeLocation, error: routeLocationError } = await api.items.getLocation(routeLocationId);
+          if (!routeLocationError && routeLocation) form.location = routeLocation;
+        }
       }
 
       subItemCreate.value = false;
