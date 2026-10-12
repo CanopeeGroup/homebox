@@ -134,11 +134,15 @@ func (s *IOSheet) Read(data io.Reader) error {
 	// level4 from silently dropping the last level.
 	if level1 {
 		highestLevel := 2
-		for level := 3; ; level++ {
-			if _, ok := s.GetColumn(fmt.Sprintf("Subfolder-level%d", level)); !ok {
-				break
+		for _, header := range s.headers {
+			const prefix = "Subfolder-level"
+			if !strings.HasPrefix(header, prefix) {
+				continue
 			}
-			highestLevel = level
+			level, err := strconv.Atoi(strings.TrimPrefix(header, prefix))
+			if err == nil && level > highestLevel {
+				highestLevel = level
+			}
 		}
 		for level := 1; level <= highestLevel; level++ {
 			if _, ok := s.GetColumn(fmt.Sprintf("Subfolder-level%d", level)); !ok {
