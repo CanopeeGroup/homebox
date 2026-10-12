@@ -2,6 +2,7 @@ let inventoryRefreshPromise: Promise<void> | null = null;
 
 export function useInventoryRefresh() {
   const locationStore = useLocationStore();
+  const nuxtApp = useNuxtApp();
   const { invalidate: invalidateLocationItems } = useLocationItemCache();
   const { invalidate: invalidateChildLocations } = useLocationChildCache();
   const locationDetailCache = useState<Record<string, unknown>>("location-detail-cache", () => ({}));
@@ -36,7 +37,7 @@ export function useInventoryRefresh() {
 
       // Refresh the currently mounted page (location item list, search results,
       // counters, etc.) only after the stale caches have been invalidated.
-      await refreshNuxtData();
+      await nuxtApp.runWithContext(() => refreshNuxtData());
     })().finally(() => {
       inventoryRefreshPromise = null;
     });
