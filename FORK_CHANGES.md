@@ -68,6 +68,8 @@ Les développements personnalisés sont publiés exclusivement sur la branche `m
 
 ### Emplacements
 
+- Tri des emplacements disponible à tous les niveaux : nom A → Z, nom Z → A, nombre d’objets décroissant ou croissant.
+- Le tri s’applique récursivement aux sous-emplacements développés et le même choix est disponible dans chaque fiche d’emplacement.
 - Présentation des emplacements de premier niveau sous forme de petites tuiles.
 - Présentation des sous-emplacements sous forme de liste hiérarchique.
 - Bouton escalier sur chaque tuile pour afficher ou masquer les sous-emplacements.
@@ -122,6 +124,8 @@ Une passe d’optimisation a été réalisée pour améliorer la réactivité su
 - Lors d’un événement WebSocket, l’arbre affiché n’est plus remis à `null` : les données existantes restent visibles pendant le rafraîchissement.
 - Après création d’un objet, les compteurs de l’arbre global et des cartes de sous-emplacements sont mis à jour immédiatement, puis vérifiés avec le serveur.
 - Les rafraîchissements rapprochés sont regroupés afin de limiter le trafic API et les recalculs.
+- Une modification structurelle des emplacements déclenche une réconciliation de l’arbre avec le serveur et purge les caches de fiches/sous-emplacements obsolètes.
+- IndexedDB ne peut plus réinjecter une fiche d’emplacement supprimée dès que l’arbre serveur confirme que son identifiant n’existe plus.
 
 ### Recherche et objets
 
