@@ -57,7 +57,7 @@
       <LocationCompactTree
         v-if="hasLocationChildren(location) && isExpanded(location.id)"
         :locations="location.children"
-        class="ml-4"
+        class="ml-2 sm:ml-4"
       />
     </li>
   </ul>
