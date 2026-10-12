@@ -3,8 +3,8 @@ let inventoryRefreshPromise: Promise<void> | null = null;
 export function useInventoryRefresh() {
   const locationStore = useLocationStore();
   const nuxtApp = useNuxtApp();
-  const { invalidate: invalidateLocationItems } = useLocationItemCache();
-  const { invalidate: invalidateChildLocations } = useLocationChildCache();
+  const { cache: locationItemCache } = useLocationItemCache();
+  const { cache: childLocationCache } = useLocationChildCache();
   const locationDetailCache = useState<Record<string, unknown>>("location-detail-cache", () => ({}));
 
   async function refreshInventoryData() {
@@ -15,8 +15,8 @@ export function useInventoryRefresh() {
       // Drop every location-specific memory/IndexedDB cache before asking the
       // authoritative API for fresh state. This also fixes mobile/PWA clients
       // that may have missed the WebSocket event while suspended.
-      invalidateLocationItems();
-      invalidateChildLocations();
+      locationItemCache.value = {};
+      childLocationCache.value = {};
       locationDetailCache.value = {};
 
       await Promise.all([
