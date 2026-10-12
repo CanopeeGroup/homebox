@@ -37,7 +37,12 @@ export function useInventoryRefresh() {
 
       // Refresh the currently mounted page (location item list, search results,
       // counters, etc.) only after the stale caches have been invalidated.
-      await nuxtApp.runWithContext(() => refreshNuxtData());
+      // A page-specific refresh failure must not leave the import dialog stuck.
+      try {
+        await nuxtApp.runWithContext(() => refreshNuxtData());
+      } catch (error) {
+        console.error("Inventory page refresh failed after cache invalidation", error);
+      }
     })().finally(() => {
       inventoryRefreshPromise = null;
     });
