@@ -448,7 +448,9 @@
   ]);
 
   const locationStore = useLocationStore();
+  const { refreshInventoryData } = useInventoryRefresh();
   let lastResumeTreeRefreshAt = 0;
+  let backgroundedAt: number | null = null;
 
   const refreshLocationTreeAfterResume = () => {
     if (document.visibilityState !== "visible" || locationStore.tree === null) return;
@@ -457,10 +459,36 @@
     if (now - lastResumeTreeRefreshAt < 1500) return;
     lastResumeTreeRefreshAt = now;
 
-    // Mobile browsers/PWAs can suspend the page and drop WebSocket events while
-    // keeping Pinia/IndexedDB alive. Revalidate the resident tree whenever the
-    // app becomes active again so deletions made elsewhere cannot linger.
+    // A short focus change only needs the lightweight tree refresh.
     void locationStore.refreshTree(true);
+  };
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState !== "visible") {
+      backgroundedAt = Date.now();
+      return;
+    }
+
+    const awayFor = backgroundedAt ? Date.now() - backgroundedAt : 0;
+    backgroundedAt = null;
+
+    // Mobile/tablet PWAs can miss WebSocket import events while suspended.
+    // After a real background period, invalidate per-location caches and refresh
+    // the complete inventory instead of refreshing only the tree.
+    if (awayFor >= 5000) {
+      void refreshInventoryData();
+      return;
+    }
+
+    refreshLocationTreeAfterResume();
+  };
+
+  const handlePageShow = (event: PageTransitionEvent) => {
+    if (event.persisted) {
+      void refreshInventoryData();
+      return;
+    }
+    refreshLocationTreeAfterResume();
   };
 
   onMounted(() => {
@@ -485,14 +513,14 @@
       });
     }
 
-    document.addEventListener("visibilitychange", refreshLocationTreeAfterResume);
-    window.addEventListener("pageshow", refreshLocationTreeAfterResume);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pageshow", handlePageShow);
     window.addEventListener("focus", refreshLocationTreeAfterResume);
   });
 
   onUnmounted(() => {
-    document.removeEventListener("visibilitychange", refreshLocationTreeAfterResume);
-    window.removeEventListener("pageshow", refreshLocationTreeAfterResume);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    window.removeEventListener("pageshow", handlePageShow);
     window.removeEventListener("focus", refreshLocationTreeAfterResume);
   });
 
@@ -506,12 +534,19 @@
     void nuxtApp.runWithContext(() => refreshNuxtData());
   }, 250);
 
+  const refreshImportDisplay = useDebounceFn(() => {
+    // Import completion is a stronger invalidation boundary than a normal
+    // entity mutation: quantities, items and entire location paths may all have
+    // changed. Refresh all desktop/mobile caches from the completed DB state.
+    void refreshInventoryData();
+  }, 250);
+
   const refreshDisplay = useDebounceFn(() => {
     void nuxtApp.runWithContext(() => refreshNuxtData());
   }, 250);
 
   onServerEvent(ServerEvent.EntityMutation, refreshEntityDisplay);
-  onServerEvent(ServerEvent.ImportMutation, refreshEntityDisplay);
+  onServerEvent(ServerEvent.ImportMutation, refreshImportDisplay);
   onServerEvent(ServerEvent.UserMutation, refreshDisplay);
   onServerEvent(ServerEvent.ExportMutation, refreshDisplay);
 
