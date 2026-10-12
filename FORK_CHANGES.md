@@ -10,6 +10,9 @@ Les développements personnalisés sont publiés exclusivement sur la branche `m
 - **CSV compact** : le format passe à sept colonnes : quatre niveaux d’emplacements puis `HB.name`, `HB.model_number` et `HB.quantity`.
 - **Import niveau 4** : un objet peut être importé directement dans le quatrième niveau ; les emplacements manquants du chemin sont créés automatiquement dans le bon ordre.
 - **Interface niveau 4** : les sélecteurs et la navigation d’emplacements sont récursifs ; un emplacement de niveau 4 peut être ouvert, modifié, supprimé et recevoir directement de nouveaux objets comme les autres niveaux.
+- **Mobile/tablette niveau 4** : le sélecteur tactile affiche le chemin complet, conserve l’indentation hiérarchique et rouvre automatiquement la branche du niveau déjà sélectionné.
+- **Création mobile dans un niveau 4** : le bouton **Nouvel Objet** conserve l’emplacement courant, avec rafraîchissement forcé de l’arbre et repli direct sur l’API si le cache PWA est ancien.
+- **Optimisation du sélecteur** : aucune recherche fuzzy n’est calculée lorsque le champ de recherche est vide, ce qui réduit le coût d’ouverture sur les grandes arborescences.
 - **Validation CSV** : les colonnes `Subfolder-levelN` doivent être continues afin d’éviter qu’un niveau soit ignoré silencieusement.
 - **Protection export** : le CSV compact refuse les hiérarchies au-delà du niveau 4 afin d’éviter toute perte de relation ; utiliser la sauvegarde ZIP complète pour les hiérarchies plus profondes.
 
