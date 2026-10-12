@@ -10,12 +10,15 @@
   import LocationCompactTree from "~/components/Location/CompactTree.vue";
   import { Card } from "~/components/ui/card";
   import { Button } from "~/components/ui/button";
+  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+  import { sortLocations, useLocationSort } from "~~/composables/use-location-sort";
 
   definePageMeta({ middleware: ["auth"] });
   const { t } = useI18n();
   useHead({ title: computed(() => `HomeBox | ${t("menu.locations")}`) });
 
   const locationStore = useLocationStore();
+  const { mode: locationSortMode, options: locationSortOptions } = useLocationSort();
   const tree = computed(() => locationStore.tree ?? []);
   const initialLoading = ref(locationStore.tree === null);
   const manualRefreshing = ref(false);
@@ -38,7 +41,7 @@
       // This page only renders the tree. Fetching the two flat location lists
       // here duplicated large API responses on phones/tablets without improving
       // the initial render. Other screens load those datasets on demand.
-      await locationStore.refreshTree();
+      await locationStore.refreshTree(true);
     } finally {
       initialLoading.value = false;
     }
@@ -50,7 +53,7 @@
     if (manualRefreshing.value) return;
     manualRefreshing.value = true;
     try {
-      await locationStore.refreshTree();
+      await locationStore.refreshTree(true);
     } finally {
       manualRefreshing.value = false;
     }
@@ -67,9 +70,11 @@
     }
   );
 
-  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
   const rootLocations = computed<TreeItem[]>(() =>
-    [...(tree.value ?? [])].filter(item => item.type === "location").sort((a, b) => collator.compare(a.name, b.name))
+    sortLocations(
+      (tree.value ?? []).filter(item => item.type === "location"),
+      locationSortMode.value
+    )
   );
 
   const expandedLocations = ref(new Set<string>());
@@ -85,18 +90,30 @@
 
 <template>
   <BaseContainer>
-    <div class="mb-4 flex items-center justify-between gap-2">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <BaseSectionHeader class="mb-0">{{ $t("menu.locations") }}</BaseSectionHeader>
-      <Button
-        size="icon"
-        variant="ghost"
-        :disabled="manualRefreshing"
-        title="Actualiser les emplacements"
-        aria-label="Actualiser les emplacements"
-        @click="manualRefreshLocations"
-      >
-        <MdiRefresh class="size-5" :class="manualRefreshing && 'animate-spin'" />
-      </Button>
+      <div class="flex min-w-0 items-center gap-2">
+        <Select v-model:model-value="locationSortMode">
+          <SelectTrigger class="h-9 w-[13.5rem] max-w-[65vw]" aria-label="Trier les emplacements">
+            <SelectValue placeholder="Trier les emplacements" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="option in locationSortOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          size="icon"
+          variant="ghost"
+          :disabled="manualRefreshing"
+          title="Actualiser les emplacements"
+          aria-label="Actualiser les emplacements"
+          @click="manualRefreshLocations"
+        >
+          <MdiRefresh class="size-5" :class="manualRefreshing && 'animate-spin'" />
+        </Button>
+      </div>
     </div>
 
 
@@ -122,7 +139,11 @@
             <MdiStairs class="size-5" :class="isExpanded(location.id) && 'text-primary'" />
           </Button>
         </div>
-        <LocationCompactTree v-if="isExpanded(location.id)" :locations="location.children" />
+        <LocationCompactTree
+          v-if="isExpanded(location.id)"
+          :locations="location.children"
+          :sort-mode="locationSortMode"
+        />
       </Card>
     </div>
 
