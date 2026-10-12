@@ -26,8 +26,9 @@
       </div>
 
       <p class="text-sm text-muted-foreground">
-        Emplacements : Subfolder-level1;Subfolder-level2. Les lignes vides et chemins existants sont ignorés.
-        Les fichiers Homebox habituels restent acceptés.
+        Emplacements : Subfolder-level1 à Subfolder-level4. Les colonnes de niveaux doivent être continues.
+        Une ligne avec HB.name crée directement l’objet dans le dernier niveau renseigné ; les chemins existants
+        sont réutilisés et les fichiers Homebox habituels restent acceptés.
       </p>
 
       <form class="flex flex-col gap-4" @submit.prevent="submitCsvFile">
