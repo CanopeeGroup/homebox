@@ -128,7 +128,24 @@ func (s *IOSheet) Read(data io.Reader) error {
 	if level1 != level2 {
 		return fmt.Errorf("Subfolder-level1 and Subfolder-level2 must be provided together")
 	}
-	if !level1 {
+
+	// Subfolder columns must form one continuous hierarchy. This makes level 4
+	// safe to import while preventing a spreadsheet such as level1, level2,
+	// level4 from silently dropping the last level.
+	if level1 {
+		highestLevel := 2
+		for level := 3; ; level++ {
+			if _, ok := s.GetColumn(fmt.Sprintf("Subfolder-level%d", level)); !ok {
+				break
+			}
+			highestLevel = level
+		}
+		for level := 1; level <= highestLevel; level++ {
+			if _, ok := s.GetColumn(fmt.Sprintf("Subfolder-level%d", level)); !ok {
+				return fmt.Errorf("Subfolder-level%d is missing from the location hierarchy", level)
+			}
+		}
+	} else {
 		if _, _, err := parseHeaders(s.headers); err != nil {
 			return err
 		}
@@ -461,11 +478,11 @@ func (s *IOSheet) CSV() ([][]string, error) {
 	return memcsv, nil
 }
 
-// CompactCSV is the six-column collection exchange format. It supports three
+// CompactCSV is the seven-column collection exchange format. It supports four
 // location levels. Location rows have no object fields, so importing them cannot
 // accidentally create objects.
 func (s *IOSheet) CompactCSV() ([][]string, error) {
-	rows := [][]string{{"Subfolder-level1", "Subfolder-level2", "Subfolder-level3", "HB.name", "HB.model_number", "HB.quantity"}}
+	rows := [][]string{{"Subfolder-level1", "Subfolder-level2", "Subfolder-level3", "Subfolder-level4", "HB.name", "HB.model_number", "HB.quantity"}}
 	key := func(path LocationString) string {
 		names := make([]string, len(path))
 		for i, name := range path {
@@ -478,8 +495,8 @@ func (s *IOSheet) CompactCSV() ([][]string, error) {
 	// in its path. Emit a standalone location only when no other row covers it.
 	covered := make(map[string]bool)
 	for _, row := range s.Rows {
-		if len(row.FolderPath) > 3 {
-			return nil, fmt.Errorf("compact CSV supports only three location levels; use a full ZIP backup for deeper hierarchies")
+		if len(row.FolderPath) > 4 {
+			return nil, fmt.Errorf("compact CSV supports only four location levels; use a full ZIP backup for deeper hierarchies")
 		}
 		depth := len(row.FolderPath)
 		if row.IsLocation {
@@ -498,12 +515,12 @@ func (s *IOSheet) CompactCSV() ([][]string, error) {
 			}
 			emittedLocations[pathKey] = true
 		}
-		values := make([]string, 6)
+		values := make([]string, 7)
 		copy(values, row.FolderPath)
 		if !row.IsLocation {
-			values[3] = row.Name
-			values[4] = row.ModelNumber
-			values[5] = strconv.FormatFloat(row.Quantity, 'f', -1, 64)
+			values[4] = row.Name
+			values[5] = row.ModelNumber
+			values[6] = strconv.FormatFloat(row.Quantity, 'f', -1, 64)
 		}
 		rows = append(rows, values)
 	}
