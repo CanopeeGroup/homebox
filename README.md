@@ -106,6 +106,7 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Objets d’un emplacement en petites tuiles sans photo, avec nom et quantité, sans choix Carte/Tableau ;
   pagination et sélection groupée conservées.
 - Emplacements de premier niveau en petites tuiles ; sous-emplacements en liste hiérarchique.
+- Tri disponible sur la page Emplacements et dans chaque fiche d’emplacement : nom A → Z, nom Z → A, nombre d’objets décroissant ou croissant. Le même ordre s’applique récursivement aux sous-emplacements affichés.
 - Navigation récursive jusqu’au quatrième niveau dans l’arbre et les sélecteurs d’emplacement ; un objet peut être ajouté directement dans un emplacement de niveau 4.
 - Bouton escalier pour afficher ou masquer les sous-emplacements, repliés par défaut.
 - Retrait des blocs Détails/Notes des pages d’emplacement et simplification des formulaires Description/Photo.
