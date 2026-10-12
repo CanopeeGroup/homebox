@@ -4,6 +4,15 @@ Ce dépôt est un fork personnalisé de [sysadminsmedia/homebox](https://github.
 
 Les développements personnalisés sont publiés exclusivement sur la branche `main`.
 
+## Changements récents — 12 octobre 2026
+
+- **Sous-emplacements niveau 4** : prise en charge de `Subfolder-level4` dans l’import/export CSV compact.
+- **CSV compact** : le format passe à sept colonnes : quatre niveaux d’emplacements puis `HB.name`, `HB.model_number` et `HB.quantity`.
+- **Import niveau 4** : un objet peut être importé directement dans le quatrième niveau ; les emplacements manquants du chemin sont créés automatiquement dans le bon ordre.
+- **Interface niveau 4** : les sélecteurs et la navigation d’emplacements sont récursifs ; un emplacement de niveau 4 peut être ouvert, modifié, supprimé et recevoir directement de nouveaux objets comme les autres niveaux.
+- **Validation CSV** : les colonnes `Subfolder-levelN` doivent être continues afin d’éviter qu’un niveau soit ignoré silencieusement.
+- **Protection export** : le CSV compact refuse les hiérarchies au-delà du niveau 4 afin d’éviter toute perte de relation ; utiliser la sauvegarde ZIP complète pour les hiérarchies plus profondes.
+
 ## Changements récents — 24 septembre 2026
 
 - **Création rapide mobile/tablette** : ajout dans l’en-tête de deux boutons visibles avec leur libellé, **Nouvel Emplacement** et **Nouvel Objet**, réutilisant les formulaires existants.
