@@ -91,8 +91,36 @@
     return [...ids];
   }
 
+  function currentTreeLocationIds(): Set<string> | null {
+    if (locationStore.tree === null) return null;
+
+    const ids = new Set<string>();
+    const walk = (nodes: TreeItem[]) => {
+      for (const node of nodes) {
+        if (node.type !== "location") continue;
+        ids.add(node.id);
+        walk(node.children ?? []);
+      }
+    };
+
+    walk(locationStore.tree);
+    return ids;
+  }
+
   async function hydrateLocationPageCache(id: string) {
     if (!id) return;
+
+    const validLocationIds = currentTreeLocationIds();
+
+    // Once the authoritative tree no longer contains an ID, never resurrect
+    // that deleted location from IndexedDB/history on desktop or mobile.
+    if (validLocationIds && !validLocationIds.has(id)) {
+      delete locationDetailCache.value[id];
+      removeChildLocationCaches([id]);
+      removeLocationItemCaches([id]);
+      await deletePersistentCache(persistentCacheKey(`location-detail:${id}`));
+      return;
+    }
 
     const [cachedDetail, cachedChildren, cachedItems] = await Promise.all([
       readPersistentCache<any>(
@@ -109,8 +137,17 @@
       ),
     ]);
 
+    const safeChildren = validLocationIds
+      ? (cachedChildren ?? []).filter(child => validLocationIds.has(child.id))
+      : cachedChildren;
+
     if (cachedDetail && !locationDetailCache.value[id]) locationDetailCache.value[id] = cachedDetail;
-    if (cachedChildren && !childLocationCache.value[id]) childLocationCache.value[id] = cachedChildren;
+    if (safeChildren && !childLocationCache.value[id]) {
+      childLocationCache.value[id] = safeChildren;
+      if (cachedChildren && safeChildren.length !== cachedChildren.length) {
+        void writePersistentCache(persistentCacheKey(`location-children:${id}`), safeChildren);
+      }
+    }
     if (cachedItems && !locationItemCache.value[id]) locationItemCache.value[id] = cachedItems;
   }
 
