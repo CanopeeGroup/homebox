@@ -198,6 +198,7 @@
   const { openDialog } = useDialog();
 
   const api = useUserApi();
+  const { clearInventoryData } = useInventoryRefresh();
   const confirm = useConfirm();
   const pubApi = usePublicApi();
   const { data: status } = useAsyncData(async () => {
@@ -333,6 +334,10 @@
       toast.error("La restauration complète a échoué.");
       return;
     }
+    // The instance restore invalidates sessions and may reuse the same
+    // collection IDs for different contents. Clear all IndexedDB/Nuxt caches
+    // before reloading so the first screen after reconnect is authoritative.
+    await clearInventoryData(true);
     toast.success("Restauration terminée. Reconnectez-vous avec un compte présent dans la sauvegarde.");
     // The login form is the root page; /login does not exist in this fork.
     window.location.href = "/";
