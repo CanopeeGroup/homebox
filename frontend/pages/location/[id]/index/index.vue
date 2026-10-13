@@ -50,7 +50,7 @@
   // the API refreshes the authoritative copy in the background.
   const LOCATION_PAGE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
   const locationStore = useLocationStore();
-  const { mode: locationSortMode, options: locationSortOptions } = useLocationSort();
+  const { mode: locationSortMode, options: locationSortOptions } = useLocationSort(locationId);
   const locationDetailCache = useState<Record<string, any>>("location-detail-cache", () => ({}));
   const { cache: childLocationCache, removeLocations: removeChildLocationCaches } = useLocationChildCache();
   const { cache: locationItemCache, removeLocations: removeLocationItemCaches } = useLocationItemCache();
