@@ -5,21 +5,23 @@
   import MdiTag from "~icons/mdi/tag";
   import MdiStairs from "~icons/mdi/stairs";
   import type { TreeItem } from "~/lib/api/types/data-contracts";
-  import { sortLocations, type LocationSortMode } from "~~/composables/use-location-sort";
+  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+  import { sortLocations, useLocationSort } from "~~/composables/use-location-sort";
 
   defineOptions({ name: "LocationCompactTree" });
 
   const props = defineProps<{
     locations: TreeItem[];
-    sortMode: LocationSortMode;
+    parentId: string;
   }>();
 
-  // Sort only the siblings currently being rendered. Recursive child branches
-  // reuse the same mode, so every location level follows the user's choice.
+  // Every parent location owns its own sort mode. Expanding and sorting one
+  // branch therefore never changes sibling branches or the root list.
+  const { mode: sortMode, options: sortOptions } = useLocationSort(computed(() => props.parentId));
   const sortedLocations = computed(() =>
     sortLocations(
       props.locations.filter(item => item.type === "location"),
-      props.sortMode
+      sortMode.value
     )
   );
   const expandedLocations = ref(new Set<string>());
@@ -34,7 +36,20 @@
 </script>
 
 <template>
-  <ul v-if="sortedLocations.length" class="divide-y px-2 py-1">
+  <div v-if="sortedLocations.length">
+    <div v-if="sortedLocations.length > 1" class="flex justify-end px-2 pb-1 pt-2">
+      <Select v-model:model-value="sortMode">
+        <SelectTrigger class="h-8 w-[12.5rem] max-w-full text-xs" aria-label="Trier ces sous-emplacements">
+          <SelectValue placeholder="Trier" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem v-for="option in sortOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+    <ul class="divide-y px-2 py-1">
     <li v-for="location in sortedLocations" :key="location.id" class="location-tree-row">
       <div class="flex items-center">
         <NuxtLink
@@ -67,11 +82,12 @@
       <LocationCompactTree
         v-if="hasLocationChildren(location) && isExpanded(location.id)"
         :locations="location.children"
-        :sort-mode="sortMode"
+        :parent-id="location.id"
         class="ml-2 sm:ml-4"
       />
     </li>
-  </ul>
+    </ul>
+  </div>
   <p v-else class="px-3 py-2 text-xs text-muted-foreground">{{ $t("locations.no_sub_locations") }}</p>
 </template>
 
