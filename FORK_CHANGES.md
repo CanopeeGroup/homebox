@@ -6,6 +6,8 @@ Les développements personnalisés sont publiés exclusivement sur la branche `m
 
 ## Changements récents — 13 octobre 2026
 
+- **Ordre automatique G puis D** : les emplacements nommés avec un numéro suivi de G ou D sont regroupés par côté, puis par numéro : `01G`, `02G`, … puis `01D`, `02D`, …. Cet ordre est appliqué à tous les niveaux sans menu de tri. Les codes sont regroupés avant les autres noms, qui conservent leur ordre naturel.
+
 - **Menus de tri retirés** : suppression des sélecteurs de tri dans la liste principale, dans toutes les branches et dans les fiches d’emplacements, y compris le menu des objets. Les emplacements sont affichés par nom croissant ; les anciennes préférences de tri ne sont plus appliquées.
 
 - **Revalidation Nuxt** : les caches de fiches, sous-emplacements et objets ne servent qu'au chargement initial. Un rafraîchissement manuel ou automatique consulte toujours l'API, sans effacer les données affichées pendant l'attente.

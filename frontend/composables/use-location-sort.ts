@@ -17,18 +17,34 @@ export const locationSortOptions = [
   { value: "items-asc" as const, label: "Objets : moins nombreux" },
 ];
 
+// Numbered left/right locations form two contiguous groups: G, then D.
+// Keep code locations together when ordinary names appear in the same list,
+// so comparison stays transitive regardless of the server's original order.
+function compareLocationNames(a: string, b: string): number {
+  const codeA = /^(\d+)\s*([GD])$/i.exec(a.trim());
+  const codeB = /^(\d+)\s*([GD])$/i.exec(b.trim());
+  if (codeA && codeB) {
+    const sideA = codeA[2]!.toUpperCase() === "G" ? 0 : 1;
+    const sideB = codeB[2]!.toUpperCase() === "G" ? 0 : 1;
+    return sideA - sideB || collator.compare(codeA[1]!, codeB[1]!) || collator.compare(a, b);
+  }
+  if (codeA) return -1;
+  if (codeB) return 1;
+  return collator.compare(a, b);
+}
+
 export function sortLocations<T extends SortableLocation>(locations: T[], mode: LocationSortMode): T[] {
   return [...locations].sort((a, b) => {
     switch (mode) {
       case "name-desc":
-        return collator.compare(b.name, a.name);
+        return compareLocationNames(b.name, a.name);
       case "items-desc":
-        return (b.itemCount ?? 0) - (a.itemCount ?? 0) || collator.compare(a.name, b.name);
+        return (b.itemCount ?? 0) - (a.itemCount ?? 0) || compareLocationNames(a.name, b.name);
       case "items-asc":
-        return (a.itemCount ?? 0) - (b.itemCount ?? 0) || collator.compare(a.name, b.name);
+        return (a.itemCount ?? 0) - (b.itemCount ?? 0) || compareLocationNames(a.name, b.name);
       case "name-asc":
       default:
-        return collator.compare(a.name, b.name);
+        return compareLocationNames(a.name, b.name);
     }
   });
 }
