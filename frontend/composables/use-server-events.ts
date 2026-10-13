@@ -7,6 +7,8 @@ export enum ServerEvent {
   UserMutation = "user.mutation",
   ExportMutation = "export.mutation",
   ImportMutation = "import.mutation",
+  InventoryMutation = "inventory.mutation",
+  InstanceRestore = "instance.restore",
 }
 
 export type EventMessage = {
@@ -112,6 +114,8 @@ function connect(onmessage: (m: EventMessage) => void) {
   thorttled.set(ServerEvent.UserMutation, useThrottleFn(onmessage, 1000, true, true));
   thorttled.set(ServerEvent.ExportMutation, useThrottleFn(onmessage, 500, true, true));
   thorttled.set(ServerEvent.ImportMutation, useThrottleFn(onmessage, 500, true, true));
+  thorttled.set(ServerEvent.InventoryMutation, useThrottleFn(onmessage, 500, true, true));
+  thorttled.set(ServerEvent.InstanceRestore, useThrottleFn(onmessage, 500, true, true));
 
   ws.onmessage = msg => {
     const pm = JSON.parse(msg.data);
