@@ -4,6 +4,15 @@ Ce dépôt est un fork personnalisé de [sysadminsmedia/homebox](https://github.
 
 Les développements personnalisés sont publiés exclusivement sur la branche `main`.
 
+## Changements récents — 13 octobre 2026
+
+- **Rafraîchissement après import CSV** : après la fin de l’import, tous les caches d’inventaire sont invalidés puis l’arbre des emplacements, les listes parentes/enfants et les pages actuellement ouvertes sont rechargés automatiquement.
+- **Rafraîchissement après restauration ZIP de collection** : les événements de progression restent séparés de l’événement final ; le rafraîchissement complet est déclenché uniquement lorsque la restauration de la collection est réellement terminée.
+- **Restauration complète d’instance** : un événement global force les clients ordinateur/mobile/tablette à purger leur cache local ; le navigateur ayant lancé la restauration efface également tout IndexedDB avant la reconnexion.
+- **Protection contre les réponses tardives** : les requêtes d’emplacements lancées avant un import, une restauration ou une suppression ne peuvent plus réécrire des données obsolètes dans Pinia/IndexedDB.
+- **Tri indépendant par niveau** : chaque emplacement et sous-emplacement possède son propre ordre de tri, indépendant des autres branches. Les choix disponibles sont nom A → Z, nom Z → A, nombre d’objets décroissant et nombre d’objets croissant.
+- **Tri récursif** : le sélecteur de tri est disponible dans chaque niveau développé de l’arborescence et dans chaque fiche d’emplacement, sur ordinateur comme sur téléphone/tablette.
+
 ## Changements récents — 12 octobre 2026
 
 - **Sous-emplacements niveau 4** : prise en charge de `Subfolder-level4` dans l’import/export CSV compact.
