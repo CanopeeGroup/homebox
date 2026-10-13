@@ -10,15 +10,13 @@
   import LocationCompactTree from "~/components/Location/CompactTree.vue";
   import { Card } from "~/components/ui/card";
   import { Button } from "~/components/ui/button";
-  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-  import { sortLocations, useLocationSort } from "~~/composables/use-location-sort";
+  import { sortLocations } from "~~/composables/use-location-sort";
 
   definePageMeta({ middleware: ["auth"] });
   const { t } = useI18n();
   useHead({ title: computed(() => `HomeBox | ${t("menu.locations")}`) });
 
   const locationStore = useLocationStore();
-  const { mode: locationSortMode, options: locationSortOptions } = useLocationSort("root");
   const tree = computed(() => locationStore.tree ?? []);
   const initialLoading = ref(locationStore.tree === null);
   const manualRefreshing = ref(false);
@@ -72,7 +70,7 @@
   const rootLocations = computed<TreeItem[]>(() =>
     sortLocations(
       (tree.value ?? []).filter(item => item.type === "location"),
-      locationSortMode.value
+      "name-asc"
     )
   );
 
@@ -91,16 +89,6 @@
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <BaseSectionHeader class="mb-0">{{ $t("menu.locations") }}</BaseSectionHeader>
       <div class="flex min-w-0 items-center gap-2">
-        <Select v-model:model-value="locationSortMode">
-          <SelectTrigger class="h-9 w-[13.5rem] max-w-[65vw]" aria-label="Trier les emplacements">
-            <SelectValue placeholder="Trier les emplacements" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem v-for="option in locationSortOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
         <Button
           size="icon"
           variant="ghost"

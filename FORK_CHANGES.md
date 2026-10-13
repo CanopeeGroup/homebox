@@ -6,17 +6,16 @@ Les développements personnalisés sont publiés exclusivement sur la branche `m
 
 ## Changements récents — 13 octobre 2026
 
+- **Menus de tri retirés** : suppression des sélecteurs de tri dans la liste principale, dans toutes les branches et dans les fiches d’emplacements, y compris le menu des objets. Les emplacements sont affichés par nom croissant ; les anciennes préférences de tri ne sont plus appliquées.
+
 - **Revalidation Nuxt** : les caches de fiches, sous-emplacements et objets ne servent qu'au chargement initial. Un rafraîchissement manuel ou automatique consulte toujours l'API, sans effacer les données affichées pendant l'attente.
 - **Réponses et lectures tardives** : les fiches et IndexedDB vérifient la génération d'invalidation ; une requête ou une lecture commencée avant l'import ne peut pas repeupler les caches après celui-ci.
 - **Suivi de restauration ZIP** : le client suit l'état du travail toutes les deux secondes jusqu'à sa fin, même après navigation dans l'application et sans notification WebSocket. Le suivi s'arrête en cas d'échec, de changement de collection ou de session.
-- **Tris mémorisés** : le tri des sous-emplacements et celui des objets sont conservés dans le navigateur, séparément pour chaque collection et chaque emplacement. Le menu de tri des sous-emplacements reste visible lorsqu'il n'y a qu'un seul enfant ; le menu des objets est accessible dans la vue compacte à tous les niveaux.
 
 - **Rafraîchissement après import CSV** : après la fin de l’import, tous les caches d’inventaire sont invalidés puis l’arbre des emplacements, les listes parentes/enfants et les pages actuellement ouvertes sont rechargés automatiquement.
 - **Rafraîchissement après restauration ZIP de collection** : les événements de progression restent séparés de l’événement final ; le rafraîchissement complet est déclenché uniquement lorsque la restauration de la collection est réellement terminée.
 - **Restauration complète d’instance** : un événement global force les clients ordinateur/mobile/tablette à purger leur cache local ; le navigateur ayant lancé la restauration efface également tout IndexedDB avant la reconnexion.
 - **Protection contre les réponses tardives** : les requêtes d’emplacements lancées avant un import, une restauration ou une suppression ne peuvent plus réécrire des données obsolètes dans Pinia/IndexedDB.
-- **Tri indépendant par niveau** : chaque emplacement et sous-emplacement possède son propre ordre de tri, indépendant des autres branches. Les choix disponibles sont nom A → Z, nom Z → A, nombre d’objets décroissant et nombre d’objets croissant.
-- **Tri récursif** : le sélecteur de tri est disponible dans chaque niveau développé de l’arborescence et dans chaque fiche d’emplacement, sur ordinateur comme sur téléphone/tablette.
 
 ## Changements récents — 12 octobre 2026
 
