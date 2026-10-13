@@ -448,7 +448,7 @@
   ]);
 
   const locationStore = useLocationStore();
-  const { refreshEntityData, refreshInventoryData } = useInventoryRefresh();
+  const { clearInventoryData, refreshEntityData, refreshInventoryData } = useInventoryRefresh();
   let lastResumeTreeRefreshAt = 0;
   let backgroundedAt: number | null = null;
 
@@ -545,8 +545,22 @@
     void nuxtApp.runWithContext(() => refreshNuxtData());
   }, 250);
 
+  const handleInstanceRestore = () => {
+    void (async () => {
+      // The restored instance can reuse collection UUIDs with completely
+      // different contents. Purge every collection cache before returning to
+      // the login page so desktop and mobile/PWA clients cannot show old data.
+      await clearInventoryData(true);
+      window.location.href = "/";
+    })();
+  };
+
   onServerEvent(ServerEvent.EntityMutation, refreshEntityDisplay);
-  onServerEvent(ServerEvent.ImportMutation, refreshImportDisplay);
+  // import.mutation is a progress/status event for asynchronous ZIP restores.
+  // The final database refresh is triggered by inventory.mutation only.
+  onServerEvent(ServerEvent.ImportMutation, refreshDisplay);
+  onServerEvent(ServerEvent.InventoryMutation, refreshImportDisplay);
+  onServerEvent(ServerEvent.InstanceRestore, handleInstanceRestore);
   onServerEvent(ServerEvent.UserMutation, refreshDisplay);
   onServerEvent(ServerEvent.ExportMutation, refreshDisplay);
 
