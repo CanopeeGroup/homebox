@@ -11,8 +11,10 @@ export const useLocationStore = defineStore("locations", {
     Locations: null as EntitySummary[] | null,
     tree: null as TreeItem[] | null,
     treeRevision: 0,
+    dataRevision: 0,
     refreshLocationsPromise: null as Promise<void> | null,
     refreshParentsPromise: null as Promise<ReturnType<ItemsApi["getLocations"]> extends Promise<infer R> ? R : never> | null,
+    refreshChildrenPromise: null as Promise<ReturnType<ItemsApi["getLocations"]> extends Promise<infer R> ? R : never> | null,
     refreshTreePromise: null as Promise<ReturnType<ItemsApi["getTree"]> extends Promise<infer R> ? R : never> | null,
   }),
   getters: {
@@ -62,12 +64,23 @@ export const useLocationStore = defineStore("locations", {
       }
       await this.refreshLocationsPromise;
     },
-    async refreshParents(): ReturnType<ItemsApi["getLocations"]> {
+    async refreshParents(force = false): ReturnType<ItemsApi["getLocations"]> {
+      if (this.refreshParentsPromise) {
+        if (!force) return this.refreshParentsPromise;
+        try {
+          await this.refreshParentsPromise;
+        } catch {
+          // The forced request below retries against the current revision.
+        }
+      }
+
       if (this.refreshParentsPromise) return this.refreshParentsPromise;
+
+      const revision = this.dataRevision;
       this.refreshParentsPromise = useUserApi().items.getLocations({ filterChildren: true });
       try {
         const result = await this.refreshParentsPromise;
-        if (!result.error) {
+        if (!result.error && revision === this.dataRevision) {
           this.parents = result.data;
           void writePersistentCache(persistentCacheKey("location-parents"), result.data);
         }
@@ -76,15 +89,36 @@ export const useLocationStore = defineStore("locations", {
         this.refreshParentsPromise = null;
       }
     },
-    async refreshChildren(): ReturnType<ItemsApi["getLocations"]> {
-      const result = await useUserApi().items.getLocations({ filterChildren: false });
-      if (result.error) {
-        return result;
+    async refreshChildren(force = false): ReturnType<ItemsApi["getLocations"]> {
+      if (this.refreshChildrenPromise) {
+        if (!force) return this.refreshChildrenPromise;
+        try {
+          await this.refreshChildrenPromise;
+        } catch {
+          // The forced request below retries against the current revision.
+        }
       }
 
-      this.Locations = result.data;
-      void writePersistentCache(persistentCacheKey("locations"), result.data);
-      return result;
+      if (this.refreshChildrenPromise) return this.refreshChildrenPromise;
+
+      const revision = this.dataRevision;
+      this.refreshChildrenPromise = useUserApi().items.getLocations({ filterChildren: false });
+      try {
+        const result = await this.refreshChildrenPromise;
+        if (!result.error && revision === this.dataRevision) {
+          this.Locations = result.data;
+          void writePersistentCache(persistentCacheKey("locations"), result.data);
+        }
+        return result;
+      } finally {
+        this.refreshChildrenPromise = null;
+      }
+    },
+    invalidateAllRequests() {
+      // Any response that started before this boundary is stale and must not
+      // overwrite post-import/post-restore data when it arrives later.
+      this.dataRevision += 1;
+      this.treeRevision += 1;
     },
     adjustItemCount(locationId: string, delta: number) {
       const adjustSummary = (location: EntitySummary) => {
@@ -116,6 +150,7 @@ export const useLocationStore = defineStore("locations", {
       // Invalidate any tree request that started before this local mutation.
       // A late response from that request must not resurrect deleted locations.
       this.treeRevision += 1;
+      this.dataRevision += 1;
       const ids = new Set(locationIds);
       if (this.parents) this.parents = this.parents.filter(location => !ids.has(location.id));
       if (this.Locations) this.Locations = this.Locations.filter(location => !ids.has(location.id));
@@ -148,10 +183,11 @@ export const useLocationStore = defineStore("locations", {
       if (this.refreshTreePromise) return this.refreshTreePromise;
 
       const revision = this.treeRevision;
+      const dataRevision = this.dataRevision;
       this.refreshTreePromise = useUserApi().items.getTree({ withItems: false });
       try {
         const result = await this.refreshTreePromise;
-        if (!result.error && revision === this.treeRevision) {
+        if (!result.error && revision === this.treeRevision && dataRevision === this.dataRevision) {
           this.tree = result.data;
           void writePersistentCache(persistentCacheKey("location-tree"), result.data);
         }
