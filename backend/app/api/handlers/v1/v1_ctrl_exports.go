@@ -1,14 +1,14 @@
 package v1
 
 import (
-	"os"
-	"time"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hay-kot/httpkit/errchain"
