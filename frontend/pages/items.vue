@@ -10,10 +10,7 @@
   import MdiFileDocumentMultiple from "~icons/mdi/file-document-multiple";
   import MdiMapMarker from "~icons/mdi/map-marker";
   import { Button } from "@/components/ui/button";
-  import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
   import { Label } from "@/components/ui/label";
-  import { Switch } from "@/components/ui/switch";
-  import { Separator } from "@/components/ui/separator";
   import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
   import BaseContainer from "@/components/Base/Container.vue";
   import SearchFilter from "~/components/Search/Filter.vue";
@@ -389,18 +386,6 @@
     await search();
   }
 
-  async function reset() {
-    // Set URL Params
-    const fields = [];
-    for (const t of fieldTuples.value) {
-      if (t[0] && t[1]) {
-        fields.push(`${t[0]}=${t[1]}`);
-      }
-    }
-
-    await search();
-  }
-
   const pagination = proxyRefs({
     page,
     pageSize,
@@ -430,71 +415,6 @@
 
       <div class="flex w-full flex-wrap gap-2 py-2 md:flex-nowrap">
         <SearchFilter v-model="selectedLocations" :label="$t('global.locations')" :options="locationFlatTree" />
-        <Popover>
-          <PopoverTrigger as-child>
-            <Button size="sm" variant="outline"> {{ $t("items.options") }}</Button>
-          </PopoverTrigger>
-          <PopoverContent class="z-40 flex flex-col gap-2">
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="includeArchived" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.include_archive") }} </span>
-            </Label>
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="fieldSelector" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.field_selector") }} </span>
-            </Label>
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="onlyWithoutPhoto" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.only_without_photo") }} </span>
-            </Label>
-            <Label class="flex cursor-pointer items-center">
-              <Switch v-model="onlyWithPhoto" class="ml-auto" />
-              <div class="grow" />
-              <span class="text-right"> {{ $t("items.only_with_photo") }} </span>
-            </Label>
-            <Label class="flex cursor-pointer flex-col gap-2">
-              <span class="text-right">
-                <span class="text-right"> {{ $t("items.order_by") }} </span>
-              </span>
-
-              <Select v-model="orderBy">
-                <SelectTrigger>
-                  <SelectValue :placeholder="$t('items.order_by')" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name"> {{ $t("items.name") }} </SelectItem>
-                  <SelectItem value="createdAt"> {{ $t("items.created_at") }} </SelectItem>
-                  <SelectItem value="updatedAt"> {{ $t("items.updated_at") }} </SelectItem>
-                </SelectContent>
-              </Select>
-            </Label>
-            <Separator />
-            <Button @click="reset"> {{ $t("items.reset_search") }} </Button>
-          </PopoverContent>
-        </Popover>
-        <div class="grow" />
-        <Popover>
-          <PopoverTrigger as-child>
-            <Button size="sm" variant="outline"> {{ $t("items.tips") }}</Button>
-          </PopoverTrigger>
-          <PopoverContent class="z-40 w-[325px]" align="end">
-            <p class="text-base">{{ $t("items.tips_sub") }}</p>
-            <ul class="mt-1 list-disc pl-6 text-sm">
-              <li>
-                {{ $t("items.tip_1") }}
-              </li>
-              <li>
-                {{ $t("items.tip_2") }}
-              </li>
-              <li>
-                {{ $t("items.tip_3") }}
-              </li>
-            </ul>
-          </PopoverContent>
-        </Popover>
       </div>
       <div v-if="fieldSelector" class="flex flex-col gap-2 pb-2">
         <p>{{ $t("items.custom_fields") }}</p>

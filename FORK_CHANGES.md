@@ -6,6 +6,9 @@ Les développements personnalisés sont publiés exclusivement sur la branche `m
 
 ## Changements récents — 13 octobre 2026
 
+- **Recherche simplifiée** : suppression des boutons Conseils et Options.
+- **Ajout de modèles simplifié** : seuls le nom du modèle, le nom de l’article et le numéro de modèle restent dans le formulaire. Les descriptions, quantité, fabricant, emplacement parent, assurance, garantie à vie et champs personnalisés sont retirés ; les valeurs techniques par défaut restent compatibles avec l’API.
+
 - **Ordre automatique G puis D** : les emplacements nommés avec un numéro suivi de G ou D sont regroupés par côté, puis par numéro : `01G`, `02G`, … puis `01D`, `02D`, …. Cet ordre est appliqué à tous les niveaux sans menu de tri. Les codes sont regroupés avant les autres noms, qui conservent leur ordre naturel.
 
 - **Menus de tri retirés** : suppression des sélecteurs de tri dans la liste principale, dans toutes les branches et dans les fiches d’emplacements, y compris le menu des objets. Les emplacements sont affichés par nom croissant ; les anciennes préférences de tri ne sont plus appliquées.
