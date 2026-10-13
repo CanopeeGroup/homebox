@@ -88,3 +88,11 @@ export async function deletePersistentCachePrefix(prefix: string): Promise<void>
     tx.onabort = () => resolve();
   });
 }
+
+
+export async function clearPersistentCache(): Promise<void> {
+  // Full instance restores can replace collection IDs and every inventory row.
+  // Clear the whole IndexedDB store so no browser/PWA can resurrect data from
+  // the pre-restore instance on the next login.
+  await deletePersistentCachePrefix("");
+}
