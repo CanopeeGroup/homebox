@@ -92,9 +92,17 @@ function connect(onmessage: (m: EventMessage) => void) {
   const ws = new WebSocket(url, protocols);
 
   ws.onopen = () => {
+    const recoveredConnection = reconnectAttempts > 0;
     reconnectAttempts = 0;
     clearReconnectTimer();
     console.debug("connected to server");
+
+    // WebSocket events are not replayed. After an outage, force one complete
+    // inventory revalidation so an import/delete that happened while this
+    // desktop/mobile client was disconnected cannot remain hidden by caches.
+    if (recoveredConnection) {
+      onmessage({ event: ServerEvent.InventoryMutation });
+    }
   };
 
   ws.onclose = () => {
