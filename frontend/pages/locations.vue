@@ -18,7 +18,7 @@
   useHead({ title: computed(() => `HomeBox | ${t("menu.locations")}`) });
 
   const locationStore = useLocationStore();
-  const { mode: locationSortMode, options: locationSortOptions } = useLocationSort();
+  const { mode: locationSortMode, options: locationSortOptions } = useLocationSort("root");
   const tree = computed(() => locationStore.tree ?? []);
   const initialLoading = ref(locationStore.tree === null);
   const manualRefreshing = ref(false);
@@ -63,6 +63,7 @@
     () => useViewPreferences().value.collectionId,
     async (next, previous) => {
       if (next === previous) return;
+      locationStore.invalidateAllRequests();
       locationStore.tree = null;
       locationStore.Locations = null;
       locationStore.parents = null;
@@ -142,7 +143,7 @@
         <LocationCompactTree
           v-if="isExpanded(location.id)"
           :locations="location.children"
-          :sort-mode="locationSortMode"
+          :parent-id="location.id"
         />
       </Card>
     </div>
