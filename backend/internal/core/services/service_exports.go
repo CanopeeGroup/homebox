@@ -749,10 +749,12 @@ func (s *ExportService) RunImport(ctx context.Context, gid, userID, importID uui
 	}
 	s.publishImportFinished(gid)
 
+	importSucceeded := false
 	if err := s.runImport(ctx, gid, userID, importID, uploadKey); err != nil {
 		log.Err(err).Stringer("gid", gid).Msg("import job: failed")
 		_ = s.repos.Exports.SetFailed(ctx, gid, importID, err.Error())
 	} else {
+		importSucceeded = true
 		// On success the upload zip has been fully restored; keep the row
 		// size_bytes (set when the upload was staged) and just flip status.
 		if err := s.repos.Exports.SetCompleted(ctx, gid, importID, uploadKey, row.SizeBytes); err != nil {
@@ -767,6 +769,9 @@ func (s *ExportService) RunImport(ctx context.Context, gid, userID, importID uui
 	}
 
 	s.publishImportFinished(gid)
+	if importSucceeded {
+		s.publishInventoryMutation(gid)
+	}
 }
 
 func (s *ExportService) runImport(ctx context.Context, gid, userID, importID uuid.UUID, uploadKey string) error {
@@ -988,6 +993,12 @@ func (s *ExportService) deleteUpload(ctx context.Context, uploadKey string) erro
 func (s *ExportService) publishImportFinished(gid uuid.UUID) {
 	if s.bus != nil {
 		s.bus.Publish(eventbus.EventImportMutation, eventbus.GroupMutationEvent{GID: gid})
+	}
+}
+
+func (s *ExportService) publishInventoryMutation(gid uuid.UUID) {
+	if s.bus != nil {
+		s.bus.Publish(eventbus.EventInventoryMutation, eventbus.GroupMutationEvent{GID: gid})
 	}
 }
 
