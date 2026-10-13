@@ -106,7 +106,7 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Objets d’un emplacement en petites tuiles sans photo, avec nom et quantité, sans choix Carte/Tableau ;
   pagination et sélection groupée conservées.
 - Emplacements de premier niveau en petites tuiles ; sous-emplacements en liste hiérarchique.
-- Tri disponible sur la page Emplacements et dans chaque fiche d’emplacement : nom A → Z, nom Z → A, nombre d’objets décroissant ou croissant. Le même ordre s’applique récursivement aux sous-emplacements affichés.
+- Tri disponible sur la page Emplacements et dans chaque niveau de sous-emplacements : nom A → Z, nom Z → A, nombre d’objets décroissant ou croissant. Chaque parent possède son propre tri indépendant, afin de pouvoir ordonner différemment deux branches de l’arborescence.
 - Navigation récursive jusqu’au quatrième niveau dans l’arbre et les sélecteurs d’emplacement ; un objet peut être ajouté directement dans un emplacement de niveau 4.
 - Bouton escalier pour afficher ou masquer les sous-emplacements, repliés par défaut.
 - Retrait des blocs Détails/Notes des pages d’emplacement et simplification des formulaires Description/Photo.
@@ -176,6 +176,10 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Les changements de quantité sont appliqués immédiatement à la fiche, aux cartes compactes et au cache des objets par emplacement.
 - Une modification complète d’un objet invalide le cache de liste concerné afin d’éviter de réafficher une ancienne quantité ou un ancien emplacement.
 - Regroupement des rafraîchissements rapprochés et traitement du dernier événement WebSocket d’une série.
+- Un import CSV d’inventaire déclenche, une fois terminé, une invalidation complète des caches d’emplacements et un rechargement de l’arbre, des listes parentes/enfants et des pages ouvertes sur ordinateur, tablette et téléphone.
+- Une restauration ZIP de collection distingue désormais les événements de progression de l’événement final : le rafraîchissement complet n’est lancé qu’après restauration terminée.
+- Une restauration complète d’instance purge tout le cache IndexedDB de tous les espaces avant la reconnexion et avertit également les autres clients ouverts.
+- Les réponses de requêtes d’emplacements lancées avant un import/restauration sont rejetées par génération afin qu’une réponse tardive ne puisse plus réinjecter d’anciennes données dans le cache.
 - Correction du client mis en cache dans le magasin d’emplacements pour utiliser la collection courante.
 - Le fork ne dispose plus de CI GitHub Actions : reconstruire l’image et valider fonctionnellement les changements après déploiement.
 
@@ -191,7 +195,7 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 - Déduplication des requêtes d'emplacements dans le store Pinia.
 - Premier chargement de l’arbre accéléré côté serveur : les compteurs d’objets par emplacement sont agrégés en une seule requête SQL au lieu d’une sous-requête répétée pour chaque emplacement.
 - Le formulaire Créer un objet / Nouvel objet résout immédiatement l’emplacement courant depuis l’arbre déjà chargé et évite les rechargements bloquants des listes d’emplacements.
-- Les hiérarchies à trois niveaux sont affichées et navigables avec le bouton escalier sur les sous-emplacements.
+- Les hiérarchies jusqu’à quatre niveaux sont affichées et navigables avec le bouton escalier sur les sous-emplacements.
 - Bouton Actualiser sur la page Emplacements pour forcer uniquement la synchronisation de l’arbre sans réintroduire de chargement depuis la barre latérale.
 - Cache mémoire des fiches d’emplacements, de leurs sous-emplacements et de leurs objets pendant la navigation, afin d’accélérer les parcours parent → enfant → sous-enfant → retour sur mobile et tablette.
 - Synchronisation immédiate des compteurs d’objets après création dans un sous-emplacement, puis réconciliation serveur en arrière-plan.
