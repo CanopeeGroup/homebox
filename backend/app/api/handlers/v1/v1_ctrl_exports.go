@@ -17,6 +17,7 @@ import (
 	"gocloud.dev/blob"
 
 	"github.com/sysadminsmedia/homebox/backend/internal/core/services"
+	"github.com/sysadminsmedia/homebox/backend/internal/core/services/reporting/eventbus"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/repo"
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/validate"
@@ -348,6 +349,12 @@ func (ctrl *V1Controller) HandleInstanceBackupRestore() errchain.HandlerFunc {
 			log.Err(err).Msg("instance restore failed")
 			return validate.NewRequestError(err, http.StatusBadRequest)
 		}
+
+		// A full restore can replace every collection and invalidates sessions.
+		// Broadcast globally so every open desktop/mobile client clears its
+		// IndexedDB/memory inventory cache instead of rendering pre-restore data.
+		ctrl.bus.Publish(eventbus.EventInstanceRestore, struct{}{})
+
 		w.WriteHeader(http.StatusNoContent)
 		return nil
 	}
