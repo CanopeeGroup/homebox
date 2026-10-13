@@ -266,11 +266,25 @@ func (ctrl *V1Controller) HandleCacheWS() errchain.HandlerFunc {
 		}
 	}
 
+	globalFactory := func(e string) func(data any) {
+		jsonBytes, err := json.Marshal(&eventMsg{Event: e})
+		if err != nil {
+			log.Log().Msgf("error marshaling event %q: %v", e, err)
+			return func(any) {}
+		}
+
+		return func(any) {
+			_ = m.Broadcast(jsonBytes)
+		}
+	}
+
 	ctrl.bus.Subscribe(eventbus.EventTagMutation, factory("tag.mutation"))
 	ctrl.bus.Subscribe(eventbus.EventEntityMutation, factory("entity.mutation"))
 	ctrl.bus.Subscribe(eventbus.EventUserMutation, factory("user.mutation"))
 	ctrl.bus.Subscribe(eventbus.EventExportMutation, factory("export.mutation"))
 	ctrl.bus.Subscribe(eventbus.EventImportMutation, factory("import.mutation"))
+	ctrl.bus.Subscribe(eventbus.EventInventoryMutation, factory("inventory.mutation"))
+	ctrl.bus.Subscribe(eventbus.EventInstanceRestore, globalFactory("instance.restore"))
 
 	// Persistent asynchronous ticker that keeps all websocket connections alive with periodic pings.
 	go func() {
