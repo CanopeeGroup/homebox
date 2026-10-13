@@ -108,6 +108,7 @@
   }
 
   async function hydrateLocationPageCache(id: string) {
+    const revision = locationStore.dataRevision;
     if (!id) return;
 
     const validLocationIds = currentTreeLocationIds();
@@ -123,19 +124,12 @@
     }
 
     const [cachedDetail, cachedChildren, cachedItems] = await Promise.all([
-      readPersistentCache<any>(
-        persistentCacheKey(`location-detail:${id}`),
-        LOCATION_PAGE_CACHE_MAX_AGE_MS
-      ),
-      readPersistentCache<any[]>(
-        persistentCacheKey(`location-children:${id}`),
-        LOCATION_PAGE_CACHE_MAX_AGE_MS
-      ),
-      readPersistentCache<any[]>(
-        persistentCacheKey(`location-items:${id}`),
-        LOCATION_PAGE_CACHE_MAX_AGE_MS
-      ),
+      readPersistentCache<any>(persistentCacheKey(`location-detail:${id}`), LOCATION_PAGE_CACHE_MAX_AGE_MS),
+      readPersistentCache<any[]>(persistentCacheKey(`location-children:${id}`), LOCATION_PAGE_CACHE_MAX_AGE_MS),
+      readPersistentCache<any[]>(persistentCacheKey(`location-items:${id}`), LOCATION_PAGE_CACHE_MAX_AGE_MS),
     ]);
+
+    if (revision !== locationStore.dataRevision) return;
 
     const safeChildren = validLocationIds
       ? (cachedChildren ?? []).filter(child => validLocationIds.has(child.id))
@@ -164,7 +158,9 @@
     () => `location_${locationId.value}`,
     async () => {
       const id = locationId.value;
+      const revision = locationStore.dataRevision;
       const { data, error } = await api.items.getLocation(id);
+      if (revision !== locationStore.dataRevision) return locationDetailCache.value[id];
       if (error) {
         if (deletingLocation.value) return;
 
@@ -183,7 +179,8 @@
     },
     {
       watch: [locationId],
-      getCachedData: () => locationDetailCache.value[locationId.value],
+      getCachedData: (_key, _app, context) =>
+        context.cause === "initial" ? locationDetailCache.value[locationId.value] : undefined,
     }
   );
 
@@ -327,6 +324,7 @@
     () => locationId.value + "_child_locations",
     async () => {
       const id = locationId.value;
+      const revision = locationStore.dataRevision;
       if (!id) return [];
 
       const resp = await api.items.getAll({
@@ -334,6 +332,8 @@
         isLocation: true,
         orderBy: "name",
       });
+
+      if (revision !== locationStore.dataRevision) return childLocationCache.value[id] ?? [];
 
       if (resp.error) {
         if (deletingLocation.value) return childLocationCache.value[id] ?? [];
@@ -348,23 +348,25 @@
     },
     {
       watch: [locationId],
-      getCachedData: () => childLocationCache.value[locationId.value],
+      getCachedData: (_key, _app, context) =>
+        context.cause === "initial" ? childLocationCache.value[locationId.value] : undefined,
     }
   );
 
-  const sortedChildLocations = computed(() =>
-    sortLocations(childLocations.value ?? [], locationSortMode.value)
-  );
+  const sortedChildLocations = computed(() => sortLocations(childLocations.value ?? [], locationSortMode.value));
 
   const { data: items, refresh: refreshItemList } = useAsyncData(
     () => locationId.value + "_item_list",
     async () => {
       const id = locationId.value;
+      const revision = locationStore.dataRevision;
       if (!id) return [];
 
       const resp = await api.items.getAll({
         parentIds: [id],
       });
+
+      if (revision !== locationStore.dataRevision) return locationItemCache.value[id] ?? [];
 
       if (resp.error) {
         if (deletingLocation.value) return locationItemCache.value[id] ?? [];
@@ -379,7 +381,8 @@
     },
     {
       watch: [locationId],
-      getCachedData: () => locationItemCache.value[locationId.value],
+      getCachedData: (_key, _app, context) =>
+        context.cause === "initial" ? locationItemCache.value[locationId.value] : undefined,
     }
   );
 
@@ -546,7 +549,7 @@
 
       <!-- Items in this location -->
       <section v-if="location && items" class="mt-6">
-        <ItemViewSelectable :items="items" compact-list @refresh="refreshItemList" />
+        <ItemViewSelectable :items="items" :sort-scope="locationId" compact-list @refresh="refreshItemList" />
       </section>
     </div>
   </div>

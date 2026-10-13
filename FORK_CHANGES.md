@@ -6,6 +6,11 @@ Les développements personnalisés sont publiés exclusivement sur la branche `m
 
 ## Changements récents — 13 octobre 2026
 
+- **Revalidation Nuxt** : les caches de fiches, sous-emplacements et objets ne servent qu'au chargement initial. Un rafraîchissement manuel ou automatique consulte toujours l'API, sans effacer les données affichées pendant l'attente.
+- **Réponses et lectures tardives** : les fiches et IndexedDB vérifient la génération d'invalidation ; une requête ou une lecture commencée avant l'import ne peut pas repeupler les caches après celui-ci.
+- **Suivi de restauration ZIP** : le client suit l'état du travail toutes les deux secondes jusqu'à sa fin, même après navigation dans l'application et sans notification WebSocket. Le suivi s'arrête en cas d'échec, de changement de collection ou de session.
+- **Tris mémorisés** : le tri des sous-emplacements et celui des objets sont conservés dans le navigateur, séparément pour chaque collection et chaque emplacement. Le menu de tri des sous-emplacements reste visible lorsqu'il n'y a qu'un seul enfant ; le menu des objets est accessible dans la vue compacte à tous les niveaux.
+
 - **Rafraîchissement après import CSV** : après la fin de l’import, tous les caches d’inventaire sont invalidés puis l’arbre des emplacements, les listes parentes/enfants et les pages actuellement ouvertes sont rechargés automatiquement.
 - **Rafraîchissement après restauration ZIP de collection** : les événements de progression restent séparés de l’événement final ; le rafraîchissement complet est déclenché uniquement lorsque la restauration de la collection est réellement terminée.
 - **Restauration complète d’instance** : un événement global force les clients ordinateur/mobile/tablette à purger leur cache local ; le navigateur ayant lancé la restauration efface également tout IndexedDB avant la reconnexion.

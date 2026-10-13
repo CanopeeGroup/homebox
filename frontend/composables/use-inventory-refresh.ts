@@ -1,8 +1,10 @@
+import { watchImportCompletion } from "~~/lib/watch-import-completion";
 import type { TreeItem } from "~~/lib/api/types/data-contracts";
 
 let inventoryRefreshPromise: Promise<void> | null = null;
 let inventoryRefreshPending = false;
 let entityRefreshPromise: Promise<void> | null = null;
+const trackedImports = new Map<string, () => void>();
 
 function treeStructureSignature(tree: TreeItem[] | null): string {
   if (!tree) return "";
@@ -24,6 +26,9 @@ function treeStructureSignature(tree: TreeItem[] | null): string {
 export function useInventoryRefresh() {
   const locationStore = useLocationStore();
   const nuxtApp = useNuxtApp();
+  const api = useUserApi();
+  const preferences = useViewPreferences();
+  const auth = useAuthContext();
   const { cache: locationItemCache } = useLocationItemCache();
   const { cache: childLocationCache } = useLocationChildCache();
   const locationDetailCache = useState<Record<string, unknown>>("location-detail-cache", () => ({}));
@@ -60,9 +65,15 @@ export function useInventoryRefresh() {
       ]);
     }
 
-    // Keep old values on screen only until the fresh API responses land.
-    // Nuxt page caches are cleared so no stale per-location payload can win.
-    await nuxtApp.runWithContext(() => clearNuxtData());
+    // Keep mounted data visible until revalidation completes. Clearing Nuxt
+    // data also discards its pending request tracking; refresh cancels those
+    // requests safely instead. Full restores leave no resident inventory.
+    if (allCollections) {
+      locationStore.tree = null;
+      locationStore.parents = null;
+      locationStore.Locations = null;
+      await nuxtApp.runWithContext(() => clearNuxtData());
+    }
   }
 
   async function refreshMountedData() {
@@ -153,5 +164,18 @@ export function useInventoryRefresh() {
     return inventoryRefreshPromise;
   }
 
-  return { clearInventoryData, refreshEntityData, refreshInventoryData };
+  function trackImportJob(id: string) {
+    if (trackedImports.has(id)) return;
+    const collectionId = preferences.value.collectionId;
+    const token = auth.attachmentToken;
+    const stop = watchImportCompletion({
+      getJob: () => api.backups.get(id),
+      isCurrent: () => preferences.value.collectionId === collectionId && auth.attachmentToken === token,
+      onCompleted: refreshInventoryData,
+      onStopped: () => trackedImports.delete(id),
+    });
+    trackedImports.set(id, stop);
+  }
+
+  return { clearInventoryData, refreshEntityData, refreshInventoryData, trackImportJob };
 }

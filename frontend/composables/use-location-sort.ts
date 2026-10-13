@@ -36,7 +36,7 @@ export function sortLocations<T extends SortableLocation>(locations: T[], mode: 
 export function useLocationSort(scope: MaybeRefOrGetter<string>) {
   // Sorting is intentionally scoped per parent location. Changing the order of
   // A > B therefore does not alter A > C, another root, or the root list.
-  const modes = useState<Record<string, LocationSortMode>>("location-sort-modes", () => ({}));
+  const modes = useLocalStorage<Record<string, LocationSortMode>>("homebox/location-sort-modes", {});
   const preferences = useViewPreferences();
 
   const scopeKey = computed(() => {

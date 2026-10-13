@@ -1,6 +1,7 @@
 const DB_NAME = "homebox-data-cache";
 const DB_VERSION = 1;
 const STORE_NAME = "entries";
+let cacheRevision = 0;
 
 type CacheEntry<T> = {
   key: string;
@@ -28,13 +29,14 @@ export function persistentCacheKey(resource: string) {
 }
 
 export async function readPersistentCache<T>(key: string, maxAgeMs = Number.POSITIVE_INFINITY): Promise<T | null> {
+  const revision = cacheRevision;
   const db = await openCache();
-  if (!db) return null;
+  if (!db || revision !== cacheRevision) return null;
   return new Promise(resolve => {
     const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get(key);
     request.onsuccess = () => {
       const entry = request.result as CacheEntry<T> | undefined;
-      if (!entry || Date.now() - entry.updatedAt > maxAgeMs) resolve(null);
+      if (revision !== cacheRevision || !entry || Date.now() - entry.updatedAt > maxAgeMs) resolve(null);
       else resolve(entry.value);
     };
     request.onerror = () => resolve(null);
@@ -42,8 +44,9 @@ export async function readPersistentCache<T>(key: string, maxAgeMs = Number.POSI
 }
 
 export async function writePersistentCache<T>(key: string, value: T): Promise<void> {
+  const revision = cacheRevision;
   const db = await openCache();
-  if (!db) return;
+  if (!db || revision !== cacheRevision) return;
   await new Promise<void>(resolve => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     tx.objectStore(STORE_NAME).put({ key, value, updatedAt: Date.now() } satisfies CacheEntry<T>);
@@ -54,6 +57,7 @@ export async function writePersistentCache<T>(key: string, value: T): Promise<vo
 }
 
 export async function deletePersistentCache(key: string): Promise<void> {
+  cacheRevision += 1;
   const db = await openCache();
   if (!db) return;
   await new Promise<void>(resolve => {
@@ -66,6 +70,7 @@ export async function deletePersistentCache(key: string): Promise<void> {
 }
 
 export async function deletePersistentCachePrefix(prefix: string): Promise<void> {
+  cacheRevision += 1;
   const db = await openCache();
   if (!db) return;
 
@@ -88,7 +93,6 @@ export async function deletePersistentCachePrefix(prefix: string): Promise<void>
     tx.onabort = () => resolve();
   });
 }
-
 
 export async function clearPersistentCache(): Promise<void> {
   // Full instance restores can replace collection IDs and every inventory row.

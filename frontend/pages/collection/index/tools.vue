@@ -53,7 +53,8 @@
         <div class="divide-y border-t px-6 pb-3">
           <DetailAction v-if="auth.user?.isSuperuser">
             <template #title>Sauvegarde complète de l'application</template>
-            Sauvegarde toutes les collections, les utilisateurs et leurs paramètres, le nom et l'avatar de l'application, les modèles, emplacements, objets, journaux de maintenance et pièces jointes.
+            Sauvegarde toutes les collections, les utilisateurs et leurs paramètres, le nom et l'avatar de
+            l'application, les modèles, emplacements, objets, journaux de maintenance et pièces jointes.
             <template #button>
               <a
                 :href="api.backups.instanceDownloadURL()"
@@ -66,10 +67,20 @@
           </DetailAction>
           <DetailAction v-if="auth.user?.isSuperuser">
             <template #title>Restaurer l'application complète</template>
-            Remplace l'ensemble des données persistantes de l'application par le contenu de la sauvegarde. Les sessions sont invalidées après restauration.
+            Remplace l'ensemble des données persistantes de l'application par le contenu de la sauvegarde. Les sessions
+            sont invalidées après restauration.
             <template #button>
-              <input ref="instanceRestoreInput" type="file" accept=".zip" class="hidden" @change="onInstanceRestoreFile" />
-              <button class="rounded bg-destructive px-3 py-1 text-destructive-foreground" @click="instanceRestoreInput?.click()">
+              <input
+                ref="instanceRestoreInput"
+                type="file"
+                accept=".zip"
+                class="hidden"
+                @change="onInstanceRestoreFile"
+              />
+              <button
+                class="rounded bg-destructive px-3 py-1 text-destructive-foreground"
+                @click="instanceRestoreInput?.click()"
+              >
                 Restaurer la sauvegarde complète
               </button>
             </template>
@@ -198,7 +209,7 @@
   const { openDialog } = useDialog();
 
   const api = useUserApi();
-  const { clearInventoryData } = useInventoryRefresh();
+  const { clearInventoryData, trackImportJob } = useInventoryRefresh();
   const confirm = useConfirm();
   const pubApi = usePublicApi();
   const { data: status } = useAsyncData(async () => {
@@ -305,7 +316,7 @@
     if (!file) {
       return;
     }
-    const { error, status } = await api.backups.importZip(file);
+    const { data, error, status } = await api.backups.importZip(file);
     if (error) {
       // 409 = empty-group precondition failed.
       if (status === 409) {
@@ -315,6 +326,7 @@
       }
       return;
     }
+    if (data?.id) trackImportJob(data.id);
     toast.success(t("tools.toast.restore_started"));
   }
 

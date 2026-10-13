@@ -53,7 +53,7 @@ export class BackupsAPI extends BaseAPI {
   importZip(file: File | Blob) {
     const formData = new FormData();
     formData.append("file", file);
-    return this.http.post<FormData, void>({
+    return this.http.post<FormData, ExportOut>({
       url: route("/group/import"),
       data: formData,
     });

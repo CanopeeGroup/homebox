@@ -33,6 +33,7 @@
     disableControls?: boolean;
     view: "table" | "card";
     compactList?: boolean;
+    sortScope?: string;
     locationFlatTree?: FlatTreeItem[];
     externalPagination?: Pagination;
   }>();
@@ -57,7 +58,23 @@
         }))
   );
 
-  const sorting = ref<SortingState>([]);
+  const localSorting = ref<SortingState>([]);
+  const locationSorting = useLocalStorage<Record<string, SortingState>>("homebox/location-item-sorts", {});
+  const sortingKey = computed(() => `${preferences.value.collectionId || "default"}:${props.sortScope}`);
+  const sorting = computed<SortingState>({
+    get: () => (props.sortScope ? (locationSorting.value[sortingKey.value] ?? []) : localSorting.value),
+    set: value => {
+      if (props.sortScope) locationSorting.value = { ...locationSorting.value, [sortingKey.value]: value };
+      else localSorting.value = value;
+    },
+  });
+  const selectedSort = computed({
+    get: () => (sorting.value[0] ? `${sorting.value[0].id}:${sorting.value[0].desc ? "desc" : "asc"}` : "none"),
+    set: (value: string) => {
+      const [id, direction] = value.split(":");
+      sorting.value = id && id !== "none" ? [{ id, desc: direction === "desc" }] : [];
+    },
+  });
   const columnOrder = ref<string[]>([
     "select",
     ...(tableHeaders.value ? tableHeaders.value.map(h => h.value) : []),
@@ -174,6 +191,24 @@
 
 <template>
   <div>
+    <div v-if="compactList && sortScope" class="mb-2 flex justify-end">
+      <Select v-model:model-value="selectedSort">
+        <SelectTrigger class="h-9 w-60 max-w-full" aria-label="Trier les objets de cet emplacement">
+          <SelectValue placeholder="Trier les objets" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">Ordre par défaut</SelectItem>
+          <template v-for="column in table.getAllLeafColumns().filter(c => c.getCanSort())" :key="column.id">
+            <SelectItem :value="`${column.id}:asc`">
+              {{ $t(`items.${camelToSnakeCase(column.id)}`) }} : croissant
+            </SelectItem>
+            <SelectItem :value="`${column.id}:desc`">
+              {{ $t(`items.${camelToSnakeCase(column.id)}`) }} : décroissant
+            </SelectItem>
+          </template>
+        </SelectContent>
+      </Select>
+    </div>
     <Dialog :dialog-id="DialogID.ItemTableSettings">
       <DialogContent>
         <DialogHeader>

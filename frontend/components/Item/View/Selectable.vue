@@ -20,6 +20,7 @@
     pagination?: Pagination;
     disableSort?: boolean;
     compactList?: boolean;
+    sortScope?: string;
   }>();
 
   const emit = defineEmits<{
@@ -105,7 +106,10 @@
     <DataTable
       :view="itemView"
       :compact-list="compactList"
-      :columns="compactList || preferences.quickActions.enabled ? columns : columns.filter(c => c.enableHiding !== false)"
+      :sort-scope="sortScope"
+      :columns="
+        compactList || preferences.quickActions.enabled ? columns : columns.filter(c => c.enableHiding !== false)
+      "
       :data="items"
       :location-flat-tree="locationFlatTree"
       :external-pagination="pagination"

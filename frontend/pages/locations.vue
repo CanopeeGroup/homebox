@@ -24,6 +24,7 @@
   const manualRefreshing = ref(false);
 
   async function refreshLocationPage() {
+    const revision = locationStore.dataRevision;
     const hadTree = locationStore.tree !== null;
     initialLoading.value = !hadTree;
 
@@ -31,11 +32,8 @@
       // Render the browser cache immediately when available, then refresh once
       // for this page mount (typically the post-login landing page).
       if (!hadTree) {
-        const cached = await readPersistentCache<TreeItem[]>(
-          persistentCacheKey("location-tree"),
-          24 * 60 * 60 * 1000
-        );
-        if (cached) locationStore.tree = cached;
+        const cached = await readPersistentCache<TreeItem[]>(persistentCacheKey("location-tree"), 24 * 60 * 60 * 1000);
+        if (cached && revision === locationStore.dataRevision) locationStore.tree = cached;
       }
 
       // This page only renders the tree. Fetching the two flat location lists
@@ -86,7 +84,6 @@
     else next.add(id);
     expandedLocations.value = next;
   };
-
 </script>
 
 <template>
@@ -117,7 +114,6 @@
       </div>
     </div>
 
-
     <div v-if="rootLocations.length" class="location-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <Card v-for="location in rootLocations" :key="location.id" class="self-start overflow-hidden">
         <div class="flex items-center border-b bg-muted/40">
@@ -140,17 +136,11 @@
             <MdiStairs class="size-5" :class="isExpanded(location.id) && 'text-primary'" />
           </Button>
         </div>
-        <LocationCompactTree
-          v-if="isExpanded(location.id)"
-          :locations="location.children"
-          :parent-id="location.id"
-        />
+        <LocationCompactTree v-if="isExpanded(location.id)" :locations="location.children" :parent-id="location.id" />
       </Card>
     </div>
 
-    <div v-else-if="initialLoading" class="py-12 text-center text-muted-foreground">
-      Chargement des emplacements…
-    </div>
+    <div v-else-if="initialLoading" class="py-12 text-center text-muted-foreground">Chargement des emplacements…</div>
     <p v-else class="py-12 text-center text-muted-foreground">
       {{ $t("locations.no_results") }}
     </p>
