@@ -25,6 +25,7 @@ export const useLocationStore = defineStore("locations", {
      */
     parentLocations(state): EntitySummary[] {
       if (state.parents === null) {
+        const revision = state.dataRevision;
         useUserApi()
           .items.getLocations({ filterChildren: true })
           .then(result => {
@@ -33,7 +34,9 @@ export const useLocationStore = defineStore("locations", {
               return;
             }
 
-            this.parents = result.data;
+            // Do not let a request started before an import/restore repopulate
+            // the store with stale parent locations.
+            if (revision === this.dataRevision) this.parents = result.data;
           });
       }
       return state.parents ?? [];
@@ -48,16 +51,21 @@ export const useLocationStore = defineStore("locations", {
 
       if (this.refreshLocationsPromise === null) {
         this.refreshLocationsPromise = (async () => {
+          const revision = this.dataRevision;
           const cached = await readPersistentCache<EntitySummary[]>(
             persistentCacheKey("locations"),
             LOCATION_CACHE_MAX_AGE_MS
           );
-          if (cached && this.Locations === null) this.Locations = cached;
+          if (cached && this.Locations === null && revision === this.dataRevision) {
+            this.Locations = cached;
+          }
 
           // Stale-while-revalidate: cached data can render immediately while
-          // the authoritative server copy refreshes in the background.
-          if (cached) void this.refreshChildren();
-          else await this.refreshChildren();
+          // the authoritative server copy refreshes in the background. If an
+          // import changed the revision during IndexedDB access, force a fresh
+          // request instead of trusting the cache that was just read.
+          if (cached && revision === this.dataRevision) void this.refreshChildren();
+          else await this.refreshChildren(true);
         })().finally(() => {
           this.refreshLocationsPromise = null;
         });
