@@ -511,10 +511,10 @@ func (ctrl *V1Controller) HandleEntitiesImport() errchain.HandlerFunc {
 		span.SetAttributes(attribute.Int("rows.imported.count", count))
 
 		// Individual entity mutations can occur throughout a long import. Emit
-		// one final import event only after the whole CSV has committed so every
-		// connected desktop/mobile client performs an authoritative refresh from
-		// the completed database state.
-		ctrl.bus.Publish(eventbus.EventImportMutation, eventbus.GroupMutationEvent{GID: auth.GID})
+		// one authoritative inventory event only after the whole CSV has
+		// completed so every desktop/mobile client invalidates its caches and
+		// reloads the final database state.
+		ctrl.bus.Publish(eventbus.EventInventoryMutation, eventbus.GroupMutationEvent{GID: auth.GID})
 
 		w.WriteHeader(http.StatusNoContent)
 		return nil
