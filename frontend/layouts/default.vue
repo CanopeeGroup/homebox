@@ -556,9 +556,9 @@
   };
 
   onServerEvent(ServerEvent.EntityMutation, refreshEntityDisplay);
-  // import.mutation is a progress/status event for asynchronous ZIP restores.
-  // The final database refresh is triggered by inventory.mutation only.
-  onServerEvent(ServerEvent.ImportMutation, refreshDisplay);
+  // import.mutation is consumed by the Tools page for progress only. Do not
+  // refresh inventory pages while a ZIP restore is still running; the single
+  // inventory.mutation event below represents the completed database state.
   onServerEvent(ServerEvent.InventoryMutation, refreshImportDisplay);
   onServerEvent(ServerEvent.InstanceRestore, handleInstanceRestore);
   onServerEvent(ServerEvent.UserMutation, refreshDisplay);
