@@ -33,12 +33,18 @@ export const useCollections = () => {
       console.debug("[useCollections] Fetching current user");
       const { data: userResp } = await api.user.self();
       const user = userResp?.item;
-      console.debug("[useCollections] User loaded", { userId: user?.id, defaultGroupId: user?.defaultGroupId });
+      console.debug("[useCollections] User loaded", {
+        userId: user?.id,
+        defaultGroupId: user?.defaultGroupId,
+      });
 
       console.debug("[useCollections] Fetching all groups");
       const { data: allGroups } = await api.group.getAll();
       const available = Array.isArray(allGroups)
-        ? (allGroups as Array<{ id: string; name: string }>).map(g => ({ id: g.id, name: g.name }))
+        ? (allGroups as Array<{ id: string; name: string }>).map(g => ({
+            id: g.id,
+            name: g.name,
+          }))
         : [];
 
       collections.value = available;
@@ -63,19 +69,28 @@ export const useCollections = () => {
       const prefId = prefs.value.collectionId ?? null;
       console.debug("[useCollections] Selection preference:", { prefId });
 
-      if (prefId && collections.value.find(c => c.id === prefId)) {
+      if (!user?.isSuperuser) {
+        selectedId.value = collections.value.find(c => c.id === user?.defaultGroupId)?.id ?? null;
+        prefs.value.collectionId = selectedId.value;
+      } else if (prefId && collections.value.find(c => c.id === prefId)) {
         selectedId.value = prefId;
-        console.debug("[useCollections] Using preferred collection", { selectedId: prefId });
+        console.debug("[useCollections] Using preferred collection", {
+          selectedId: prefId,
+        });
       } else if (user?.defaultGroupId && collections.value.find(c => c.id === user.defaultGroupId)) {
         selectedId.value = user.defaultGroupId;
         prefs.value.collectionId = selectedId.value;
-        console.debug("[useCollections] Using user default collection", { selectedId: user.defaultGroupId });
+        console.debug("[useCollections] Using user default collection", {
+          selectedId: user.defaultGroupId,
+        });
       } else if (collections.value.length > 0) {
         const first = collections.value[0];
         if (first) {
           selectedId.value = first.id;
           prefs.value.collectionId = selectedId.value;
-          console.debug("[useCollections] Using first available collection", { selectedId: first.id });
+          console.debug("[useCollections] Using first available collection", {
+            selectedId: first.id,
+          });
         }
       } else {
         selectedId.value = null;
@@ -86,11 +101,15 @@ export const useCollections = () => {
       console.error("[useCollections] Error loading collections:", e);
     } finally {
       refreshing.value = false;
-      console.debug("[useCollections] Load complete", { selectedId: selectedId.value });
+      console.debug("[useCollections] Load complete", {
+        selectedId: selectedId.value,
+      });
     }
   };
 
   const set = (id: string | null) => {
+    const user = useAuthContext().user;
+    if (id !== null && !user?.isSuperuser && id !== user?.defaultGroupId) return;
     selectedId.value = id;
     try {
       const prefs = useViewPreferences();

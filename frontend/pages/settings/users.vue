@@ -17,7 +17,14 @@
   const api = useUserApi();
   useHead({ title: computed(() => `HomeBox | ${t("users.title")}`) });
 
-  const form = reactive({ name: "", email: "", password: "", isSuperuser: false });
+  const form = reactive({
+    name: "",
+    email: "",
+    password: "",
+    isSuperuser: false,
+    defaultGroupId: "",
+  });
+  const availableCollections = ref<CollectionSummary[]>([]);
   const rows = ref<(UserOut & { password: string })[]>([]);
   const loading = ref(false);
 
@@ -29,6 +36,10 @@
 
   onMounted(async () => {
     if (!auth.user?.isSuperuser) return navigateTo("/settings");
+    const result = await api.user.listAdminCollections();
+    if (result.error) return toast.error(t("users.load_failed"));
+    availableCollections.value = result.data;
+    form.defaultGroupId = auth.user?.defaultGroupId ?? availableCollections.value[0]?.id ?? "";
     await load();
   });
 
@@ -37,7 +48,12 @@
     const result = await api.user.createAdminUser({ ...form });
     loading.value = false;
     if (result.error) return toast.error(t("users.save_failed"));
-    Object.assign(form, { name: "", email: "", password: "", isSuperuser: false });
+    Object.assign(form, {
+      name: "",
+      email: "",
+      password: "",
+      isSuperuser: false,
+    });
     toast.success(t("users.created"));
     await load();
   };
@@ -48,6 +64,7 @@
       email: user.email,
       password: user.password,
       isSuperuser: user.isSuperuser,
+      defaultGroupId: user.defaultGroupId,
     });
     if (result.error) return toast.error(t("users.save_failed"));
     toast.success(t("users.saved"));
@@ -68,9 +85,11 @@
     <BaseSectionHeader
       ><span class="flex items-center gap-2"><MdiAccountMultiple />{{ $t("users.title") }}</span></BaseSectionHeader
     >
-    <p class="mb-5 text-sm text-muted-foreground">{{ $t("users.description") }}</p>
+    <p class="mb-5 text-sm text-muted-foreground">
+      {{ $t("users.description") }}
+    </p>
 
-    <form class="mb-6 grid gap-3 rounded-md border bg-card p-4 md:grid-cols-5" @submit.prevent="createUser">
+    <form class="mb-6 grid gap-3 rounded-md border bg-card p-4 md:grid-cols-6" @submit.prevent="createUser">
       <div>
         <Label>{{ $t("users.name") }}</Label
         ><Input v-model="form.name" required />
@@ -83,6 +102,19 @@
         <Label>{{ $t("users.password") }}</Label
         ><Input v-model="form.password" type="password" minlength="6" required />
       </div>
+      <div>
+        <Label>Collection par défaut</Label>
+        <select
+          v-model="form.defaultGroupId"
+          required
+          aria-label="Collection par défaut"
+          class="h-10 w-full rounded-md border bg-background px-3 text-sm"
+        >
+          <option v-for="collection in availableCollections" :key="collection.id" :value="collection.id">
+            {{ collection.name }}
+          </option>
+        </select>
+      </div>
       <label class="flex items-center gap-2 self-end pb-2"
         ><input v-model="form.isSuperuser" type="checkbox" />{{ $t("users.administrator") }}</label
       >
@@ -93,11 +125,20 @@
       <div
         v-for="user in rows"
         :key="user.id"
-        class="grid gap-2 rounded-md border bg-card p-3 md:grid-cols-[1fr_1.3fr_1fr_auto_auto_auto] md:items-center"
+        class="grid gap-2 rounded-md border bg-card p-3 md:grid-cols-[1fr_1.3fr_1fr_1fr_auto_auto_auto] md:items-center"
       >
         <Input v-model="user.name" :aria-label="$t('users.name')" />
         <Input v-model="user.email" type="email" :aria-label="$t('users.email')" />
         <Input v-model="user.password" type="password" :placeholder="$t('users.password_unchanged')" />
+        <select
+          v-model="user.defaultGroupId"
+          aria-label="Collection par défaut"
+          class="h-10 w-full rounded-md border bg-background px-3 text-sm"
+        >
+          <option v-for="collection in availableCollections" :key="collection.id" :value="collection.id">
+            {{ collection.name }}
+          </option>
+        </select>
         <label class="flex items-center gap-2"
           ><input v-model="user.isSuperuser" type="checkbox" />{{ $t("users.administrator") }}</label
         >

@@ -62,10 +62,11 @@ type (
 		Password string `json:"password"`
 	}
 	AdminUserCreate struct {
-		Name        string `json:"name"`
-		Email       string `json:"email"`
-		Password    string `json:"password"`
-		IsSuperuser bool   `json:"isSuperuser"`
+		Name           string     `json:"name"`
+		Email          string     `json:"email"`
+		Password       string     `json:"password"`
+		IsSuperuser    bool       `json:"isSuperuser"`
+		DefaultGroupID *uuid.UUID `json:"defaultGroupId,omitempty"`
 	}
 )
 
@@ -330,7 +331,22 @@ func (svc *UserService) AdminListUsers(ctx context.Context) ([]repo.UserOut, err
 	return svc.repos.Users.GetAll(ctx)
 }
 
+// validateDefaultCollection rejects missing/deleted collections before writing an account.
+func (svc *UserService) validateDefaultCollection(ctx context.Context, id uuid.UUID) error {
+	if id == uuid.Nil {
+		return errors.New("default collection is required")
+	}
+	_, err := svc.repos.Groups.GroupByID(ctx, id)
+	return err
+}
+
 func (svc *UserService) AdminCreateUser(ctx context.Context, groupID uuid.UUID, data AdminUserCreate) (repo.UserOut, error) {
+	if data.DefaultGroupID != nil {
+		groupID = *data.DefaultGroupID
+	}
+	if err := svc.validateDefaultCollection(ctx, groupID); err != nil {
+		return repo.UserOut{}, err
+	}
 	data.Name = strings.TrimSpace(data.Name)
 	data.Email = strings.TrimSpace(data.Email)
 	if data.Name == "" || data.Email == "" {
@@ -378,6 +394,11 @@ func (svc *UserService) AdminUpdateUser(ctx context.Context, id uuid.UUID, data 
 			return repo.UserOut{}, hashErr
 		}
 		passwordHash = &hashed
+	}
+	if data.DefaultGroupID != nil {
+		if err := svc.validateDefaultCollection(ctx, *data.DefaultGroupID); err != nil {
+			return repo.UserOut{}, err
+		}
 	}
 	if err := svc.repos.Users.UpdateAdmin(ctx, id, data, passwordHash); err != nil {
 		return repo.UserOut{}, err

@@ -50,10 +50,11 @@ type (
 	}
 
 	AdminUserUpdate struct {
-		Name        string `json:"name"`
-		Email       string `json:"email"`
-		IsSuperuser bool   `json:"isSuperuser"`
-		Password    string `json:"password"`
+		Name           string     `json:"name"`
+		Email          string     `json:"email"`
+		IsSuperuser    bool       `json:"isSuperuser"`
+		Password       string     `json:"password"`
+		DefaultGroupID *uuid.UUID `json:"defaultGroupId,omitempty"`
 	}
 
 	UserOut struct {
@@ -344,14 +345,36 @@ func (r *UserRepository) Update(ctx context.Context, id uuid.UUID, data UserUpda
 }
 
 func (r *UserRepository) UpdateAdmin(ctx context.Context, id uuid.UUID, data AdminUserUpdate, passwordHash *string) error {
-	q := r.db.User.UpdateOneID(id).
+	tx, err := r.db.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	if data.DefaultGroupID != nil {
+		exists, err := tx.UserGroup.Query().Where(usergroup.UserID(id), usergroup.GroupID(*data.DefaultGroupID)).Exist(ctx)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			if err := tx.UserGroup.Create().SetUserID(id).SetGroupID(*data.DefaultGroupID).SetRole(usergroup.RoleUser).Exec(ctx); err != nil {
+				return err
+			}
+		}
+	}
+	q := tx.User.UpdateOneID(id).
 		SetName(data.Name).
 		SetEmail(normalizeEmail(data.Email)).
 		SetIsSuperuser(data.IsSuperuser)
 	if passwordHash != nil {
 		q = q.SetPassword(*passwordHash)
 	}
-	return q.Exec(ctx)
+	if data.DefaultGroupID != nil {
+		q.SetDefaultGroupID(*data.DefaultGroupID)
+	}
+	if err := q.Exec(ctx); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *UserRepository) UpdateDefaultGroup(ctx context.Context, id uuid.UUID, groupID uuid.UUID) error {

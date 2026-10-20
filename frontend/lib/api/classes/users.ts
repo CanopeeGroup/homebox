@@ -59,16 +59,41 @@ export class UserApi extends BaseAPI {
     return this.http.delete<void>({ url: route(`/users/self/api-keys/${id}`) });
   }
 
+  public listAdminCollections() {
+    return this.http.get<{ id: string; name: string }[]>({ url: route("/admin/collections") });
+  }
+
   public listAdminUsers() {
     return this.http.get<UserOut[]>({ url: route("/admin/users") });
   }
 
-  public createAdminUser(body: { name: string; email: string; password: string; isSuperuser: boolean }) {
-    return this.http.post<typeof body, UserOut>({ url: route("/admin/users"), body });
+  public createAdminUser(body: {
+    name: string;
+    email: string;
+    password: string;
+    isSuperuser: boolean;
+    defaultGroupId?: string;
+  }) {
+    return this.http.post<typeof body, UserOut>({
+      url: route("/admin/users"),
+      body,
+    });
   }
 
-  public updateAdminUser(id: string, body: { name: string; email: string; password: string; isSuperuser: boolean }) {
-    return this.http.put<typeof body, UserOut>({ url: route(`/admin/users/${id}`), body });
+  public updateAdminUser(
+    id: string,
+    body: {
+      name: string;
+      email: string;
+      password: string;
+      isSuperuser: boolean;
+      defaultGroupId?: string;
+    }
+  ) {
+    return this.http.put<typeof body, UserOut>({
+      url: route(`/admin/users/${id}`),
+      body,
+    });
   }
 
   public deleteAdminUser(id: string) {

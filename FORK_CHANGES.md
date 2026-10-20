@@ -4,6 +4,14 @@ Ce dépôt est un fork personnalisé de [sysadminsmedia/homebox](https://github.
 
 Les développements personnalisés sont publiés exclusivement sur la branche `main`.
 
+## Changements récents — 20 octobre 2026
+
+- **Créations successives d’objets** : remise à zéro de l’état « en cours » dans un bloc `finally`, y compris après une exception réseau. Le rafraîchissement des listes et compteurs s’effectue séparément après confirmation de l’enregistrement. `Maj + Créer` conserve le modèle et l’emplacement, avec une quantité remise à zéro pour la saisie suivante. Les réponses tardives de modèles et les anciennes ouvertures du formulaire ne remplacent plus les choix récents.
+
+- **Collection par défaut des utilisateurs** : sélection à la création et à la modification d’un compte. La collection doit exister ; l’accès est ajouté avec le rôle utilisateur, en conservant les accès et rôles existants. L’affectation et la mise à jour du compte sont enregistrées dans une même transaction. Aucune migration supplémentaire n’est nécessaire.
+- **Comptes standards** : affichage du nom de la collection sans sélecteur. Le serveur impose la collection assignée, même si une ancienne préférence, un en-tête `X-Tenant` ou le paramètre `tenant` désigne une autre collection. Créer, rejoindre, supprimer une collection et retirer des membres sont réservés aux administrateurs ; les opérations qui demandaient le propriétaire continuent de le demander.
+- **Vérification** : tests de sélection côté interface et tests serveur pour le contexte de collection et l’affectation transactionnelle.
+
 ## Changements récents — 13 octobre 2026
 
 - **Recherche simplifiée** : suppression des boutons Conseils et Options.
@@ -186,32 +194,30 @@ Une passe d’optimisation a été réalisée pour améliorer la réactivité su
 - Les réponses API ne sont volontairement pas placées dans Cache Storage par le Service Worker : la règle `NetworkOnly` reste active pour `/api`.
 - Ce cache n’implémente pas un mode d'écriture hors ligne ; les mutations et l'authentification continuent de nécessiter le serveur.
 
-## GitHub Actions
+## GitHub Actions et publication Docker
 
-- Tous les fichiers sous `.github/workflows/` ont été supprimés du fork.
-- Les anciens workflows Android/Capacitor ne font plus partie de la branche `main`.
-- Aucun build, test, publication Docker ou autre automatisation GitHub Actions n’est actuellement exécuté.
-- Après une modification importante, le build et les tests doivent être lancés manuellement avant déploiement.
+Le workflow `Docker main` vérifie les affectations de collections et les créations successives, puis construit l’image pour `linux/amd64` et `linux/arm64`. Il publie sur GHCR après chaque push sur `main`, avec les tags `main`, `latest` et `sha-<commit complet>`. Un échec des vérifications ou de la construction empêche la mise à jour de ces tags.
+
+Les autres anciens workflows restent retirés du fork.
 
 ## Installation avec Docker Compose
 
-Cloner directement la branche personnalisée :
-
-```bash
-git clone --branch main https://github.com/canopeegroup/homebox.git
-cd homebox
-docker compose build --pull
-docker compose up -d
-```
+Utiliser `image: ghcr.io/canopeegroup/homebox:main` dans le service Homebox du fichier Compose. Conserver les volumes, ports et variables de l’installation existante.
 
 ## Mettre à jour une installation existante
 
+Après la réussite du workflow Docker :
+
 ```bash
-git fetch origin
-git switch main
+docker compose pull
+docker compose up -d
+```
+
+Pour une installation construite localement depuis les sources :
+
+```bash
 git pull --ff-only origin main
-docker compose down
-docker compose build --pull --no-cache
+docker compose build --pull
 docker compose up -d
 ```
 

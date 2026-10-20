@@ -17,6 +17,17 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+// HandleAdminCollectionsGetAll lists assignment choices for account administration.
+func (ctrl *V1Controller) HandleAdminCollectionsGetAll() errchain.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		groups, err := ctrl.repo.Groups.GetAllGroups(r.Context(), uuid.Nil)
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusInternalServerError)
+		}
+		return server.JSON(w, http.StatusOK, groups)
+	}
+}
+
 func (ctrl *V1Controller) HandleAdminUsersGetAll() errchain.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		users, err := ctrl.svc.User.AdminListUsers(r.Context())

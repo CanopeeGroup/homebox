@@ -1,5 +1,13 @@
 <template>
-  <Popover v-model:open="open">
+  <div
+    v-if="!auth.user?.isSuperuser"
+    class="flex items-center gap-2 rounded-md border p-2 text-sm"
+    :title="selectedCollection?.name"
+  >
+    <MdiHomeGroup class="size-5 shrink-0" />
+    <span v-if="sidebar.state.value !== 'collapsed'" class="truncate">{{ selectedCollection?.name }}</span>
+  </div>
+  <Popover v-else v-model:open="open">
     <PopoverTrigger as-child>
       <Button
         variant="outline"
@@ -42,7 +50,8 @@
               }
             "
           >
-            <Plus class="mr-2 size-4" /> {{ t("components.collection.selector.create_collection") }}
+            <Plus class="mr-2 size-4" />
+            {{ t("components.collection.selector.create_collection") }}
           </CommandItem>
           <CommandItem
             value="join-collection"
@@ -53,7 +62,8 @@
               }
             "
           >
-            <UserPlus class="mr-2 size-4" /> {{ t("components.collection.selector.join_collection") }}
+            <UserPlus class="mr-2 size-4" />
+            {{ t("components.collection.selector.join_collection") }}
           </CommandItem>
           <CommandItem as-child value="collection-settings">
             <NuxtLink to="/collection/members" class="flex w-full items-center" @click="open = false">
@@ -109,6 +119,7 @@
 
   const { t } = useI18n();
 
+  const auth = useAuthContext();
   const open = ref(false);
   const search = ref("");
 

@@ -336,6 +336,13 @@ func (a *app) mwTenant(next errchain.Handler) errchain.Handler {
 			tenantSource = "header"
 		}
 
+		// Standard accounts always operate in their assigned collection, including
+		// requests carrying an old browser preference or a forged tenant selector.
+		if !user.IsSuperuser {
+			tenantHeader = ""
+			tenantSource = "assigned_default"
+		}
+
 		if tenantHeader != "" {
 			parsedTenantID, err := uuid.Parse(tenantHeader)
 			if err != nil {

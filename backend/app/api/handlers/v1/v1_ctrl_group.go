@@ -142,7 +142,21 @@ func (ctrl *V1Controller) HandleGroupInvitationsCreate() errchain.HandlerFunc {
 func (ctrl *V1Controller) HandleGroupsGetAll() errchain.HandlerFunc {
 	fn := func(r *http.Request) ([]repo.Group, error) {
 		auth := services.NewContext(r.Context())
-		return ctrl.repo.Groups.GetAllGroups(auth, auth.UID)
+		user := services.UseUserCtx(r.Context())
+		groups, err := ctrl.repo.Groups.GetAllGroups(auth, auth.UID)
+		if err != nil {
+			return nil, err
+		}
+		if user.IsSuperuser {
+			return groups, nil
+		}
+		assigned := make([]repo.Group, 0, 1)
+		for _, g := range groups {
+			if g.ID == user.DefaultGroupID {
+				assigned = append(assigned, g)
+			}
+		}
+		return assigned, nil
 	}
 
 	return adapters.Command(fn, http.StatusOK)
