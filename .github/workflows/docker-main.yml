@@ -23,7 +23,7 @@ jobs:
           cache-dependency-path: backend/go.sum
       - name: Test collection assignment and compile API
         working-directory: backend
-        run: go test -tags nodynamic ./internal/data/repo ./app/api -run 'TestAdminDefaultCollectionMembership|TestTenantCollectionAssignment|TestUserRepo_BrandingSurvivesSettingsUpdates' -count=1
+        run: go test -tags nodynamic ./internal/data/repo ./app/api -run 'TestAdminDefaultCollectionMembership|TestTenantCollectionAssignment|TestUserRepo_BrandingSurvivesSettingsUpdates|TestClearSubLocationItems' -count=1
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: frontend/package.json

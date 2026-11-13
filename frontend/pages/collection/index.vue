@@ -47,13 +47,10 @@
             to: "/collection/settings",
             icon: MdiCog,
           },
-          {
-            id: "tools",
-            label: "collection.tabs.tools",
-            to: "/collection/tools",
-            icon: MdiWrench,
-          },
         ]
+      : []),
+    ...(isOwner.value || auth.user?.isSuperuser
+      ? [{ id: "tools", label: "collection.tabs.tools", to: "/collection/tools", icon: MdiWrench }]
       : []),
   ]);
 

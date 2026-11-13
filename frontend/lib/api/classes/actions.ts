@@ -32,6 +32,12 @@ export class ActionsAPI extends BaseAPI {
     });
   }
 
+  clearSubLocationItems() {
+    return this.http.post<void, ActionAmountResult>({
+      url: route("/actions/clear-sub-location-items"),
+    });
+  }
+
   wipeInventory() {
     return this.http.post<void, ActionAmountResult>({
       url: route("/actions/wipe-inventory"),

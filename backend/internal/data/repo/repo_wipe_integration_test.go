@@ -203,3 +203,38 @@ func TestWipeInventory_SelectiveWipe(t *testing.T) {
 	// Cleanup
 	_ = tRepos.Tags.DeleteByGroup(context.Background(), tGroup.ID, tagObj.ID)
 }
+
+func TestClearSubLocationItems(t *testing.T) {
+	ctx := context.Background()
+	locationType := useContainerEntityType(t)
+	itemType := useItemEntityType(t)
+
+	root := mustCreateEntity(t, "Root", locationType.ID, uuid.Nil)
+	shelf := mustCreateEntity(t, "Shelf", locationType.ID, root.ID)
+	bin := mustCreateEntity(t, "Bin", locationType.ID, shelf.ID)
+	rootItem := mustCreateEntity(t, "Root article", itemType.ID, root.ID)
+	shelfItem := mustCreateEntity(t, "Shelf article", itemType.ID, shelf.ID)
+	binItem := mustCreateEntity(t, "Bin article", itemType.ID, bin.ID)
+
+	model, err := tRepos.EntityTemplates.Create(ctx, tGroup.ID, templateFactory())
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = tRepos.EntityTemplates.Delete(ctx, tGroup.ID, model.ID) })
+
+	deleted, err := tRepos.Entities.ClearSubLocationItems(ctx, tGroup.ID)
+	require.NoError(t, err)
+	assert.Equal(t, 2, deleted)
+	for _, id := range []uuid.UUID{shelfItem.ID, binItem.ID} {
+		_, err := tRepos.Entities.GetOneByGroup(ctx, tGroup.ID, id)
+		require.Error(t, err)
+	}
+	for _, id := range []uuid.UUID{root.ID, shelf.ID, bin.ID, rootItem.ID} {
+		_, err := tRepos.Entities.GetOneByGroup(ctx, tGroup.ID, id)
+		require.NoError(t, err)
+	}
+	_, err = tRepos.EntityTemplates.GetOne(ctx, tGroup.ID, model.ID)
+	require.NoError(t, err)
+
+	deleted, err = tRepos.Entities.ClearSubLocationItems(ctx, tGroup.ID)
+	require.NoError(t, err)
+	assert.Zero(t, deleted)
+}

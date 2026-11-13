@@ -97,6 +97,21 @@ func (ctrl *V1Controller) HandleCreateMissingThumbnails() errchain.HandlerFunc {
 	return actionHandlerFactory("create missing thumbnails", ctrl.repo.Attachments.CreateMissingThumbnails)
 }
 
+func (ctrl *V1Controller) HandleClearSubLocationItems() errchain.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		if ctrl.isDemo {
+			return validate.NewRequestError(errors.New("clearing articles is not allowed in demo mode"), http.StatusForbidden)
+		}
+
+		ctx := services.NewContext(r.Context())
+		deleted, err := ctrl.repo.Entities.ClearSubLocationItems(ctx, ctx.GID)
+		if err != nil {
+			return validate.NewRequestError(err, http.StatusInternalServerError)
+		}
+		return server.JSON(w, http.StatusOK, ActionAmountResult{Completed: deleted})
+	}
+}
+
 // HandleWipeInventory godoc
 //
 //	@Summary		Wipe Inventory

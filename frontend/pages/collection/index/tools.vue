@@ -165,6 +165,11 @@
             <div v-html="DOMPurify.sanitize($t('tools.actions_set.zero_datetimes_sub'))" />
             <template #button> {{ $t("tools.actions_set.zero_datetimes_button") }} </template>
           </DetailAction>
+          <DetailAction v-if="auth.user?.isSuperuser" @action="clearSubLocationItems">
+            <template #title>{{ $t("tools.actions_set.clear_sub_location_items") }}</template>
+            <template #default>{{ $t("tools.actions_set.clear_sub_location_items_sub") }}</template>
+            <template #button>{{ $t("tools.actions_set.clear_sub_location_items_button") }}</template>
+          </DetailAction>
           <DetailAction v-if="auth.user?.isSuperuser" @action="wipeInventory">
             <template #title> {{ $t("tools.actions_set.wipe_inventory") }} </template>
             <!-- eslint-disable-next-line vue/no-v-html -->
@@ -209,7 +214,7 @@
   const { openDialog } = useDialog();
 
   const api = useUserApi();
-  const { clearInventoryData, trackImportJob } = useInventoryRefresh();
+  const { clearInventoryData, refreshInventoryData, trackImportJob } = useInventoryRefresh();
   const confirm = useConfirm();
   const pubApi = usePublicApi();
   const { data: status } = useAsyncData(async () => {
@@ -354,6 +359,33 @@
     // The login form is the root page; /login does not exist in this fork.
     window.location.href = "/";
   }
+
+  const clearingSubLocationItems = ref(false);
+
+  const clearSubLocationItems = async () => {
+    if (!auth.user?.isSuperuser || clearingSubLocationItems.value) return;
+    if (status.value?.demo) {
+      await confirm.open(t("tools.demo_mode_error.wipe_inventory"));
+      return;
+    }
+
+    clearingSubLocationItems.value = true;
+    try {
+      const { isCanceled } = await confirm.open(t("tools.actions_set.clear_sub_location_items_confirm"));
+      if (isCanceled) return;
+
+      const result = await api.actions.clearSubLocationItems();
+      if (result.error) {
+        toast.error(t("tools.actions_set.clear_sub_location_items_error"));
+        return;
+      }
+
+      await refreshInventoryData();
+      toast.success(t("tools.actions_set.clear_sub_location_items_success", { count: result.data.completed }));
+    } finally {
+      clearingSubLocationItems.value = false;
+    }
+  };
 
   const wipeInventory = async () => {
     if (status.value?.demo) {
