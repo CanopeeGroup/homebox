@@ -472,7 +472,7 @@ func (r *UserRepository) brandingOwner(ctx context.Context) (*ent.User, error) {
 	return r.db.User.Query().
 		Where(user.IsSuperuser(true)).
 		Order(user.ByCreatedAt(), user.ByID()).
-		Select(user.FieldID, user.FieldSettings).
+		Select(user.FieldID, user.FieldCreatedAt, user.FieldSettings).
 		First(ctx)
 }
 

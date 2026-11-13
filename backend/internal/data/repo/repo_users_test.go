@@ -178,12 +178,16 @@ func TestUserRepo_GetSuperusers(t *testing.T) {
 
 func TestUserRepo_BrandingSurvivesSettingsUpdates(t *testing.T) {
 	ctx := context.Background()
-	t.Cleanup(func() { require.NoError(t, tRepos.Users.DeleteAll(ctx)) })
-
 	admin := userFactory()
 	admin.IsSuperuser = true
-	owner, err := tRepos.Users.Create(ctx, admin)
+	created, err := tRepos.Users.Create(ctx, admin)
 	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, tRepos.Users.Delete(ctx, created.ID)) })
+	owner, err := tRepos.Users.brandingOwner(ctx)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, tRepos.Users.db.User.UpdateOneID(owner.ID).SetSettings(owner.Settings).Exec(ctx))
+	})
 
 	// Existing installations keep branding in the administrator's settings.
 	require.NoError(t, tRepos.Users.db.User.UpdateOneID(owner.ID).
