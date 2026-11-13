@@ -1459,14 +1459,14 @@ func (r *EntityRepository) deleteOneByGroupInternal(ctx context.Context, gid, id
 	return nil
 }
 
-// ClearSubLocationItems removes articles directly assigned to a nested location.
+// ClearSubLocationItems removes articles directly assigned to any location.
 func (r *EntityRepository) ClearSubLocationItems(ctx context.Context, gid uuid.UUID) (int, error) {
 	inCollection := entity.HasGroupWith(group.ID(gid))
 	isLocation := entity.HasEntityTypeWith(entitytype.IsLocation(true))
 	items := []predicate.Entity{
 		inCollection,
 		entity.HasEntityTypeWith(entitytype.IsLocation(false)),
-		entity.HasParentWith(inCollection, isLocation, entity.HasParentWith(inCollection, isLocation)),
+		entity.HasParentWith(inCollection, isLocation),
 	}
 	deleted, err := r.db.Entity.Delete().Where(items...).Exec(ctx)
 	if err != nil {

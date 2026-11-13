@@ -222,12 +222,12 @@ func TestClearSubLocationItems(t *testing.T) {
 
 	deleted, err := tRepos.Entities.ClearSubLocationItems(ctx, tGroup.ID)
 	require.NoError(t, err)
-	assert.Equal(t, 2, deleted)
-	for _, id := range []uuid.UUID{shelfItem.ID, binItem.ID} {
+	assert.Equal(t, 3, deleted)
+	for _, id := range []uuid.UUID{rootItem.ID, shelfItem.ID, binItem.ID} {
 		_, err := tRepos.Entities.GetOneByGroup(ctx, tGroup.ID, id)
 		require.Error(t, err)
 	}
-	for _, id := range []uuid.UUID{root.ID, shelf.ID, bin.ID, rootItem.ID} {
+	for _, id := range []uuid.UUID{root.ID, shelf.ID, bin.ID} {
 		_, err := tRepos.Entities.GetOneByGroup(ctx, tGroup.ID, id)
 		require.NoError(t, err)
 	}

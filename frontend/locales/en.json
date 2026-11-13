@@ -1034,11 +1034,11 @@
     "tools": {
         "actions": "Inventory Actions",
         "actions_set": {
-            "clear_sub_location_items": "Empty sub-locations",
-            "clear_sub_location_items_sub": "Deletes items in sub-locations of the active collection. Locations, templates and items stored directly in a top-level location are kept.",
+            "clear_sub_location_items": "Clear items from locations",
+            "clear_sub_location_items_sub": "Deletes items stored in top-level locations and sub-locations of the active collection. Locations and templates are kept.",
             "clear_sub_location_items_button": "Delete items",
-            "clear_sub_location_items_confirm": "Permanently delete items in all sub-locations of the active collection? Attachments and maintenance records associated with deleted items will be removed from inventory.",
-            "clear_sub_location_items_error": "Could not empty sub-locations.",
+            "clear_sub_location_items_confirm": "Permanently delete items in top-level locations and sub-locations of the active collection? Attachments and maintenance records associated with deleted items will be removed from inventory.",
+            "clear_sub_location_items_error": "Could not clear items from locations.",
             "clear_sub_location_items_success": "Items deleted: {count}",
             "create_missing_thumbnails": "Create Missing Thumbnails",
             "create_missing_thumbnails_button": "Create Thumbnails",

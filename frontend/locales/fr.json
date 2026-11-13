@@ -938,11 +938,11 @@
     "tools": {
         "actions": "Actions d’inventaire",
         "actions_set": {
-            "clear_sub_location_items": "Vider les sous-emplacements",
-            "clear_sub_location_items_sub": "Supprime les articles des sous-emplacements de la collection active. Les emplacements, les modèles et les articles rangés directement dans un emplacement racine sont conservés.",
+            "clear_sub_location_items": "Vider les articles des emplacements",
+            "clear_sub_location_items_sub": "Supprime les articles rangés dans les emplacements racines et les sous-emplacements de la collection active. Les emplacements et les modèles sont conservés.",
             "clear_sub_location_items_button": "Supprimer les articles",
-            "clear_sub_location_items_confirm": "Supprimer définitivement les articles de tous les sous-emplacements de la collection active ? Les pièces jointes et fiches de maintenance associées aux articles supprimés seront retirées de l’inventaire.",
-            "clear_sub_location_items_error": "Impossible de vider les sous-emplacements.",
+            "clear_sub_location_items_confirm": "Supprimer définitivement les articles des emplacements racines et des sous-emplacements de la collection active ? Les pièces jointes et fiches de maintenance associées aux articles supprimés seront retirées de l’inventaire.",
+            "clear_sub_location_items_error": "Impossible de vider les articles des emplacements.",
             "clear_sub_location_items_success": "Articles supprimés : {count}",
             "create_missing_thumbnails": "Crée les miniatures manquantes",
             "create_missing_thumbnails_button": "Crée les miniatures",
