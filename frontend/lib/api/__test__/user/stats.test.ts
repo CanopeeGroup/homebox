@@ -96,6 +96,14 @@ describe("group related statistics tests", () => {
     const { client } = await factories.client.singleUse();
     tAPI = client;
 
+    for (const item of imports) {
+      const template = await client.templates.create({
+        ...factories.template(),
+        defaultModelNumber: item["HB.model_number"],
+      });
+      expect(template.status).toBe(201);
+    }
+
     const csv = toCsv(imports);
 
     const setupResp = await client.items.import(new Blob([csv], { type: "text/csv" }));

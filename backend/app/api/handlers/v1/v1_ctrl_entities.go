@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -478,44 +479,68 @@ func (ctrl *V1Controller) HandleEntitiesImport() errchain.HandlerFunc {
 		spanCtx, span := startEntityCtrlSpan(r.Context(), "controller.V1.HandleEntitiesImport")
 		defer span.End()
 
-		_, parseSpan := startEntityCtrlSpan(spanCtx, "controller.V1.HandleEntitiesImport.parseForm")
-		err := r.ParseMultipartForm(ctrl.maxUploadSize << 20)
-		if err != nil {
-			recordCtrlSpanError(parseSpan, err)
-			parseSpan.End()
-			recordCtrlSpanError(span, err)
-			log.Err(err).Msg("failed to parse multipart form")
+		r.Body = http.MaxBytesReader(w, r.Body, ctrl.maxUploadSize<<20)
+		if err := r.ParseMultipartForm(ctrl.maxUploadSize << 20); err != nil {
 			return multipartFormError(err)
 		}
-
+		defer func() { _ = r.MultipartForm.RemoveAll() }()
 		file, _, err := r.FormFile("csv")
 		if err != nil {
-			recordCtrlSpanError(parseSpan, err)
-			parseSpan.End()
-			recordCtrlSpanError(span, err)
-			log.Err(err).Msg("failed to get file from form")
-			return validate.NewRequestError(err, http.StatusInternalServerError)
+			return validate.NewRequestError(err, http.StatusBadRequest)
 		}
-		parseSpan.End()
 		defer func() { _ = file.Close() }()
 
-		auth := services.NewContext(spanCtx)
-		span.SetAttributes(attribute.String("group.id", auth.GID.String()))
+		var corrections map[int]uuid.UUID
+		if raw := r.FormValue("corrections"); raw != "" {
+			if err := json.Unmarshal([]byte(raw), &corrections); err != nil {
+				return validate.NewRequestError(err, http.StatusBadRequest)
+			}
+		}
 
-		count, err := ctrl.svc.Entities.CsvImport(spanCtx, auth.GID, file)
+		auth := services.NewContext(spanCtx)
+		stream := r.Header.Get("Accept") == "application/x-ndjson"
+		var progress func(int, int)
+		if stream {
+			allowSlowResponse(w, r)
+			w.Header().Set("Content-Type", "application/x-ndjson")
+			w.Header().Set("X-Accel-Buffering", "no")
+			last := time.Time{}
+			progress = func(done, total int) {
+				if done == 0 || time.Since(last) >= 150*time.Millisecond {
+					_ = json.NewEncoder(w).Encode(map[string]any{"type": "progress", "done": done, "total": total})
+					_ = http.NewResponseController(w).Flush()
+					last = time.Now()
+				}
+			}
+		}
+		count, err := ctrl.svc.Entities.ImportCatalogCSV(spanCtx, auth.GID, file, corrections, progress)
+		var issues services.CSVModelIssues
+		if errors.As(err, &issues) {
+			if stream {
+				return json.NewEncoder(w).Encode(map[string]any{"type": "corrections", "issues": issues})
+			}
+			return server.JSON(w, http.StatusUnprocessableEntity, map[string]any{"issues": issues})
+		}
+		var readErr services.CSVReadError
+		if errors.As(err, &readErr) {
+			if stream {
+				return json.NewEncoder(w).Encode(map[string]any{"type": "error", "message": "Fichier CSV invalide. " + readErr.Err.Error()})
+			}
+			return validate.NewRequestError(err, http.StatusBadRequest)
+		}
 		if err != nil {
 			recordCtrlSpanError(span, err)
 			log.Err(err).Msg("failed to import entities")
+			if stream {
+				return json.NewEncoder(w).Encode(map[string]any{"type": "error", "message": "L’import a échoué. Certaines lignes peuvent avoir été enregistrées."})
+			}
 			return validate.NewRequestError(err, http.StatusInternalServerError)
 		}
-		span.SetAttributes(attribute.Int("rows.imported.count", count))
 
-		// Individual entity mutations can occur throughout a long import. Emit
-		// one authoritative inventory event only after the whole CSV has
-		// completed so every desktop/mobile client invalidates its caches and
-		// reloads the final database state.
 		ctrl.bus.Publish(eventbus.EventInventoryMutation, eventbus.GroupMutationEvent{GID: auth.GID})
-
+		if stream {
+			return json.NewEncoder(w).Encode(map[string]any{"type": "complete", "done": count})
+		}
 		w.WriteHeader(http.StatusNoContent)
 		return nil
 	}

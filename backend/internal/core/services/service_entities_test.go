@@ -120,3 +120,45 @@ func TestEntityService_CsvImport_FourthLevelObject(t *testing.T) {
 	require.NotNil(t, level2.Parent)
 	require.Equal(t, "A", level2.Parent.Name)
 }
+
+func TestImportCatalogCSVRequiresCorrectionsBeforeWriting(t *testing.T) {
+	ctx := context.Background()
+	grp, err := tRepos.Groups.GroupCreate(ctx, "catalog-import-"+fk.Str(4), uuid.Nil)
+	require.NoError(t, err)
+
+	ref := "CATALOG-" + fk.Str(8)
+	model, err := tRepos.EntityTemplates.Create(ctx, grp.ID, repo.EntityTemplateCreate{
+		Name: "Catalog model", DefaultModelNumber: &ref,
+	})
+	require.NoError(t, err)
+
+	csv := "HB.import_ref,HB.location,Item name,Quantity,Model number\n" +
+		"matched,Warehouse,Matched,1," + strings.ToLower(ref) + "\n" +
+		"corrected,Warehouse,Corrected,2,UNKNOWN\n" +
+		"missing,Warehouse,Missing,0,\n"
+
+	_, err = tSvc.Entities.ImportCatalogCSV(ctx, grp.ID, strings.NewReader(csv), nil, nil)
+	var issues CSVModelIssues
+	require.ErrorAs(t, err, &issues)
+	require.Len(t, issues, 2)
+	require.Equal(t, 3, issues[0].Row)
+	require.Equal(t, "unknown", issues[0].Reason)
+	require.Equal(t, "missing", issues[1].Reason)
+	items, err := tRepos.Entities.GetAll(ctx, grp.ID)
+	require.NoError(t, err)
+	require.Empty(t, items)
+
+	var steps []int
+	count, err := tSvc.Entities.ImportCatalogCSV(ctx, grp.ID, strings.NewReader(csv), map[int]uuid.UUID{3: model.ID, 4: model.ID}, func(done, total int) {
+		require.Equal(t, 3, total)
+		steps = append(steps, done)
+	})
+	require.NoError(t, err)
+	require.Equal(t, 3, count)
+	require.Equal(t, []int{0, 1, 2}, steps)
+	for _, key := range []string{"matched", "corrected", "missing"} {
+		item, err := tRepos.Entities.GetByRef(ctx, grp.ID, key)
+		require.NoError(t, err)
+		require.Equal(t, ref, item.ModelNumber)
+	}
+}

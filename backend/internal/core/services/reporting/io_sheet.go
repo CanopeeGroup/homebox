@@ -120,8 +120,17 @@ func (s *IOSheet) Read(data io.Reader) error {
 	s.index = nil
 	s.custom = nil
 	s.headers = sheet[0]
-	for i := range s.headers {
-		s.headers[i] = strings.TrimSpace(strings.TrimPrefix(s.headers[i], "\uFEFF"))
+	for i, header := range s.headers {
+		header = strings.TrimSpace(strings.TrimPrefix(header, "\uFEFF"))
+		switch strings.ToLower(header) {
+		case "item name":
+			header = "HB.name"
+		case "model number":
+			header = "HB.model_number"
+		case "quantity":
+			header = "HB.quantity"
+		}
+		s.headers[i] = header
 	}
 	_, level1 := s.GetColumn("Subfolder-level1")
 	_, level2 := s.GetColumn("Subfolder-level2")

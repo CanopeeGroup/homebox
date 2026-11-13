@@ -187,6 +187,17 @@ func serializeLocation[T ~[]string](location T) string {
 var csvImportMu sync.Mutex
 
 func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.Reader) (int, error) {
+	return svc.csvImport(ctx, gid, data, nil, nil)
+}
+
+func (svc *EntityService) ImportCatalogCSV(ctx context.Context, gid uuid.UUID, data io.Reader, corrections map[int]uuid.UUID, progress func(int, int)) (int, error) {
+	if corrections == nil {
+		corrections = map[int]uuid.UUID{}
+	}
+	return svc.csvImport(ctx, gid, data, corrections, progress)
+}
+
+func (svc *EntityService) csvImport(ctx context.Context, gid uuid.UUID, data io.Reader, corrections map[int]uuid.UUID, progress func(int, int)) (int, error) {
 	// Serialize CSV imports so two uploads cannot create the same missing paths.
 	csvImportMu.Lock()
 	defer csvImportMu.Unlock()
@@ -202,11 +213,24 @@ func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.
 		recordServiceSpanError(readSpan, err)
 		readSpan.End()
 		recordServiceSpanError(span, err)
-		return 0, err
+		return 0, CSVReadError{Err: err}
 	}
 	readSpan.SetAttributes(attribute.Int("rows.count", len(sheet.Rows)))
 	readSpan.End()
 	span.SetAttributes(attribute.Int("rows.count", len(sheet.Rows)))
+
+	if corrections != nil {
+		models, err := svc.repo.EntityTemplates.GetAll(ctx, gid)
+		if err != nil {
+			return 0, err
+		}
+		if err := matchCSVModels(sheet.Rows, models, corrections); err != nil {
+			return 0, err
+		}
+	}
+	if progress != nil {
+		progress(0, len(sheet.Rows))
+	}
 
 	// ========================================
 	// Tags
@@ -295,8 +319,16 @@ func (svc *EntityService) CsvImport(ctx context.Context, gid uuid.UUID, data io.
 	finished := 0
 
 	for i := range sheet.Rows {
+		if err := ctx.Err(); err != nil {
+			return finished, err
+		}
+		if progress != nil && i > 0 {
+			progress(i, len(sheet.Rows))
+		}
 		row := sheet.Rows[i]
-		if strings.TrimSpace(row.Name) == "" && len(row.Location) == 0 { continue }
+		if strings.TrimSpace(row.Name) == "" && len(row.Location) == 0 {
+			continue
+		}
 
 		rowCtx, rowSpan := entityServiceTracer().Start(importCtx, "service.EntityService.CsvImport.row",
 			trace.WithAttributes(

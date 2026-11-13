@@ -17,6 +17,20 @@ import type { AttachmentTypes } from "../types/non-generated";
 import type { MaintenanceFilters } from "./maintenance.ts";
 import type { Requests } from "~~/lib/requests";
 
+export type CSVModelIssue = {
+  row: number;
+  name: string;
+  reference: string;
+  location: string;
+  reason: "missing" | "unknown" | "ambiguous" | "unavailable";
+};
+
+export type CSVImportEvent =
+  | { type: "progress"; done: number; total: number }
+  | { type: "corrections"; issues: CSVModelIssue[] }
+  | { type: "complete"; done: number }
+  | { type: "error"; message: string };
+
 export type ItemsQuery = {
   orderBy?: string;
   includeArchived?: boolean;
@@ -182,6 +196,40 @@ export class ItemsApi extends BaseAPI {
       url: route("/entities/import"),
       data: formData,
     });
+  }
+
+  async importWithProgress(file: File, corrections: Record<number, string>, onProgress: (done: number, total: number) => void) {
+    const data = new FormData();
+    data.append("csv", file);
+    data.append("corrections", JSON.stringify(corrections));
+
+    const result = await this.http.post<FormData, unknown>({
+      url: route("/entities/import"),
+      headers: { Accept: "application/x-ndjson" },
+      data,
+    });
+    if (result.error || !result.response.body) throw new Error("CSV import request failed");
+
+    const reader = result.response.body.pipeThrough(new TextDecoderStream()).getReader();
+    let pending = "";
+    try {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) throw new Error("CSV import ended without a result");
+        pending += value;
+        let newline = pending.indexOf("\n");
+        while (newline !== -1) {
+          const event = JSON.parse(pending.slice(0, newline)) as CSVImportEvent;
+          pending = pending.slice(newline + 1);
+          if (event.type !== "progress") return event;
+          onProgress(event.done, event.total);
+          newline = pending.indexOf("\n");
+        }
+      }
+    } finally {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
+    }
   }
 
   exportURL(tenant?: string) {
