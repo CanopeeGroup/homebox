@@ -24,7 +24,7 @@
   const { t } = useI18n();
 
   definePageMeta({ middleware: ["auth"] });
-  useHead({ title: "HomeBox | " + t("menu.profile") });
+  useHead({ title: t("menu.profile") });
 
   const api = useUserApi();
   const confirm = useConfirm();

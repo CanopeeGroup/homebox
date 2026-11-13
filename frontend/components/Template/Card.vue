@@ -22,11 +22,13 @@
     "update:selected": [selected: boolean];
   }>();
 
+  const auth = useAuthContext();
   const api = useUserApi();
   const confirm = useConfirm();
   const { t } = useI18n();
 
   async function handleDelete() {
+    if (!auth.user?.isSuperuser) return;
     const { isCanceled } = await confirm.open(t("components.template.confirm_delete"));
     if (isCanceled) return;
 
@@ -121,6 +123,7 @@
       </Button>
       <Button
         size="icon"
+        v-if="auth.user?.isSuperuser"
         variant="destructive"
         class="size-8"
         :title="$t('components.template.card.delete')"

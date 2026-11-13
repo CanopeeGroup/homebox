@@ -14,7 +14,7 @@
 
   definePageMeta({ middleware: ["auth"] });
   const { t } = useI18n();
-  useHead({ title: computed(() => `HomeBox | ${t("menu.journal")}`) });
+  useHead(() => ({ title: t("menu.journal") }));
 
   const api = useUserApi();
   const page = ref(1);

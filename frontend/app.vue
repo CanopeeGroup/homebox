@@ -6,7 +6,7 @@
 
     <NuxtLayout>
       <Html :lang="locale" :data-theme="theme || 'homebox'" />
-      <Link rel="icon" type="image/svg" href="/favicon.svg" />
+      <Link rel="icon" :href="avatar || '/favicon.svg'" />
       <Link rel="apple-touch-icon" href="/pwa-192x192.png" />
       <Meta name="theme-color" content="#5b7f67" />
       <Link rel="manifest" href="/manifest.webmanifest" />
@@ -23,6 +23,13 @@
   const { theme } = useTheme();
 
   const { locale } = useI18n();
+
+  const { avatar, title, load } = useAdminBranding();
+  useHead(() => {
+    const appTitle = title.value;
+    return { titleTemplate: (pageTitle?: string) => (pageTitle ? `${appTitle} | ${pageTitle}` : appTitle) };
+  });
+  onMounted(() => void load());
 
   useViewPreferencesSync();
 </script>

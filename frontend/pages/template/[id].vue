@@ -22,6 +22,7 @@
 
   const { openDialog, closeDialog } = useDialog();
   const route = useRoute();
+  const auth = useAuthContext();
   const api = useUserApi();
   const confirm = useConfirm();
 
@@ -40,6 +41,7 @@
   });
 
   async function confirmDelete() {
+    if (!auth.user?.isSuperuser) return;
     const { isCanceled } = await confirm.open(t("components.template.confirm_delete"));
     if (isCanceled) return;
 
@@ -216,7 +218,7 @@
               <MdiPencil class="mr-1" />
               {{ $t("global.edit") }}
             </Button>
-            <Button variant="destructive" @click="confirmDelete">
+            <Button v-if="auth.user?.isSuperuser" variant="destructive" @click="confirmDelete">
               <MdiDelete class="mr-1" />
               {{ $t("global.delete") }}
             </Button>

@@ -31,10 +31,9 @@
 
   const { t } = useI18n();
 
-  useHead({
-    title: computed(() => `HomeBox | ${t("pages.templates.title")}`),
-  });
+  useHead(() => ({ title: t("pages.templates.title") }));
 
+  const auth = useAuthContext();
   const api = useUserApi();
   const { openDialog } = useDialog();
   const confirm = useConfirm();
@@ -104,7 +103,7 @@
   };
 
   const deleteSelectedTemplates = async () => {
-    if (!selectedTemplateIds.value.length) return;
+    if (!auth.user?.isSuperuser || !selectedTemplateIds.value.length) return;
     const { isCanceled } = await confirm.open(
       t("components.template.confirm_delete_selected", { count: selectedTemplateIds.value.length })
     );
@@ -278,7 +277,7 @@
 
     <TemplateCreateModal @created="handleRefresh" />
 
-    <div v-if="templates?.length" class="mb-3 flex flex-wrap items-center gap-3 rounded-md border px-3 py-2">
+    <div v-if="auth.user?.isSuperuser && templates?.length" class="mb-3 flex flex-wrap items-center gap-3 rounded-md border px-3 py-2">
       <Checkbox
         :model-value="allTemplatesSelected ? true : selectedTemplateIds.length ? 'indeterminate' : false"
         :aria-label="$t('components.template.select_all')"
@@ -304,7 +303,7 @@
         :key="tpl.id"
         :template="tpl"
         compact
-        selectable
+        :selectable="auth.user?.isSuperuser"
         :selected="selectedTemplateIdSet.has(tpl.id)"
         @update:selected="setTemplateSelected(tpl.id, $event)"
         @deleted="handleRefresh"

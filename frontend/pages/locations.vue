@@ -14,7 +14,7 @@
 
   definePageMeta({ middleware: ["auth"] });
   const { t } = useI18n();
-  useHead({ title: computed(() => `HomeBox | ${t("menu.locations")}`) });
+  useHead(() => ({ title: t("menu.locations") }));
 
   const locationStore = useLocationStore();
   const tree = computed(() => locationStore.tree ?? []);

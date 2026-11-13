@@ -165,7 +165,7 @@
             <div v-html="DOMPurify.sanitize($t('tools.actions_set.zero_datetimes_sub'))" />
             <template #button> {{ $t("tools.actions_set.zero_datetimes_button") }} </template>
           </DetailAction>
-          <DetailAction @action="wipeInventory">
+          <DetailAction v-if="auth.user?.isSuperuser" @action="wipeInventory">
             <template #title> {{ $t("tools.actions_set.wipe_inventory") }} </template>
             <!-- eslint-disable-next-line vue/no-v-html -->
             <div v-html="DOMPurify.sanitize($t('tools.actions_set.wipe_inventory_sub'))" />
@@ -203,7 +203,7 @@
     middleware: ["auth"],
   });
   useHead({
-    title: "HomeBox | " + t("collection.tabs.tools"),
+    title: t("collection.tabs.tools"),
   });
 
   const { openDialog } = useDialog();

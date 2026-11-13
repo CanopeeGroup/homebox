@@ -1,14 +1,12 @@
 <script setup lang="ts">
-const auth = useAuthContext();
-const { avatar, load } = useAdminBranding();
-onMounted(() => void load());
+const { avatar, title } = useAdminBranding();
 </script>
 
 <template>
   <img
-    v-if="auth.user?.isSuperuser && avatar"
+    v-if="avatar"
     :src="avatar"
-    alt="Avatar administrateur"
+    :alt="title"
     class="size-full rounded-full object-cover"
   />
   <svg

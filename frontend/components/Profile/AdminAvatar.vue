@@ -10,7 +10,7 @@ const fileInput = ref<HTMLInputElement | null>(null);
 async function persistAvatar(value: string | null) {
   loading.value = true;
   try {
-    await save({ avatar: value });
+    await save({ avatar: value ?? "" });
     toast.success(value ? "Avatar mis à jour" : "Avatar supprimé");
   } catch {
     toast.error("Impossible d'enregistrer l'avatar");
@@ -72,7 +72,7 @@ onMounted(() => void load());
   <div v-if="auth.user?.isSuperuser" class="border-t px-4 py-4">
     <div class="mb-3">
       <div class="font-medium">Avatar administrateur</div>
-      <div class="text-sm text-muted-foreground">Cet avatar remplace le grand logo Homebox dans la barre latérale.</div>
+      <div class="text-sm text-muted-foreground">Cette image apparaît dans la barre latérale, sur la page de connexion et dans l’onglet du navigateur.</div>
     </div>
     <div class="flex items-center gap-4">
       <div class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-background-accent">

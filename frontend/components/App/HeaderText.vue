@@ -1,6 +1,5 @@
 <script setup lang="ts">
-const { title, load } = useAdminBranding();
-onMounted(() => void load());
+const { title } = useAdminBranding();
 </script>
 
 <template>

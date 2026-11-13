@@ -32,7 +32,7 @@ func New(db *ent.Client, bus *eventbus.EventBus, storage config.Storage, pubSubC
 		driver = databaseDriver[0]
 	}
 	return &AllRepos{
-		Users:               &UserRepository{db},
+		Users:               &UserRepository{db: db},
 		AuthTokens:          &TokenRepository{db},
 		PasswordResetTokens: &PasswordResetTokenRepository{db},
 		APIKeys:             NewAPIKeyRepository(db),

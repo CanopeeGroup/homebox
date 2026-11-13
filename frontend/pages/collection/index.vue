@@ -5,6 +5,7 @@
   import { Button, ButtonGroup } from "@/components/ui/button";
   import { toast } from "@/components/ui/sonner";
 
+  import MdiAccount from "~icons/mdi/account";
   import MdiAccountMultiple from "~icons/mdi/account-multiple";
   import MdiCog from "~icons/mdi/cog";
   import MdiWrench from "~icons/mdi/wrench";
@@ -18,7 +19,7 @@
 
   const { t } = useI18n();
 
-  useHead({ title: `HomeBox | ${t("menu.collection")}` });
+  useHead({ title: `${t("menu.collection")}` });
 
   const route = useRoute();
   const api = useUserApi();
@@ -35,6 +36,9 @@
       to: "/collection/members",
       icon: MdiAccountMultiple,
     },
+    ...(auth.user?.isSuperuser
+      ? [{ id: "profile", label: "menu.profile", to: "/profile", icon: MdiAccount }]
+      : []),
     ...(isOwner.value
       ? [
           {
@@ -224,7 +228,7 @@
             :variant="tab.to === currentPath ? 'default' : 'outline'"
             size="sm"
           >
-            <NuxtLink :to="tab.to" class="flex items-center gap-2">
+            <NuxtLink :to="tab.to" class="flex items-center gap-2" :aria-label="t(tab.label)">
               <component :is="tab.icon" v-if="tab.icon" class="size-4" />
               <span class="hidden sm:block">{{ t(tab.label) }}</span>
             </NuxtLink>

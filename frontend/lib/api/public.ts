@@ -15,7 +15,17 @@ export type StatusResult = {
   message: string;
 };
 
+export type AppBranding = {
+  title: string;
+  subtitle: string;
+  avatar: string;
+};
+
 export class PublicApi extends BaseAPI {
+  public branding() {
+    return this.http.get<AppBranding>({ url: route("/branding") });
+  }
+
   public status() {
     return this.http.get<APISummary>({ url: route("/status") });
   }

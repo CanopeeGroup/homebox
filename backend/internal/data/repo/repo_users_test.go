@@ -175,3 +175,31 @@ func TestUserRepo_GetSuperusers(t *testing.T) {
 	err = tRepos.Users.DeleteAll(ctx)
 	require.NoError(t, err)
 }
+
+func TestUserRepo_BrandingSurvivesSettingsUpdates(t *testing.T) {
+	ctx := context.Background()
+	t.Cleanup(func() { require.NoError(t, tRepos.Users.DeleteAll(ctx)) })
+
+	admin := userFactory()
+	admin.IsSuperuser = true
+	owner, err := tRepos.Users.Create(ctx, admin)
+	require.NoError(t, err)
+
+	// Existing installations keep branding in the administrator's settings.
+	require.NoError(t, tRepos.Users.db.User.UpdateOneID(owner.ID).
+		SetSettings(map[string]interface{}{"appTitle": "Existing title", "adminAvatar": "existing avatar"}).Exec(ctx))
+	settings, err := tRepos.Users.UpdateBranding(ctx, map[string]string{"appSubtitle": "Welcome"})
+	require.NoError(t, err)
+	assert.Equal(t, "Existing title", settings["appTitle"])
+	assert.Equal(t, "existing avatar", settings["adminAvatar"])
+
+	require.NoError(t, tRepos.Users.SetSettings(ctx, owner.ID, map[string]interface{}{
+		"appTitle": "Stale value", "view": "list",
+	}))
+	settings, err = tRepos.Users.GetBranding(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, "Existing title", settings["appTitle"])
+	assert.Equal(t, "Welcome", settings["appSubtitle"])
+	assert.Equal(t, "existing avatar", settings["adminAvatar"])
+	assert.Equal(t, "list", settings["view"])
+}

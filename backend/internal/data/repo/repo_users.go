@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -15,7 +16,8 @@ import (
 )
 
 type UserRepository struct {
-	db *ent.Client
+	db         *ent.Client
+	settingsMu sync.Mutex
 }
 
 // normalizeEmail canonicalizes an email address for storage and lookup. Emails are
@@ -443,9 +445,68 @@ func (r *UserRepository) SetSettings(ctx context.Context, uid uuid.UUID, setting
 		))
 	defer span.End()
 
-	err := r.db.User.UpdateOneID(uid).SetSettings(settings).Exec(ctx)
+	r.settingsMu.Lock()
+	defer r.settingsMu.Unlock()
+	current, err := r.GetSettings(ctx, uid)
+	if err != nil {
+		return err
+	}
+	if settings == nil {
+		settings = make(map[string]interface{})
+	}
+	for _, key := range brandingKeys {
+		delete(settings, key)
+		if value, ok := current[key]; ok {
+			settings[key] = value
+		}
+	}
+	err = r.db.User.UpdateOneID(uid).SetSettings(settings).Exec(ctx)
 	recordSpanError(span, err)
 	return err
+}
+
+var brandingKeys = [...]string{"appTitle", "appSubtitle", "adminAvatar"}
+
+// Keep instance branding in the oldest administrator’s backed-up settings.
+func (r *UserRepository) brandingOwner(ctx context.Context) (*ent.User, error) {
+	return r.db.User.Query().
+		Where(user.IsSuperuser(true)).
+		Order(user.ByCreatedAt(), user.ByID()).
+		Select(user.FieldID, user.FieldSettings).
+		First(ctx)
+}
+
+func (r *UserRepository) GetBranding(ctx context.Context) (map[string]interface{}, error) {
+	owner, err := r.brandingOwner(ctx)
+	if ent.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return owner.Settings, nil
+}
+
+func (r *UserRepository) UpdateBranding(ctx context.Context, changes map[string]string) (map[string]interface{}, error) {
+	r.settingsMu.Lock()
+	defer r.settingsMu.Unlock()
+	owner, err := r.brandingOwner(ctx)
+	if err != nil {
+		return nil, err
+	}
+	settings := owner.Settings
+	if settings == nil {
+		settings = make(map[string]interface{})
+	}
+	for _, key := range brandingKeys {
+		if value, ok := changes[key]; ok {
+			settings[key] = value
+		}
+	}
+	if err := r.db.User.UpdateOneID(owner.ID).SetSettings(settings).Exec(ctx); err != nil {
+		return nil, err
+	}
+	return settings, nil
 }
 
 func (r *UserRepository) GetSettings(ctx context.Context, uid uuid.UUID) (map[string]interface{}, error) {

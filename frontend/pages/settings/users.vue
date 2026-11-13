@@ -15,7 +15,7 @@
   const { t } = useI18n();
   const auth = useAuthContext();
   const api = useUserApi();
-  useHead({ title: computed(() => `HomeBox | ${t("users.title")}`) });
+  useHead(() => ({ title: t("users.title") }));
 
   const form = reactive({
     name: "",

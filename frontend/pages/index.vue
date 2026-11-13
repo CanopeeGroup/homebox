@@ -17,9 +17,9 @@
 
   const { t } = useI18n();
 
-  useHead({
-    title: "HomeBox | " + t("index.title"),
-  });
+  const { avatar, title, subtitle } = useAdminBranding();
+
+  useHead(() => ({ title: t("index.title") }));
 
   definePageMeta({
     layout: "empty",
@@ -249,9 +249,15 @@
       >
         <div class="z-10">
           <h2 class="mt-1 flex text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-            HomeB
-            <AppLogo class="-mb-4 w-12" />
-            x
+            <template v-if="avatar || title !== 'HomeBox'">
+              <AppLogo class="mr-3 size-12 shrink-0" />
+              <span>{{ title }}</span>
+            </template>
+            <template v-else>
+              HomeB
+              <AppLogo class="-mb-4 w-12" />
+              x
+            </template>
           </h2>
           <p
             class="ml-1 text-lg"
@@ -260,7 +266,7 @@
               'text-white': isLofiTheme,
             }"
           >
-            {{ $t("index.tagline") }}
+            {{ subtitle || $t("index.tagline") }}
           </p>
         </div>
         <div class="z-10 ml-auto mt-6 flex items-center sm:mt-0">

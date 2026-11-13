@@ -11,7 +11,7 @@
   const auth = useAuthContext();
 
   definePageMeta({ middleware: ["auth"] });
-  useHead({ title: computed(() => `HomeBox | ${t("menu.settings")}`) });
+  useHead(() => ({ title: t("menu.settings") }));
 
   const sections = computed(() => [
     {

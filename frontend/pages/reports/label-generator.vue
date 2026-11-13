@@ -17,7 +17,7 @@
     layout: false,
   });
   useHead({
-    title: "HomeBox | " + t("reports.label_generator.title"),
+    title: t("reports.label_generator.title"),
   });
 
   const api = useUserApi();
