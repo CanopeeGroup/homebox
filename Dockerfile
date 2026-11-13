@@ -1,5 +1,5 @@
 # Node dependencies stage
-FROM --platform=$BUILDPLATFORM public.ecr.aws/docker/library/node:22-alpine AS frontend-dependencies
+FROM --platform=$BUILDPLATFORM public.ecr.aws/docker/library/node:22.23.5-alpine AS frontend-dependencies
 WORKDIR /app
 
 # Install pnpm 10 (latest stable, works reliably in Alpine)
@@ -10,7 +10,7 @@ COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Build Nuxt (frontend) stage
-FROM --platform=$BUILDPLATFORM public.ecr.aws/docker/library/node:22-alpine AS frontend-builder
+FROM --platform=$BUILDPLATFORM public.ecr.aws/docker/library/node:22.23.5-alpine AS frontend-builder
 WORKDIR /app
 
 # Install pnpm 10 (latest stable)
