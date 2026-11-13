@@ -247,11 +247,13 @@
           'text-white': isLofiTheme,
         }"
       >
-        <div class="z-10">
+        <div class="z-10 min-w-0">
           <h2 class="mt-1 flex text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             <template v-if="avatar || title !== 'HomeBox'">
-              <AppLogo class="mr-3 size-12 shrink-0" />
-              <span>{{ title }}</span>
+              <span class="mr-3 flex h-12 w-12 flex-none items-center">
+                <AppLogo />
+              </span>
+              <span class="min-w-0 break-words">{{ title }}</span>
             </template>
             <template v-else>
               HomeB
