@@ -230,13 +230,24 @@ L’import reste progressif : les créations réussies sont conservées en cas d
 
 ### GitHub Actions
 
-Tous les workflows GitHub Actions du fork ont été retirés. La compilation, les tests et la publication
-d'images ne sont donc plus exécutés automatiquement par GitHub. Valider le build localement lors des mises à jour.
+Le workflow `Docker main` exécute les tests du fork, puis publie l’image sur GHCR pour `linux/amd64` et `linux/arm64`.
 
 ### Déployer et mettre à jour ce fork
 
-L’image officielle `ghcr.io/sysadminsmedia/homebox` ne contient pas ces personnalisations.
-Construire l’image à partir de la branche du fork :
+Utiliser `image: ghcr.io/canopeegroup/homebox:main` dans le service HomeBox du fichier Compose, puis exécuter les commandes suivantes depuis son répertoire.
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Le commit [`5c803e3`](https://github.com/CanopeeGroup/homebox/commit/5c803e32c6f571e110629f4a9cb7c57f343198a3) épingle Node.js à **22.23.5 LTS** pour la compilation du frontend et les tests GitHub Actions. Cette version inclut le correctif **Node2Shell (CVE-2026-111497)**. Pour déployer précisément l’image vérifiée de ce commit, épingler son digest dans Compose. [Exécution GitHub Actions](https://github.com/CanopeeGroup/homebox/actions/runs/43437956730)
+
+```yaml
+image: ghcr.io/canopeegroup/homebox@sha256:138f919887370cda7092d2c661abbcf45a4180821177d8277c92bb8fdf4c0d64
+```
+
+Pour construire l’image à partir des sources du fork :
 
 ```bash
 git clone --branch main https://github.com/CanopeeGroup/homebox.git

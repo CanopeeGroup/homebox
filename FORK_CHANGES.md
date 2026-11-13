@@ -4,6 +4,17 @@ Ce dépôt est un fork personnalisé de [sysadminsmedia/homebox](https://github.
 
 Les développements personnalisés sont publiés exclusivement sur la branche `main`.
 
+## Sécurité — 13 novembre 2026
+
+- Le commit [`5c803e3`](https://github.com/CanopeeGroup/homebox/commit/5c803e32c6f571e110629f4a9cb7c57f343198a3) épingle Node.js à **22.23.5 LTS** dans les trois Dockerfiles et dans le workflow `Docker main`. Cette version inclut le correctif **Node2Shell (CVE-2026-111497)**. Node.js sert à compiler le frontend et à exécuter ses tests. L’image finale exécute le binaire Go.
+- Le workflow a réussi. Les tags `main`, `latest` et `sha-5c803e32c6f571e110629f4a9cb7c57f343198a3` pointaient vers le même digest à la publication, pour `linux/amd64` et `linux/arm64`. [Exécution GitHub Actions](https://github.com/CanopeeGroup/homebox/actions/runs/43437956730)
+
+Pour épingler l’image publiée pour ce commit dans Docker Compose :
+
+```yaml
+image: ghcr.io/canopeegroup/homebox@sha256:138f919887370cda7092d2c661abbcf45a4180821177d8277c92bb8fdf4c0d64
+```
+
 ## Changements récents — 20 octobre 2026
 
 - **Créations successives d’objets** : remise à zéro de l’état « en cours » dans un bloc `finally`, y compris après une exception réseau. Le rafraîchissement des listes et compteurs s’effectue séparément après confirmation de l’enregistrement. `Maj + Créer` conserve le modèle et l’emplacement, avec une quantité remise à zéro pour la saisie suivante. Les réponses tardives de modèles et les anciennes ouvertures du formulaire ne remplacent plus les choix récents.
